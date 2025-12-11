@@ -26,10 +26,11 @@ export const state = {
   userCards: {},
   userStats: {},
   leaderboard: [],
-  isAdmin: false
+  isAdmin: false,
+  isLoginMode: true  // Флаг: true = вход, false = регистрация
 };
 
-// === ТАБЛИЦА НАВигаЦИИ ===
+// === ТАБЛиЦА НАВГАЦИИ ===
 const TAB_TITLES = {
   collection: '📚 Моя коллекция',
   profile: '👤 Мой профиль',
@@ -42,7 +43,7 @@ const TAB_TITLES = {
  * Инициализация приложения
  */
 async function initApp() {
-  console.log('[ОНИЦ]Инициализация Art Deck...');
+  console.log('[ОНИЦ] Инициализация Art Deck...');
   
   try {
     // Проверяем аутентификацию
@@ -51,6 +52,7 @@ async function initApp() {
     if (!state.currentUser) {
       // Показываем страницу авторизации
       showAuthPage();
+      setupAuthListeners();
       return;
     }
     
@@ -59,9 +61,10 @@ async function initApp() {
     await loadInitialData();
     setupEventListeners();
     
-    console.log('✔️ Приложение загружено');
+    console.log('✅ Приложение загружено');
   } catch (error) {
     console.error('Ошибка инициализации:', error);
+    ui.showError('Ошибка инициализации приложения');
   }
 }
 
@@ -101,168 +104,170 @@ async function loadInitialData() {
 function updateUserInterface() {
   const { currentUser } = state;
   
-  // Обновляю ник
   document.getElementById('user-name').textContent = 
     currentUser.username || currentUser.email?.split('@')[0] || 'Гость';
-  
-  // Обновляю монеты
   document.getElementById('coins-display').textContent = currentUser.currency || 100;
   
-  // Обновляю тир
   const deckRating = user.calculateDeckRating();
   const tier = user.getRatingTier(deckRating);
   const tierEmojis = {
-    'Common': '📍',
-    'Uncommon': '🎯',
-    'Rare': '🏆',
-    'Epic': '💎',
-    'Ancient': '🔥',
-    'Legendary': '⭐',
-    'Immortal': '👑'
+    'Common': '📍', 'Uncommon': '🎯', 'Rare': '🏆',
+    'Epic': '💎', 'Ancient': '🔥', 'Legendary': '⭐', 'Immortal': '👑'
   };
   
-  document.getElementById('user-rank').textContent = 
-    `${tierEmojis[tier] || '📍'} ${tier}`;
+  document.getElementById('user-rank').textContent = `${tierEmojis[tier] || '📍'} ${tier}`;
   
-  // Показываю админ-кнопку, если это админ
   const adminBtn = document.getElementById('admin-btn');
-  if (state.isAdmin) {
-    adminBtn.style.display = 'flex';
-  } else {
-    adminBtn.style.display = 'none';
-  }
+  adminBtn.style.display = state.isAdmin ? 'flex' : 'none';
 }
 
 /**
  * Переключает вкладки
  */
 export function switchTab(tabName) {
-  // Открываю контент
   const tabContents = document.querySelectorAll('.tab-content');
   tabContents.forEach(tab => tab.classList.remove('active'));
   document.getElementById(`${tabName}-tab`).classList.add('active');
   
-  // Обновляю активные кнопки
   const sidebarBtns = document.querySelectorAll('.sidebar-btn');
   sidebarBtns.forEach(btn => {
-    if (btn.dataset.tab === tabName) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
   
-  // Обновляю заголовок
   document.getElementById('page-title').textContent = TAB_TITLES[tabName] || 'Art Deck';
   
-  // Дополнительная логика для некоторых табов
   switch (tabName) {
-    case 'collection':
-      cards.renderCollection();
-      break;
-    case 'profile':
-      user.renderProfile();
-      break;
-    case 'leaderboard':
-      leaderboard.renderLeaderboard();
-      break;
-    case 'packs':
-      packs.renderShop();
-      break;
-    case 'admin':
-      admin.initAdminPanel();
-      break;
+    case 'collection': cards.renderCollection(); break;
+    case 'profile': user.renderProfile(); break;
+    case 'leaderboard': leaderboard.renderLeaderboard(); break;
+    case 'packs': packs.renderShop(); break;
+    case 'admin': admin.initAdminPanel(); break;
   }
 }
 
 /**
- * Открывает модальное окно
+ * Открывает/закрывает модальные окна
  */
 export function openModal(modalId) {
   const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.add('active');
-  }
+  if (modal) modal.classList.add('active');
 }
 
-/**
- * Закрывает модальное окно
- */
 export function closeModal(modalId) {
   const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.remove('active');
-  }
+  if (modal) modal.classList.remove('active');
 }
 
 /**
- * Показывает страницу аппликации
+ * Режим доступа
  */
 function showApp() {
   document.getElementById('app').style.display = 'grid';
   document.getElementById('auth-page').style.display = 'none';
 }
 
-/**
- * Показывает страницу авторизации
- */
 function showAuthPage() {
   document.getElementById('app').style.display = 'none';
   document.getElementById('auth-page').style.display = 'flex';
+  state.isLoginMode = true;
+  updateAuthUI();
+}
+
+function updateAuthUI() {
+  const btn = document.getElementById('auth-btn');
+  const toggleBtn = document.getElementById('toggle-auth');
+  
+  if (state.isLoginMode) {
+    btn.textContent = '🔓 Вход';
+    toggleBtn.textContent = 'Создать аккаунт';
+  } else {
+    btn.textContent = '✨ Регистрация';
+    toggleBtn.textContent = 'Уже есть аккаунт?';
+  }
 }
 
 /**
- * Настраивают слушатели событий
+ * Обработчики авторизации
+ */
+function setupAuthListeners() {
+  const form = document.getElementById('auth-form');
+  const toggleBtn = document.getElementById('toggle-auth');
+  const errorDiv = document.getElementById('auth-error');
+  
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    
+    errorDiv.style.display = 'none';
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Почждите...';
+    
+    try {
+      if (state.isLoginMode) {
+        await auth.login(email, password);
+      } else {
+        await auth.register(email, password);
+      }
+      
+      await loadInitialData();
+      showApp();
+      setupEventListeners();
+      updateAuthUI();
+      
+    } catch (error) {
+      errorDiv.textContent = error.message;
+      errorDiv.style.display = 'block';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = state.isLoginMode ? '🔓 Вход' : '✨ Регистрация';
+    }
+  });
+  
+  toggleBtn.addEventListener('click', () => {
+    state.isLoginMode = !state.isLoginMode;
+    document.getElementById('auth-email').value = '';
+    document.getElementById('auth-password').value = '';
+    errorDiv.style.display = 'none';
+    updateAuthUI();
+  });
+}
+
+/**
+ * Обработчики приложения
  */
 function setupEventListeners() {
-  // Навигация по вкладкам
   document.querySelectorAll('.sidebar-btn[data-tab]').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
   
-  // Выход
-  document.getElementById('logout-btn').addEventListener('click', () => {
-    auth.logout().then(() => {
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    try {
+      await auth.logout();
       state.currentUser = null;
       showAuthPage();
-    });
-  });
-  
-  // Окрытие модалей
-  document.querySelectorAll('[class*="modal"]').forEach(modal => {
-    // Закрытие по клику вне модали
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        modal.classList.remove('active');
-      }
-    });
-    
-    // Закрытие по кнопке х
-    const closeBtn = modal.querySelector('.modal-close');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
-        modal.classList.remove('active');
-      });
+    } catch (error) {
+      ui.showError('Ошибка при выходе');
     }
   });
   
-  // Профильтр по редкости
-  const rarityFilter = document.getElementById('rarity-filter');
-  if (rarityFilter) {
-    rarityFilter.addEventListener('change', () => {
-      cards.renderCollection();
+  document.querySelectorAll('[id*="modal"]').forEach(modal => {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('active');
     });
-  }
+    
+    const closeBtn = modal.querySelector('.modal-close');
+    if (closeBtn) closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+  });
+  
+  const rarityFilter = document.getElementById('rarity-filter');
+  if (rarityFilter) rarityFilter.addEventListener('change', () => cards.renderCollection());
 }
 
-// === ПУБЛИЧНОЕ API ===
-export {
-  state,
-  updateUserInterface,
-  switchTab
-};
+export { state, updateUserInterface };
 
-// === ЗАПУСК ПО КОнтролю DOM ===
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);
 } else {
