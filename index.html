@@ -249,7 +249,10 @@
         
         <div class="form-group">
           <label class="form-label">Пароль</label>
-          <input type="password" id="auth-password" class="form-input" placeholder="Минимум 6 символов" required>
+          <div style="position: relative;">
+            <input type="password" id="auth-password" class="form-input" placeholder="Минимум 6 символов" required>
+            <button type="button" id="toggle-password-btn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 18px; padding: 0;"ят title="Показать/скрыть">🙈</button>
+          </div>
         </div>
         
         <button type="submit" class="btn btn-primary btn-full" id="auth-btn" style="margin-bottom: 12px;">Вход</button>
@@ -360,5 +363,22 @@
   <!-- === КОНФИГ И МОДУЛИ === -->
   <script type="module" src="config.js"></script>
   <script type="module" src="app.js"></script>
+  
+  <!-- === ОБРАБОТКА КНОПки "Показать/скрыть" пароль === -->
+  <script>
+    document.getElementById('toggle-password-btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      const input = document.getElementById('auth-password');
+      const btn = this;
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙉';
+      } else {
+        input.type = 'password';
+        btn.textContent = '🙈';
+      }
+    });
+  </script>
 </body>
 </html>
