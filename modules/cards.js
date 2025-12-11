@@ -4,7 +4,7 @@
  * 
  * Ответственность:
  * - Загружа все карты из masterCards
- * - Рендер сетки карт
+ * - Нендер сетки карт
  * - Расчет силы колоды и рейтинга
  * - Детали карты
  */
@@ -78,7 +78,7 @@ export async function updateCardCount(cardId, newCount) {
 }
 
 /**
- * Рендерит сетку карт в коллекции
+ * Нендерит сетку карт в коллекции
  */
 export function renderCollection() {
   const grid = document.getElementById('cards-grid');
@@ -98,7 +98,7 @@ export function renderCollection() {
     return;
   }
   
-  // Рендер карт
+  // Нендер карт
   filteredCards.forEach(card => {
     const count = getCardCount(card.id);
     const element = createCardElement(card, count);
@@ -116,9 +116,12 @@ function createCardElement(card, count) {
   const div = document.createElement('div');
   div.className = 'card-item';
   
-  // Редкость карты
+  // Нередкость карты
   const rarity = ui.getRarityBadge(card.rarity);
   const borderColor = rarity.color;
+  
+  // Добавляем data-rarity атрибут
+  div.setAttribute('data-rarity', card.rarity);
   
   // HTML карты
   div.innerHTML = `
@@ -165,11 +168,11 @@ function showCardDetail(card, count) {
   document.getElementById('modal-card-year').textContent = `Год: ${card.year}`;
   document.getElementById('modal-card-description').textContent = card.description;
   
-  // Изображение
+  // Нзображение
   const img = document.getElementById('modal-card-image');
   img.src = card.imageUrl || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22%3E%3C/svg%3E';
   
-  // Редкость
+  // Передкость
   const rarityDiv = document.getElementById('modal-card-rarity');
   rarityDiv.innerHTML = `${rarity.emoji} ${rarity.name}`;
   rarityDiv.style.backgroundColor = `${rarity.color}15`;
@@ -202,8 +205,45 @@ function showCardDetail(card, count) {
  * Рейтинг Колоды = (Уникальность + Сила/10) × Множитель Бонусов
  * 
  * где:
- *   Множитель Бонусов = 1 + Бонус Эр + Бонус Художников + Бонус Редкостей
+ *   Множитель Бонусов = 1 + Бонус Эр + Бонус Художников + Бонус Нередкостей
  */
+
+/**
+ * Получит рейтинг для импорта из user.js
+ */
+export function calculateDeckRating() {
+  return calculateDeckRatingInternal();
+}
+
+/**
+ * Внутренняя реализация
+ */
+function calculateDeckRatingInternal() {
+  const uniqueness = calculateUniqueness();
+  const power = calculatePower();
+  
+  const eraBonus = calculateEraBonus();
+  const artistBonus = calculateArtistBonus();
+  const rarityBonus = calculateRarityBonus();
+  
+  const bonusMultiplier = 1 + eraBonus + artistBonus + rarityBonus;
+  
+  return (uniqueness + power) * bonusMultiplier;
+}
+
+/**
+ * Получает информацию о разложении рейтинга
+ */
+export function getDeckRatingBreakdown() {
+  return {
+    uniqueness: calculateUniqueness(),
+    power: calculatePower(),
+    eraBonus: calculateEraBonus(),
+    artistBonus: calculateArtistBonus(),
+    rarityBonus: calculateRarityBonus(),
+    total: calculateDeckRatingInternal()
+  };
+}
 
 /**
  * Рассчитывает уникальность коллекции
@@ -310,43 +350,13 @@ function calculateRarityBonus() {
 }
 
 /**
- * Рассчитывает общий рейтинг колоды
- */
-export function calculateDeckRating() {
-  const uniqueness = calculateUniqueness();
-  const power = calculatePower();
-  
-  const eraBonus = calculateEraBonus();
-  const artistBonus = calculateArtistBonus();
-  const rarityBonus = calculateRarityBonus();
-  
-  const bonusMultiplier = 1 + eraBonus + artistBonus + rarityBonus;
-  
-  return (uniqueness + power) * bonusMultiplier;
-}
-
-/**
- * Получает информацию о разложении рейтинга
- */
-export function getDeckRatingBreakdown() {
-  return {
-    uniqueness: calculateUniqueness(),
-    power: calculatePower(),
-    eraBonus: calculateEraBonus(),
-    artistBonus: calculateArtistBonus(),
-    rarityBonus: calculateRarityBonus(),
-    total: calculateDeckRating()
-  };
-}
-
-/**
  * Обновляет статистику коллекции
  */
 function updateCollectionStats() {
   const cards = state.currentUser?.cards || {};
   const totalCards = Object.values(cards).reduce((a, b) => a + b, 0);
   const uniqueCards = Object.keys(cards).length;
-  const deckRating = calculateDeckRating();
+  const deckRating = calculateDeckRatingInternal();
   
   document.getElementById('stat-total-cards').textContent = totalCards;
   document.getElementById('stat-unique-cards').textContent = uniqueCards;
