@@ -30,6 +30,50 @@ export const state = {
   isLoginMode: true  // Флаг: true = вход, false = регистрация
 };
 
+// === МИССИИ ===
+const QUESTS = {
+  'first_pack': {
+    id: 'first_pack',
+    title: 'Первые шаги',
+    desc: 'Откройте первый пак',
+    reward: 100,
+    progress: 'packsOpened',
+    target: 1
+  },
+  'collect_5': {
+    id: 'collect_5',
+    title: 'Начинающий коллекционер',
+    desc: 'Соберите 5 уникальных карт',
+    reward: 150,
+    progress: 'uniqueCards',
+    target: 5
+  },
+  'collect_10': {
+    id: 'collect_10',
+    title: 'Коллекционер',
+    desc: 'Соберите 10 уникальных карт',
+    reward: 200,
+    progress: 'uniqueCards',
+    target: 10
+  },
+  'first_legendary': {
+    id: 'first_legendary',
+    title: 'Легенда',
+    desc: 'Получите первую легендарную карту',
+    reward: 250,
+    progress: 'legendaryCards',
+    target: 1
+  },
+  'rare_collector': {
+    id: 'rare_collector',
+    title: 'Мастер редкостей',
+    desc: 'Насобирайте редкие и выше карты',
+    reward: 300,
+    progress: 'rareCards',
+    target: 5
+  }
+};
+
 // === ТАБЛИЦА НАВГАЦИИ ===
 const TAB_TITLES = {
   collection: '📚 Моя коллекция',
@@ -38,6 +82,122 @@ const TAB_TITLES = {
   packs: '💳 Магазин паков',
   admin: '⚙️ Админ-панель'
 };
+
+// === ДНЕВНЫЕ БОНУСЫ ===
+/**
+ * Проверяют и выдают ежедневные бонусы
+ */
+async function checkDailyRewards() {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    
+    const userRef = firebase.firestore().collection('users').doc(user.uid);
+    const userData = (await userRef.get()).data();
+    
+    if (!userData) return;
+    
+    const lastReward = userData.lastDailyReward?.toDate() || new Date(0);
+    const now = new Date();
+    const daysDiff = Math.floor((now - lastReward) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff >= 1) {
+      // Дать +50 монет и +1 бесплатное открытие
+      await userRef.update({
+        currency: (userData.currency || 0) + 50,
+        lastDailyReward: new Date(),
+        dailyFreeOpens: (userData.dailyFreeOpens || 0) + 1
+      });
+      
+      // Обновить состояние
+      state.currentUser.currency = (userData.currency || 0) + 50;
+      state.currentUser.dailyFreeOpens = (userData.dailyFreeOpens || 0) + 1;
+      
+      ui.showToast('🎁 Ежедневный бонус! +50 монет 💎', 'success');
+      updateUserInterface();
+    }
+  } catch (error) {
+    console.error('Ошибка дневных бонусов:', error);
+  }
+}
+
+/**
+ * Получит миссии пользователя
+ */
+async function loadQuests() {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) return [];
+    
+    const userData = (await firebase.firestore().collection('users').doc(user.uid).get()).data();
+    const completedQuests = userData?.completedQuests || [];
+    
+    return Object.values(QUESTS).map(quest => ({
+      ...quest,
+      completed: completedQuests.includes(quest.id)
+    }));
+  } catch (error) {
+    console.error('Ошибка загружки миссий:', error);
+    return [];
+  }
+}
+
+/**
+ * Рендерит миссии
+ */
+export function renderQuests() {
+  loadQuests().then(quests => {
+    const container = document.getElementById('quests-container');
+    if (!container) return;
+    
+    container.innerHTML = quests.map(quest => `
+      <div class="quest-card ${quest.completed ? 'completed' : ''}">
+        <div class="quest-icon">✨</div>
+        <div class="quest-info">
+          <h4>${quest.title}</h4>
+          <p>${quest.desc}</p>
+          <div class="quest-reward">+${quest.reward} 💎</div>
+        </div>
+        ${quest.completed ? '<span class="quest-badge">\u2713 Выполнено</span>' : ''}
+      </div>
+    `).join('');
+  });
+}
+
+/**
+ * Проверяют выполнение миссий
+ */
+export async function checkQuestCompletion() {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    
+    const userData = (await firebase.firestore().collection('users').doc(user.uid).get()).data();
+    const completedQuests = userData?.completedQuests || [];
+    
+    for (const questId in QUESTS) {
+      if (completedQuests.includes(questId)) continue;
+      
+      const quest = QUESTS[questId];
+      const currentProgress = userData[quest.progress] || 0;
+      
+      if (currentProgress >= quest.target) {
+        // Миссия выполнена!
+        await firebase.firestore().collection('users').doc(user.uid).update({
+          completedQuests: [...completedQuests, questId],
+          currency: (userData.currency || 0) + quest.reward
+        });
+        
+        state.currentUser.currency = (userData.currency || 0) + quest.reward;
+        ui.showToast(`🌟 Миссия выполнена! +${quest.reward} 💎`, 'success');
+        updateUserInterface();
+        renderQuests();
+      }
+    }
+  } catch (error) {
+    console.error('Ошибка проверки миссий:', error);
+  }
+}
 
 /**
  * Инициализация приложения
@@ -60,6 +220,9 @@ async function initApp() {
     showApp();
     await loadInitialData();
     setupEventListeners();
+    
+    // Проверяем дневные бонусы
+    await checkDailyRewards();
     
     console.log('✅ Приложение загружено');
   } catch (error) {
@@ -203,7 +366,7 @@ function setupAuthListeners() {
     errorDiv.style.display = 'none';
     const submitBtn = form.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ Посхдите...';
+    submitBtn.textContent = '⏳ Подхдите...';
     
     try {
       if (state.isLoginMode) {
@@ -216,6 +379,9 @@ function setupAuthListeners() {
       showApp();
       setupEventListeners();
       updateAuthUI();
+      
+      // Проверяем дневные бонусы
+      await checkDailyRewards();
       
     } catch (error) {
       errorDiv.textContent = error.message;
