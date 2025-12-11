@@ -30,7 +30,7 @@ export const state = {
   isLoginMode: true  // Флаг: true = вход, false = регистрация
 };
 
-// === ТАБЛиЦА НАВГАЦИИ ===
+// === ТАБЛИЦА НАВГАЦИИ ===
 const TAB_TITLES = {
   collection: '📚 Моя коллекция',
   profile: '👤 Мой профиль',
@@ -159,7 +159,7 @@ export function closeModal(modalId) {
 }
 
 /**
- * Режим доступа
+ * Настройка режима доступа
  */
 function showApp() {
   document.getElementById('app').style.display = 'grid';
@@ -203,7 +203,7 @@ function setupAuthListeners() {
     errorDiv.style.display = 'none';
     const submitBtn = form.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ Почждите...';
+    submitBtn.textContent = '⏳ Посхдите...';
     
     try {
       if (state.isLoginMode) {
@@ -266,7 +266,7 @@ function setupEventListeners() {
   if (rarityFilter) rarityFilter.addEventListener('change', () => cards.renderCollection());
 }
 
-export { state, updateUserInterface };
+export { updateUserInterface };
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);
