@@ -4,7 +4,7 @@
  * 
  * Ответственность:
  * - Загружа все карты из masterCards
- * - Нендер сетки карт из коллекции пользователя
+ * - Нендер сетки карт из коллекции пользователя (или ВСЕ для админов)
  * - Расчет силы колоды и рейтинга
  * - Детали карты
  */
@@ -78,8 +78,11 @@ export async function updateCardCount(cardId, newCount) {
 }
 
 /**
- * Нендерит сетку карт ИЗ КОЛЛЕКЦИИ ПОЛЬЗОВАТЕЛЯ
- * (ПРАВО - только карты, которые есть у игрока)
+ * Нендерит сетку карт
+ * 
+ * Философия:
+ * - Обычные пользователи видят ТОЛЬКО свои карты
+ * - Админы видят ВСЕ созданные карты для тестирования
  */
 export function renderCollection() {
   const grid = document.getElementById('cards-grid');
@@ -88,24 +91,34 @@ export function renderCollection() {
   // Очистка сетки
   grid.innerHTML = '';
   
-  // Получаем иды карт из коллекции пользователя
-  const userCardIds = Object.keys(state.currentUser?.cards || {});
+  // ТО НОВОЕ: Привилегия для админов
+  let cardsToDisplay;
   
-  // Получаем объекты карт из masterCards
-  let userCards = userCardIds.map(cardId => getCard(cardId)).filter(card => card !== undefined);
-  
-  // Применяем фильтр редкости
-  if (rarityFilter) {
-    userCards = userCards.filter(card => card.rarity === rarityFilter);
+  if (state.isAdmin) {
+    // Админы видят ВСЕ карты для превью
+    cardsToDisplay = state.cards;
+  } else {
+    // Обычные пользователи видят только свои карты
+    const userCardIds = Object.keys(state.currentUser?.cards || {});
+    cardsToDisplay = userCardIds.map(cardId => getCard(cardId)).filter(card => card !== undefined);
   }
   
-  if (userCards.length === 0) {
-    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">🤷 Ни одной карты не найдено</div>';
+  // Применяем фильтр редкости
+  let filteredCards = cardsToDisplay;
+  if (rarityFilter) {
+    filteredCards = cardsToDisplay.filter(card => card.rarity === rarityFilter);
+  }
+  
+  if (filteredCards.length === 0) {
+    const message = state.isAdmin 
+      ? '📦 Не создано карт' 
+      : '🤷 Ни одной карты не найдено';
+    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">${message}</div>`;
     return;
   }
   
   // Нендер карт
-  userCards.forEach(card => {
+  filteredCards.forEach(card => {
     const count = getCardCount(card.id);
     const element = createCardElement(card, count);
     grid.appendChild(element);
@@ -147,7 +160,7 @@ function createCardElement(card, count) {
         <div class="card-stat" style="color: var(--harmony);">⚖️ ${card.power?.harmony || 0}</div>
       </div>
       <div class="card-count" style="border-color: ${borderColor}; color: ${borderColor};">
-        ${count} шт.
+        ${count > 0 ? `${count} шт.` : (state.isAdmin ? '🗒 Превью' : '0 шт.')}
       </div>
     </div>
   `;
@@ -199,7 +212,10 @@ function showCardDetail(card, count) {
   });
   
   // Количество в коллекции
-  document.getElementById('modal-card-count').textContent = `В коллекции: ${count} шт.`;
+  const countText = state.isAdmin && count === 0 
+    ? `🗒 создана админом` 
+    : `В коллекции: ${count} шт.`;
+  document.getElementById('modal-card-count').textContent = countText;
   
   // Открываем модаль
   openModal('card-detail-modal');
