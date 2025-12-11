@@ -23,15 +23,15 @@
   --profundity: #95E1D3;    /* 🧠 Глубина */
   --harmony: #FFD93D;       /* ⚖️ Гармония */
   
-  /* === РЕДКОСТИ === */
-  --rarity-common: #e0e0e0;
-  --rarity-uncommon: #4facf6;
-  --rarity-rare: #5d4cc0;
-  --rarity-mythical: #a832d0;
-  --rarity-legendary: #d946ef;
-  --rarity-ancient: #ff6b6b;
-  --rarity-exceedingly-rare: #ffaa00;
-  --rarity-immortal: #b89968;
+  /* === РЕДКОСТИ (ВЫРАЗИТЕЛЬНАЯ ВЕРСИЯ) === */
+  --rarity-common: #6b7280;
+  --rarity-uncommon: #3b82f6;
+  --rarity-rare: #8b5cf6;
+  --rarity-mythical: #d946ef;
+  --rarity-legendary: #ec4899;
+  --rarity-ancient: #f97316;
+  --rarity-exceedingly-rare: #eab308;
+  --rarity-immortal: #fbbf24;
   
   /* === ТИРЫ === */
   --tier-common: #e0e0e0;
@@ -266,6 +266,51 @@ body {
   transform: translateY(-8px);
   border-color: var(--wood-medium);
   box-shadow: var(--shadow-lg);
+}
+
+/* === ГРАДИЕНТНЫЕ БОРДЕРЫ ДЛЯ РЕДКИХ КАРТ === */
+@keyframes glow-immortal {
+  0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4), inset 0 0 20px rgba(251, 191, 36, 0.15); }
+  50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.6), inset 0 0 30px rgba(251, 191, 36, 0.25); }
+}
+
+@keyframes glow-exceedingly-rare {
+  0%, 100% { box-shadow: 0 0 18px rgba(234, 179, 8, 0.35), inset 0 0 18px rgba(234, 179, 8, 0.12); }
+  50% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.5), inset 0 0 25px rgba(234, 179, 8, 0.2); }
+}
+
+@keyframes glow-ancient {
+  0%, 100% { box-shadow: 0 0 16px rgba(249, 115, 22, 0.3), inset 0 0 16px rgba(249, 115, 22, 0.1); }
+  50% { box-shadow: 0 0 22px rgba(249, 115, 22, 0.45), inset 0 0 22px rgba(249, 115, 22, 0.15); }
+}
+
+@keyframes glow-legendary {
+  0%, 100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.25), inset 0 0 15px rgba(236, 72, 153, 0.08); }
+  50% { box-shadow: 0 0 20px rgba(236, 72, 153, 0.4), inset 0 0 20px rgba(236, 72, 153, 0.15); }
+}
+
+.card-item[data-rarity="immortal"] {
+  border: 2px solid;
+  border-image: linear-gradient(135deg, #fbbf24, #f59e0b, #fbbf24) 1;
+  animation: glow-immortal 2.5s ease-in-out infinite;
+}
+
+.card-item[data-rarity="exceedingly_rare"] {
+  border: 2px solid;
+  border-image: linear-gradient(135deg, #eab308, #facc15, #eab308) 1;
+  animation: glow-exceedingly-rare 2.5s ease-in-out infinite;
+}
+
+.card-item[data-rarity="ancient"] {
+  border: 2px solid;
+  border-image: linear-gradient(135deg, #f97316, #fb923c, #f97316) 1;
+  animation: glow-ancient 2.5s ease-in-out infinite;
+}
+
+.card-item[data-rarity="legendary"] {
+  border: 2px solid;
+  border-image: linear-gradient(135deg, #ec4899, #f472b6, #ec4899) 1;
+  animation: glow-legendary 2.5s ease-in-out infinite;
 }
 
 .card-image {
