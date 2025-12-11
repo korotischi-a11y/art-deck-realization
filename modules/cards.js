@@ -4,7 +4,7 @@
  * 
  * Ответственность:
  * - Загружа все карты из masterCards
- * - Нендер сетки карт
+ * - Нендер сетки карт из коллекции пользователя
  * - Расчет силы колоды и рейтинга
  * - Детали карты
  */
@@ -22,7 +22,7 @@ export async function loadCards() {
   try {
     const snapshot = await db.collection('masterCards')
       .orderBy('createdAt', 'desc')
-      .limit(100)
+      .limit(1000)
       .get();
     
     state.cards = snapshot.docs.map(doc => ({
@@ -78,7 +78,8 @@ export async function updateCardCount(cardId, newCount) {
 }
 
 /**
- * Нендерит сетку карт в коллекции
+ * Нендерит сетку карт ИЗ КОЛЛЕКЦИИ ПОЛЬЗОВАТЕЛЯ
+ * (ПРАВО - только карты, которые есть у игрока)
  */
 export function renderCollection() {
   const grid = document.getElementById('cards-grid');
@@ -87,19 +88,24 @@ export function renderCollection() {
   // Очистка сетки
   grid.innerHTML = '';
   
-  // Фильтрация
-  let filteredCards = state.cards;
+  // Получаем иды карт из коллекции пользователя
+  const userCardIds = Object.keys(state.currentUser?.cards || {});
+  
+  // Получаем объекты карт из masterCards
+  let userCards = userCardIds.map(cardId => getCard(cardId)).filter(card => card !== undefined);
+  
+  // Применяем фильтр редкости
   if (rarityFilter) {
-    filteredCards = state.cards.filter(card => card.rarity === rarityFilter);
+    userCards = userCards.filter(card => card.rarity === rarityFilter);
   }
   
-  if (filteredCards.length === 0) {
+  if (userCards.length === 0) {
     grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">🤷 Ни одной карты не найдено</div>';
     return;
   }
   
   // Нендер карт
-  filteredCards.forEach(card => {
+  userCards.forEach(card => {
     const count = getCardCount(card.id);
     const element = createCardElement(card, count);
     grid.appendChild(element);
