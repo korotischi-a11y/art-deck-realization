@@ -3,382 +3,239 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Art Deck - Коллекционирование цифровых карт искусства</title>
+  <title>Art Deck - Коллекционирование карт</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div id="app">
-    <!-- === БОКОВАЯ ПАНЕЛЬ === -->
     <aside class="sidebar">
       <button class="sidebar-btn active" data-tab="collection" title="Коллекция">🎨</button>
       <button class="sidebar-btn" data-tab="profile" title="Профиль">👤</button>
       <button class="sidebar-btn" data-tab="leaderboard" title="Рейтинг">🏆</button>
-      <button class="sidebar-btn" data-tab="packs" title="Магазин">💳</button>
-      <button class="sidebar-btn" data-tab="admin" title="Админ-панель" id="admin-btn">⚙️</button>
+      <button class="sidebar-btn" data-tab="packs" title="Паки">📋</button>
+      <button class="sidebar-btn" data-tab="admin" title="Админ" id="admin-btn">⚙</button>
     </aside>
 
-    <!-- === ГЛАВНОЕ СОДЕРЖИМОЕ === -->
     <div class="main-content">
-      <!-- ЗАГОЛОВОК -->
       <header class="header">
         <div class="header-title" id="page-title">Моя коллекция</div>
-        
         <div class="header-info">
-          <div class="coins-display">
-            <span>💰</span>
-            <span id="coins-display">0</span>
-          </div>
-          
+          <div class="coins-display"><span>💰</span> <span id="coins-display">0</span></div>
           <div class="user-info">
             <div class="user-name" id="user-name">-</div>
-            <div class="user-rank" id="user-rank">📍 Common</div>
+            <div class="user-rank" id="user-rank">📑 Common</div>
           </div>
-          
           <button class="logout-btn" id="logout-btn">Выход</button>
         </div>
       </header>
 
-      <!-- СОДЕРЖАНИЕ ВКЛАДОК -->
       <div class="content-area">
-        <!-- === ВКЛАДКА: КОЛЛЕКЦИЯ === -->
+        <!-- КОЛЛЕКЦИЯ -->
         <div class="tab-content active" id="collection-tab">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2>📚 Моя коллекция</h2>
-            <div style="display: flex; gap: 10px;">
-              <select id="rarity-filter" style="padding: 8px 12px; background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px;">
-                <option value="">Все редкости</option>
-                <option value="common">📍 Обычная</option>
-                <option value="uncommon">🎯 Необычная</option>
-                <option value="rare">🏆 Редкая</option>
-                <option value="mythical">💎 Мифическая</option>
-                <option value="legendary">⭐ Легендарная</option>
-                <option value="ancient">🔥 Древняя</option>
-                <option value="exceedingly_rare">✨ Исключительно редкая</option>
-                <option value="immortal">👑 Бессмертная</option>
-              </select>
+          <div style="display: grid; grid-template-columns: 1fr 250px; gap: 16px; height: calc(100vh - 120px);">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2>📚 Коллекция</h2>
+                <select id="rarity-filter" style="padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
+                  <option value="">Все</option>
+                  <option value="common">📑 Обычная</option>
+                  <option value="uncommon">🎯 Необычная</option>
+                  <option value="rare">🏆 Редкая</option>
+                  <option value="mythical">💎 Мифическая</option>
+                  <option value="legendary">⭐ Легендарная</option>
+                  <option value="ancient">🔥 Древняя</option>
+                  <option value="exceedingly_rare">✨ Исключительно редкая</option>
+                  <option value="immortal">⛔ Бессмертная</option>
+                </select>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                <div class="stat-card">
+                  <div class="stat-value" id="stat-total-cards">0</div>
+                  <div class="stat-label">Всего карт</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-value" id="stat-unique-cards">0</div>
+                  <div class="stat-label">Уникальных</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-value" id="stat-deck-rating">0</div>
+                  <div class="stat-label">Рейтинг</div>
+                </div>
+              </div>
+              <div id="cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; overflow-y: auto;"></div>
             </div>
-          </div>
-          
-          <div id="collection-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px;">
-            <div class="stat-card">
-              <div class="stat-value" id="stat-total-cards">0</div>
-              <div class="stat-label">Всего карт</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" id="stat-unique-cards">0</div>
-              <div class="stat-label">Уникальных</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" id="stat-deck-rating">0</div>
-              <div class="stat-label">Рейтинг колоды</div>
-            </div>
-          </div>
-          
-          <div class="cards-grid" id="cards-grid">
-            <!-- Карточки будут загружены JS -->
+            <!-- ПАНЕЛЬ КОЛОД -->
+            <div id="decks-panel" style="border: 1px solid var(--border); border-radius: 12px; background: var(--bg-secondary); overflow-y: auto; max-height: calc(100vh - 120px);"></div>
           </div>
         </div>
 
-        <!-- === ВКЛАДКА: ПРОФИЛЬ === -->
+        <!-- ПРОФОЛЬ -->
         <div class="tab-content" id="profile-tab">
           <h2>👤 Мой профиль</h2>
-          
           <div class="profile-header">
             <h3 id="profile-username" style="color: var(--text-accent); margin-bottom: 10px;">-</h3>
             <p id="profile-email" style="color: var(--text-secondary); margin-bottom: 16px;">-</p>
-            
             <div style="display: flex; gap: 20px; align-items: center;">
               <div>
                 <div style="font-size: 32px; font-weight: 700; color: var(--wood-light);">-</div>
-                <div style="font-size: 12px; color: var(--text-secondary);">Тир</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">Tier</div>
               </div>
               <div>
                 <div style="font-size: 24px; font-weight: 700; color: var(--wood-light);" id="profile-rating">0</div>
-                <div style="font-size: 12px; color: var(--text-secondary);">Рейтинг колоды</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">Rating</div>
               </div>
             </div>
           </div>
-          
-          <h3 style="margin: 24px 0 16px; color: var(--text-accent);">📊 Разложение рейтинга</h3>
-          <div id="rating-breakdown" style="display: grid; gap: 12px;">
-            <!-- Заполняется JS -->
-          </div>
-          
-          <h3 style="margin: 24px 0 16px; color: var(--text-accent);">🎯 Статистика</h3>
-          <div class="profile-stats-grid">
+          <h3 style="margin: 24px 0 16px;">Rating breakdown</h3>
+          <div id="rating-breakdown"></div>
+          <h3 style="margin: 24px 0 16px;">Stats</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
             <div class="stat-card">
               <div class="stat-value" id="profile-total-cards">0</div>
-              <div class="stat-label">Карт в коллекции</div>
+              <div class="stat-label">Cards</div>
             </div>
             <div class="stat-card">
               <div class="stat-value" id="profile-unique-cards">0</div>
-              <div class="stat-label">Уникальных карт</div>
+              <div class="stat-label">Unique</div>
             </div>
             <div class="stat-card">
               <div class="stat-value" id="profile-coins">0</div>
-              <div class="stat-label">Монет</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" id="profile-packs-opened">0</div>
-              <div class="stat-label">Паков открыто</div>
+              <div class="stat-label">Coins</div>
             </div>
           </div>
         </div>
 
-        <!-- === ВКЛАДКА: РЕЙТИНГ === -->
+        <!-- ЛИДЕРБОРД -->
         <div class="tab-content" id="leaderboard-tab">
-          <h2>🏆 Глобальный рейтинг</h2>
-          
-          <table class="leaderboard-table" id="leaderboard-table">
+          <h2>🏆 Leaderboard</h2>
+          <table style="width: 100%; border-collapse: collapse;" id="leaderboard-table">
             <thead>
-              <tr>
-                <th style="width: 40px;">Место</th>
-                <th>Игрок</th>
-                <th style="width: 120px;">Рейтинг</th>
-                <th style="width: 100px;">Тир</th>
+              <tr style="background: var(--bg-secondary);">
+                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border);">Place</th>
+                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border);">Player</th>
+                <th style="padding: 12px; text-align: right; border-bottom: 2px solid var(--border);">Rating</th>
               </tr>
             </thead>
-            <tbody id="leaderboard-body">
-              <!-- Заполняется JS -->
-            </tbody>
+            <tbody id="leaderboard-body"></tbody>
           </table>
         </div>
 
-        <!-- === ВКЛАДКА: МАГАЗИН === -->
+        <!-- ПАКИ -->
         <div class="tab-content" id="packs-tab">
-          <h2>💳 Магазин паков</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 24px;">Открывайте паки и собирайте редкие карты</p>
-          
-          <div class="cards-grid" id="packs-grid">
-            <!-- Паки будут загружены JS -->
-          </div>
+          <h2>📋 Packs</h2>
+          <div id="packs-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; overflow-y: auto;"></div>
         </div>
 
-        <!-- === ВКЛАДКА: АДМИН-ПАНЕЛЬ === -->
+        <!-- АДМИН -->
         <div class="tab-content" id="admin-tab">
-          <h2>⚙️ Админ-панель</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 24px;">Добавление новых карт в базу данных</p>
-          
-          <form id="admin-form" style="max-width: 600px;">
-            <div class="form-group">
-              <label class="form-label">Название произведения</label>
-              <input type="text" id="card-title" class="form-input" placeholder="е.г. Звёздная ночь" required>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">Художник</label>
-              <input type="text" id="card-artist" class="form-input" placeholder="е.г. Винсент Ван Гог" required>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">Год создания</label>
-              <input type="number" id="card-year" class="form-input" placeholder="е.г. 1889" min="1000" max="2100" required>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">Описание</label>
-              <textarea id="card-description" class="form-textarea" placeholder="Описание произведения" required></textarea>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">URL изображения</label>
-              <input type="url" id="card-image-url" class="form-input" placeholder="https://example.com/image.jpg" required>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">Редкость</label>
-              <select id="card-rarity" class="form-select" required>
-                <option value="">Выберите редкость</option>
-                <option value="common">📍 Обычная (Common)</option>
-                <option value="uncommon">🎯 Необычная (Uncommon)</option>
-                <option value="rare">🏆 Редкая (Rare)</option>
-                <option value="mythical">💎 Мифическая (Mythical)</option>
-                <option value="legendary">⭐ Легендарная (Legendary)</option>
-                <option value="ancient">🔥 Древняя (Ancient)</option>
-                <option value="exceedingly_rare">✨ Исключительно редкая (Exceedingly Rare)</option>
-                <option value="immortal">👑 Бессмертная (Immortal)</option>
-              </select>
-            </div>
-            
-            <div style="background-color: var(--bg-secondary); padding: 16px; border-radius: 12px; margin-bottom: 24px;">
-              <h4 style="margin-bottom: 16px; color: var(--text-accent);">🎯 Философские параметры (0-10)</h4>
-              
-              <div class="slider-group">
-                <label class="slider-label">💓 Резонанс</label>
-                <input type="range" id="card-resonance" min="0" max="10" value="5" class="power-slider">
-                <span class="slider-value">5</span>
+          <h2>⚙ Admin Panel</h2>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- ФОРМА НОВых КАРТ -->
+            <form id="admin-form" style="border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: var(--bg-secondary);">
+              <h3 style="margin-bottom: 16px;">➕ Add Card</h3>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <input type="text" id="card-title" placeholder="Title" class="form-control" required>
+                <input type="text" id="card-artist" placeholder="Artist" class="form-control" required>
+                <input type="number" id="card-year" placeholder="Year" class="form-control" min="1000" max="2100" required>
+                <textarea id="card-description" placeholder="Description" class="form-control" required></textarea>
+                <input type="url" id="card-image-url" placeholder="Image URL" class="form-control" required>
+                <select id="card-rarity" class="form-control" required>
+                  <option value="">Rarity</option>
+                  <option value="common">Common</option>
+                  <option value="uncommon">Uncommon</option>
+                  <option value="rare">Rare</option>
+                  <option value="mythical">Mythical</option>
+                  <option value="legendary">Legendary</option>
+                  <option value="ancient">Ancient</option>
+                  <option value="exceedingly_rare">Exceedingly Rare</option>
+                  <option value="immortal">Immortal</option>
+                </select>
+                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px;">
+                  <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 12px;">💓 Resonance</label>
+                  <input type="range" id="card-resonance" min="0" max="10" value="5" class="power-slider" style="width: 100%;">
+                  <span class="slider-value">5</span>
+                </div>
+                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px;">
+                  <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 12px;">🎯 Virtuosity</label>
+                  <input type="range" id="card-virtuosity" min="0" max="10" value="5" class="power-slider" style="width: 100%;">
+                  <span class="slider-value">5</span>
+                </div>
+                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px;">
+                  <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 12px;">🧠 Profundity</label>
+                  <input type="range" id="card-profundity" min="0" max="10" value="5" class="power-slider" style="width: 100%;">
+                  <span class="slider-value">5</span>
+                </div>
+                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px;">
+                  <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 12px;">⚖ Harmony</label>
+                  <input type="range" id="card-harmony" min="0" max="10" value="5" class="power-slider" style="width: 100%;">
+                  <span class="slider-value">5</span>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Add</button>
               </div>
-              
-              <div class="slider-group">
-                <label class="slider-label">🎯 Виртуозность</label>
-                <input type="range" id="card-virtuosity" min="0" max="10" value="5" class="power-slider">
-                <span class="slider-value">5</span>
-              </div>
-              
-              <div class="slider-group">
-                <label class="slider-label">🧠 Глубина</label>
-                <input type="range" id="card-profundity" min="0" max="10" value="5" class="power-slider">
-                <span class="slider-value">5</span>
-              </div>
-              
-              <div class="slider-group">
-                <label class="slider-label">⚖️ Гармония</label>
-                <input type="range" id="card-harmony" min="0" max="10" value="5" class="power-slider">
-                <span class="slider-value">5</span>
-              </div>
+            </form>
+            <!-- СПИСОК ВСЕХ КАРТ -->
+            <div style="border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: var(--bg-secondary); overflow-y: auto; max-height: 600px;">
+              <h3 style="margin-bottom: 12px;">📄 All Cards</h3>
+              <div id="admin-cards-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
             </div>
-            
-            <button type="submit" class="btn btn-primary btn-full">✨ Добавить карту</button>
-          </form>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- === СТРАНИЦА АУТЕНТИФИКАЦИИ === -->
+  <!-- АУТЕНТИФИКАЦИЯ -->
   <div id="auth-page" style="display: none; width: 100%; height: 100%; background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary)); display: flex; align-items: center; justify-content: center;">
-    <div style="background-color: var(--bg-secondary); padding: 40px; border-radius: 16px; box-shadow: var(--shadow-xl); max-width: 400px; width: 90%; border: 1px solid var(--border-light);">
+    <div style="background: var(--bg-secondary); padding: 40px; border-radius: 16px; border: 1px solid var(--border); max-width: 400px; width: 90%;">
       <h1 style="text-align: center; margin-bottom: 10px; color: var(--text-accent);">🎨 Art Deck</h1>
-      <p style="text-align: center; color: var(--text-secondary); margin-bottom: 30px;">Коллекционируйте шедевры искусства</p>
-      
+      <p style="text-align: center; color: var(--text-secondary); margin-bottom: 30px;">Collect Digital Art</p>
       <form id="auth-form">
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email" id="auth-email" class="form-input" placeholder="your@email.com" required>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; color: var(--text-secondary); font-size: 12px; margin-bottom: 4px;">Email</label>
+          <input type="email" id="auth-email" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px; box-sizing: border-box;" required>
         </div>
-        
-        <div class="form-group">
-          <label class="form-label">Пароль</label>
-          <div style="position: relative;">
-            <input type="password" id="auth-password" class="form-input" placeholder="Минимум 6 символов" required>
-            <button type="button" id="toggle-password-btn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 18px; padding: 0;"ят title="Показать/скрыть">🙈</button>
-          </div>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; color: var(--text-secondary); font-size: 12px; margin-bottom: 4px;">Password</label>
+          <input type="password" id="auth-password" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px; box-sizing: border-box;" required>
         </div>
-        
-        <button type="submit" class="btn btn-primary btn-full" id="auth-btn" style="margin-bottom: 12px;">Вход</button>
-        <button type="button" class="btn btn-secondary btn-full" id="toggle-auth">Создать аккаунт</button>
+        <button type="submit" class="btn btn-primary" id="auth-btn" style="width: 100%; margin-bottom: 8px;">Login</button>
+        <button type="button" class="btn btn-secondary" id="toggle-auth" style="width: 100%;">Register</button>
       </form>
-      
-      <div id="auth-error" style="margin-top: 16px; padding: 12px; background-color: rgba(255, 107, 107, 0.1); border: 1px solid var(--resonance); border-radius: 8px; color: var(--resonance); display: none; font-size: 12px;"></div>
+      <div id="auth-error" style="margin-top: 16px; padding: 12px; background: rgba(255,107,107,0.1); border: 1px solid red; border-radius: 8px; color: red; display: none; font-size: 12px;"></div>
     </div>
   </div>
 
-  <!-- === МОДАЛЬНОЕ ОКНО: ДЕТАЛЬ КАРТЫ === -->
+  <!-- МОДАЛи -->
   <div id="card-detail-modal" class="modal">
-    <div class="modal-content" style="max-width: 500px;">
-      <div class="modal-header">
-        <h2 class="modal-title" id="modal-card-title">-</h2>
-        <button type="button" class="modal-close">✕</button>
+    <div class="modal-content" style="max-width: 400px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2 id="modal-card-title">-</h2>
+        <button class="modal-close">✕</button>
       </div>
-      
-      <div style="display: grid; gap: 16px;">
-        <div style="background: linear-gradient(135deg, var(--bg-tertiary), var(--wood-darker)); aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-          <img id="modal-card-image" src="" alt="" style="width: 100%; height: 100%; object-fit: cover;">
-        </div>
-        
-        <div>
-          <h3 id="modal-card-artist" style="color: var(--text-secondary); margin-bottom: 4px;">-</h3>
-          <p id="modal-card-year" style="color: var(--text-secondary); font-size: 12px;">-</p>
-          <div id="modal-card-rarity" class="card-rarity" style="margin-top: 8px;"></div>
-        </div>
-        
-        <div>
-          <p id="modal-card-description" style="color: var(--text-primary); line-height: 1.6;">-</p>
-        </div>
-        
-        <div style="background-color: var(--bg-tertiary); padding: 16px; border-radius: 12px;">
-          <h4 style="color: var(--text-accent); margin-bottom: 12px; font-size: 14px;">🎯 Философские параметры</h4>
-          
-          <div style="display: grid; gap: 12px;">
-            <div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                <span style="color: var(--text-secondary); font-size: 12px;">💓 Резонанс</span>
-                <span id="modal-resonance" style="color: var(--resonance); font-weight: 600;">0/10</span>
-              </div>
-              <div style="height: 8px; background-color: var(--bg-secondary); border-radius: 4px; overflow: hidden;">
-                <div id="modal-resonance-bar" style="height: 100%; background-color: var(--resonance); width: 0%;"></div>
-              </div>
-            </div>
-            
-            <div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                <span style="color: var(--text-secondary); font-size: 12px;">🎯 Виртуозность</span>
-                <span id="modal-virtuosity" style="color: var(--virtuosity); font-weight: 600;">0/10</span>
-              </div>
-              <div style="height: 8px; background-color: var(--bg-secondary); border-radius: 4px; overflow: hidden;">
-                <div id="modal-virtuosity-bar" style="height: 100%; background-color: var(--virtuosity); width: 0%;"></div>
-              </div>
-            </div>
-            
-            <div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                <span style="color: var(--text-secondary); font-size: 12px;">🧠 Глубина</span>
-                <span id="modal-profundity" style="color: var(--profundity); font-weight: 600;">0/10</span>
-              </div>
-              <div style="height: 8px; background-color: var(--bg-secondary); border-radius: 4px; overflow: hidden;">
-                <div id="modal-profundity-bar" style="height: 100%; background-color: var(--profundity); width: 0%;"></div>
-              </div>
-            </div>
-            
-            <div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                <span style="color: var(--text-secondary); font-size: 12px;">⚖️ Гармония</span>
-                <span id="modal-harmony" style="color: var(--harmony); font-weight: 600;">0/10</span>
-              </div>
-              <div style="height: 8px; background-color: var(--bg-secondary); border-radius: 4px; overflow: hidden;">
-                <div id="modal-harmony-bar" style="height: 100%; background-color: var(--harmony); width: 0%;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div style="padding-top: 16px; border-top: 1px solid var(--border-color);">
-          <p id="modal-card-count" style="color: var(--text-secondary); font-size: 12px; text-align: center;">-</p>
-        </div>
+      <div style="aspect-ratio: 1; background: var(--bg-tertiary); border-radius: 12px; overflow: hidden; margin-bottom: 12px;">
+        <img id="modal-card-image" src="" style="width: 100%; height: 100%; object-fit: cover;">
       </div>
+      <div id="modal-card-artist" style="color: var(--text-secondary); margin-bottom: 4px;">-</div>
+      <div id="modal-card-year" style="color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">-</div>
+      <div id="modal-card-rarity" style="display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; margin-bottom: 12px;">-</div>
+      <div id="modal-card-description" style="color: var(--text); line-height: 1.5; margin-bottom: 12px; font-size: 14px;">-</div>
+      <button id="add-to-deck-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;">Add to Deck</button>
+      <div id="modal-card-count" style="color: var(--text-secondary); font-size: 12px; text-align: center;">-</div>
     </div>
   </div>
 
-  <!-- === МОДАЛЬНОЕ ОКНО: ОТКРЫТИЕ ПАКА === -->
   <div id="pack-opening-modal" class="modal">
     <div class="modal-content" style="text-align: center; max-width: 400px;">
-      <h2 class="modal-title" style="margin-bottom: 20px;">🎁 Открытие пака</h2>
-      
-      <div id="pack-animation-container" style="margin: 30px 0; min-height: 200px;">
-        <!-- Будет заполнено при открытии пака -->
-      </div>
-      
-      <button type="button" class="btn btn-primary btn-full" id="pack-confirm-btn" style="display: none;">Готово</button>
+      <h2>🎁 Pack Opening</h2>
+      <div id="pack-animation-container" style="margin: 20px 0; min-height: 150px;"></div>
+      <button type="button" class="btn btn-primary" id="pack-confirm-btn" style="width: 100%; display: none;">Done</button>
     </div>
   </div>
 
-  <!-- === КОНТЕЙНЕР TOASTОВ === -->
-  <div class="toast-container" id="toast-container"></div>
-
-  <!-- === FIREBASE SDK (COMPAT VERSION) === -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-  <!-- === КОНФИГ И МОДУЛИ === -->
   <script type="module" src="config.js"></script>
   <script type="module" src="app.js"></script>
-  
-  <!-- === ОБРАБОТКА КНОПки "Показать/скрыть" пароль === -->
-  <script>
-    document.getElementById('toggle-password-btn').addEventListener('click', function(e) {
-      e.preventDefault();
-      const input = document.getElementById('auth-password');
-      const btn = this;
-      
-      if (input.type === 'password') {
-        input.type = 'text';
-        btn.textContent = '🙉';
-      } else {
-        input.type = 'password';
-        btn.textContent = '🙈';
-      }
-    });
-  </script>
 </body>
 </html>
