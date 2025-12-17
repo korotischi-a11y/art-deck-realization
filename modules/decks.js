@@ -1,5 +1,9 @@
 /**
  * modules/decks.js - система колод
+ * 
+ * НОВОЕ:
+ * - Панель колод теперь показывает рейтинг активной колоды
+ * - Карты отображаются выбранной колоды
  */
 
 import { state, openModal, closeModal } from '../app.js';
@@ -82,7 +86,7 @@ export async function selectDeck(deckId) {
       decks: currentUser.decks, activeDeckId: deckId
     });
     renderDecks();
-    cards.renderCollection();
+    cards.renderCollection();  // Перерисовываем карты
     ui.showSuccess(`Выбрана «${currentUser.decks[deckId].name}»`);
   } catch (error) {
     console.error('Ошибка:', error);
@@ -130,7 +134,7 @@ export async function cloneDeck(deckId) {
   }
 }
 
-// Отредактировать
+// Отредактить
 export async function editDeck(deckId, name, desc, color) {
   const { currentUser } = state;
   if (!currentUser || !currentUser.decks[deckId]) return;
@@ -190,16 +194,37 @@ export async function removeCardFromDeck(deckId, cardId) {
   }
 }
 
-// Нендер панели колод
+/**
+ * Нендер панели колод с рейтингом активной
+ */
 export function renderDecks() {
   const { currentUser } = state;
   const panel = document.getElementById('decks-panel');
   if (!panel || !currentUser) return;
   panel.innerHTML = '';
+  
   const h = document.createElement('div');
-  h.style.cssText = 'padding: 12px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 12px;';
+  h.style.cssText = 'padding: 12px; border-bottom: 1px solid var(--border-color); font-weight: 600; font-size: 12px;';
   h.textContent = `🎲 Колоды (${Object.keys(currentUser.decks).length}/${MAX_DECKS})`;
   panel.appendChild(h);
+  
+  // Показываем рейтинг активной колоды
+  if (currentUser.activeDeckId) {
+    const activeDeck = currentUser.decks[currentUser.activeDeckId];
+    if (activeDeck) {
+      const ratingDisplay = document.createElement('div');
+      ratingDisplay.style.cssText = 'padding: 8px 12px; background: var(--bg-tertiary); margin-bottom: 8px; border-radius: 8px; font-size: 12px;';
+      
+      // Не берем из state.cards.calculateDeckRating, где рейтинг читается истинный
+      const rating = cards.calculateDeckRating();
+      ratingDisplay.innerHTML = `
+        <div style="color: var(--text-secondary); margin-bottom: 4px;">🏆 Рейтинг</div>
+        <div style="font-size: 18px; font-weight: 700; color: var(--wood-light);">${Math.round(rating)}</div>
+      `;
+      panel.appendChild(ratingDisplay);
+    }
+  }
+  
   const btn = document.createElement('button');
   btn.className = 'btn btn-primary';
   btn.textContent = '➕ Новая';
@@ -207,6 +232,7 @@ export function renderDecks() {
   btn.style.width = 'calc(100% - 16px)';
   btn.addEventListener('click', () => showCreateDeckModal());
   panel.appendChild(btn);
+  
   Object.values(currentUser.decks).forEach(deck => {
     panel.appendChild(createDeckItemElement(deck));
   });
