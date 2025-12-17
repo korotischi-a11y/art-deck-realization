@@ -55,11 +55,11 @@ async function initApp() {
 async function loadInitialData() {
   try {
     await cardMod.loadCards();
-    await user.loadUserData();
     await decks.loadDecks();
     await packs.loadPacks();
     await leaderboard.loadLeaderboard();
     updateUserInterface();
+    user.renderProfile();
     switchTab('collection');
   } catch (e) { console.error('Load error:', e); }
 }
