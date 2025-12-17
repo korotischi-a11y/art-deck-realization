@@ -78,7 +78,7 @@ export function renderCollection() {
   }
 
   cards.forEach(card => {
-    // Взэм кол-во МиНИМУМ из ОБШЕЙ коллекции
+    // Взэм кол-во МИНИМУМ из ОБЩЕЙ коллекции
     const totalCount = state.currentUser?.cards[card.id] || 0;
     const el = createCardElement(card, totalCount);
     grid.appendChild(el);
@@ -282,36 +282,62 @@ function renderDeckSelector(cardId) {
 }
 
 /**
- * Рендерит кнопку удаления
+ * Рендерит кнопки удаления
  */
 function renderRemoveFromDeckButton(cardId) {
   let removeBtn = document.getElementById('remove-from-deck-btn');
+  let deleteCompletelyBtn = document.getElementById('delete-completely-btn');
   if (removeBtn) removeBtn.remove();
-  
-  if (!decks.activeDeckId) return;
+  if (deleteCompletelyBtn) deleteCompletelyBtn.remove();
   
   const modal = document.querySelector('.modal-content');
   const addBtn = document.getElementById('add-to-deck-btn');
   if (!modal || !addBtn) return;
   
-  removeBtn = document.createElement('button');
-  removeBtn.id = 'remove-from-deck-btn';
-  removeBtn.className = 'btn btn-danger';
-  removeBtn.style.cssText = 'width:100%; margin-top:8px;';
-  removeBtn.textContent = '🗑 Удалить из колоды';
-  removeBtn.onclick = async () => {
-    const success = await decks.removeCardFromActiveDeck(cardId);
-    if (success) {
-      ui.showToast('✅ Удалено', 'success');
-      closeModal('card-detail-modal');
-      decks.renderDecks();
-      renderCollection();
-    } else {
-      ui.showError('Ошибка');
+  // Кнопка УДАЛЕНИЯ ИЗ КОЛОДЫ (только в колоде, но не в коллекции)
+  if (decks.activeDeckId) {
+    removeBtn = document.createElement('button');
+    removeBtn.id = 'remove-from-deck-btn';
+    removeBtn.className = 'btn btn-danger';
+    removeBtn.style.cssText = 'width:100%; margin-top:8px;';
+    removeBtn.textContent = '🗑 Удалить из колоды';
+    removeBtn.onclick = async () => {
+      const success = await decks.removeCardFromActiveDeck(cardId);
+      if (success) {
+        ui.showToast('✅ Удалено из колоды', 'success');
+        closeModal('card-detail-modal');
+        decks.renderDecks();
+        renderCollection();
+      } else {
+        ui.showError('Ошибка');
+      }
+    };
+    
+    modal.insertBefore(removeBtn, addBtn.nextSibling);
+  }
+  
+  // Кнопка ПОЛНОГО УДАЛЕНИЯ (из ВСЕХ колод и коллекции)
+  deleteCompletelyBtn = document.createElement('button');
+  deleteCompletelyBtn.id = 'delete-completely-btn';
+  deleteCompletelyBtn.className = 'btn';
+  deleteCompletelyBtn.style.cssText = 'width:100%; margin-top:8px; background:#666; color:white; border:none; border-radius:6px; cursor:pointer;';
+  deleteCompletelyBtn.textContent = '⚠ НУКЛеарная опция: Удалить навсегда';
+  deleteCompletelyBtn.onclick = async () => {
+    if (confirm('⚠ Это удалит карту ГОДЕЙТЕ ИЗ ВСЕХ колод и коллекции!')) {
+      const success = await decks.deleteCardFromCollection(cardId);
+      if (success) {
+        ui.showToast('✅ Карта полностью удалена', 'success');
+        closeModal('card-detail-modal');
+        await decks.loadDecks();
+        decks.renderDecks();
+        renderCollection();
+      } else {
+        ui.showError('Ошибка');
+      }
     }
   };
   
-  modal.insertBefore(removeBtn, addBtn.nextSibling);
+  modal.insertBefore(deleteCompletelyBtn, addBtn.nextSibling);
 }
 
 /**
