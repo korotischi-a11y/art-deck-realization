@@ -39,6 +39,19 @@ function getCard(cardId) {
 }
 
 /**
+ * Глобальная переменная: текущая выбранная колода
+ */
+let selectedDeckId = null;
+
+export function getSelectedDeckId() {
+  return selectedDeckId;
+}
+
+export function setSelectedDeckId(deckId) {
+  selectedDeckId = deckId;
+}
+
+/**
  * Рендерит коллекцию карт
  */
 export function renderCollection() {
@@ -47,8 +60,19 @@ export function renderCollection() {
   
   grid.innerHTML = '';
 
-  const userCardIds = Object.keys(state.currentUser?.cards || {});
-  let cards = userCardIds.map(id => getCard(id)).filter(c => c);
+  // Если выбрана колода - показываем карты ГОЛЬКО из неё
+  let cards = [];
+  if (selectedDeckId) {
+    const deck = state.currentUser?.decks?.[selectedDeckId];
+    if (deck) {
+      const cardIds = Object.keys(deck.cards || {});
+      cards = cardIds.map(id => getCard(id)).filter(c => c);
+    }
+  } else {
+    // Если нет выбора - вся коллекция
+    const userCardIds = Object.keys(state.currentUser?.cards || {});
+    cards = userCardIds.map(id => getCard(id)).filter(c => c);
+  }
   
   if (filter) cards = cards.filter(c => c.rarity === filter);
 
@@ -58,13 +82,18 @@ export function renderCollection() {
   }
 
   cards.forEach(card => {
-    const count = state.currentUser?.cards[card.id] || 0;
+    let count;
+    if (selectedDeckId) {
+      const deck = state.currentUser?.decks?.[selectedDeckId];
+      count = deck?.cards?.[card.id] || 0;
+    } else {
+      count = state.currentUser?.cards?.[card.id] || 0;
+    }
     const el = createCardElement(card, count);
     grid.appendChild(el);
   });
 
   updateStats();
-  // 🔥 ВАЖНО: переинициализируем tilt ПОСЛЕ рендера
   setTimeout(() => initTiltEffect(), 30);
 }
 
@@ -102,14 +131,13 @@ function createCardElement(card, count) {
 }
 
 /**
- * Инициализирует 3D Tilt эффект (вызывается и при фильтре!)
+ * Инициализирует 3D Tilt эффект
  */
 function initTiltEffect() {
   const cards = document.querySelectorAll('[data-tilt="true"]');
   console.log(`🎪 Init tilt for ${cards.length} cards`);
   
   cards.forEach(card => {
-    // Удаляем старые слушатели (чтобы не было дублей)
     const newCard = card.cloneNode(true);
     card.replaceWith(newCard);
     
@@ -158,7 +186,6 @@ function showCardDetail(card, count) {
   rarityDiv.style.borderColor = rarity.color;
   rarityDiv.style.color = rarity.color;
   
-  // Таблица параметров 2x2
   const paramsTable = document.getElementById('modal-params-table');
   paramsTable.innerHTML = '';
   
@@ -185,14 +212,13 @@ function showCardDetail(card, count) {
   document.getElementById('modal-card-description').textContent = card.description;
   document.getElementById('modal-card-count').textContent = `In collection: ${count}`;
   
-  // Dropdown для выбора колоды
   renderDeckSelector(card.id);
   
   openModal('card-detail-modal');
 }
 
 /**
- * Рендерит селектор колод в модали
+ * Рендерит селектор колод
  */
 function renderDeckSelector(cardId) {
   let container = document.getElementById('deck-selector-container');
@@ -220,7 +246,6 @@ function renderDeckSelector(cardId) {
     </div>
   `;
   
-  // Обнови обработчик кнопки
   const addBtn = document.getElementById('add-to-deck-btn');
   addBtn.onclick = async () => {
     const deckId = document.getElementById('deck-choice')?.value;
@@ -235,6 +260,7 @@ function renderDeckSelector(cardId) {
       closeModal('card-detail-modal');
       await decks.loadDecks();
       decks.renderDecks();
+      renderCollection();
     } else {
       ui.showError('Error adding card');
     }
@@ -278,7 +304,7 @@ function updateStats() {
 }
 
 /**
- * Рассчитывает максимальный рейтинг ИЗ ВСЕХ колод
+ * Рассчитывает максимальный рейтинг
  */
 function calculateMaxRating() {
   const decksObj = state.currentUser?.decks || {};
@@ -290,5 +316,4 @@ function calculateMaxRating() {
   return Math.max(...ratings, 0);
 }
 
-// Экспортируем для app.js
 export { initTiltEffect };
