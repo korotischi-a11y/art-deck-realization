@@ -273,7 +273,7 @@ body {
   font-weight: 700;
 }
 
-/* === СЕТКА КАРТ TAROT (1.72:1) === */
+/* === СЕТКА КАРТ === */
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -287,76 +287,83 @@ body {
   border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
-  transition: all var(--transition-normal);
   display: flex;
   flex-direction: column;
-  perspective: 1000px;
   position: relative;
   aspect-ratio: 155 / 268;
+  box-shadow: var(--shadow-sm);
+  transform-style: preserve-3d;
+  transition: transform 0.12s linear, box-shadow 0.12s linear, border-color 0.12s linear;
+}
+
+/* Для родительской сетки включаем perspective */
+#cards-grid {
+  perspective: 900px;
 }
 
 .card-item[data-tilt] {
-  transform-style: preserve-3d;
-  transition: transform 0.1s linear;
+  will-change: transform;
 }
 
-.card-item[data-tilt].tilt-active::before {
+.card-item::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255, 255, 255, 0.3), transparent 50%);
+  inset: 0;
+  background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 30%), rgba(255,255,255,0.18), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
 
-.card-item:hover:not([data-tilt]) {
-  transform: translateY(-4px);
-  border-color: var(--wood-medium);
+.card-item.tilt-active::before {
+  opacity: 1;
+}
+
+.card-item:hover {
   box-shadow: var(--shadow-md);
+  border-color: var(--wood-medium);
 }
 
-/* === РЕДКИЕ КАРТЫ СВЕтЯтся === */
+/* === РЕДКОСТИ / GLOW === */
 @keyframes glow-immortal {
   0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
-  50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.6); }
+  50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.7); }
 }
 
 @keyframes glow-exceedingly-rare {
   0%, 100% { box-shadow: 0 0 18px rgba(234, 179, 8, 0.35); }
-  50% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.5); }
+  50% { box-shadow: 0 0 26px rgba(234, 179, 8, 0.6); }
 }
 
 @keyframes glow-ancient {
   0%, 100% { box-shadow: 0 0 16px rgba(249, 115, 22, 0.3); }
-  50% { box-shadow: 0 0 22px rgba(249, 115, 22, 0.45); }
+  50% { box-shadow: 0 0 24px rgba(249, 115, 22, 0.55); }
 }
 
 @keyframes glow-legendary {
   0%, 100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.25); }
-  50% { box-shadow: 0 0 20px rgba(236, 72, 153, 0.4); }
+  50% { box-shadow: 0 0 22px rgba(236, 72, 153, 0.5); }
 }
 
 .card-item[data-rarity="immortal"] {
   border: 2px solid #fbbf24;
-  animation: glow-immortal 2.5s ease-in-out infinite;
+  animation: glow-immortal 2.4s ease-in-out infinite;
 }
 
 .card-item[data-rarity="exceedingly_rare"] {
   border: 2px solid #eab308;
-  animation: glow-exceedingly-rare 2.5s ease-in-out infinite;
+  animation: glow-exceedingly-rare 2.4s ease-in-out infinite;
 }
 
 .card-item[data-rarity="ancient"] {
   border: 2px solid #f97316;
-  animation: glow-ancient 2.5s ease-in-out infinite;
+  animation: glow-ancient 2.4s ease-in-out infinite;
 }
 
 .card-item[data-rarity="legendary"] {
   border: 2px solid #ec4899;
-  animation: glow-legendary 2.5s ease-in-out infinite;
+  animation: glow-legendary 2.4s ease-in-out infinite;
 }
 
 .card-image {
@@ -371,6 +378,7 @@ body {
   overflow: hidden;
   position: relative;
   cursor: pointer;
+  transform: translateZ(20px);
 }
 
 .card-image img {
@@ -391,6 +399,7 @@ body {
   gap: var(--spacing-xs);
   flex: 0.6;
   overflow: hidden;
+  transform: translateZ(10px);
 }
 
 .card-title {
@@ -645,16 +654,27 @@ body {
 
 .form-input:focus,
 .form-select:focus,
-.form-textarea:focus {
+.form-textarea:focus,
+#deck-choice:focus {
   outline: none;
   border-color: var(--wood-light);
   background-color: var(--bg-primary);
-  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.18);
 }
 
 .form-textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+#deck-choice {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #aaa 50%),
+                    linear-gradient(135deg, #aaa 50%, transparent 50%);
+  background-position: calc(100% - 16px) calc(50% - 3px),
+                       calc(100% - 11px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
 }
 
 /* === КНОПКИ === */
@@ -786,7 +806,6 @@ body {
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
 /* === ТОСТ === */
