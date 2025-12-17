@@ -33,31 +33,58 @@ async function initDefaultPacks() {
   try {
     const defaultPacks = [
       { 
+        name: 'Начало', 
+        price: 25, 
+        cardCount: 2, 
+        emoji: '🎲', 
+        color: '#3b82f6',
+        borderColor: '#1e40af',
+        rarityWeights: { common: 10 } 
+      },
+      { 
         name: 'Стартер', 
         price: 50, 
         cardCount: 3, 
-        emoji: '🎲', 
-        color: '#3b82f6',
-        borderColor: '#2563eb',
-        rarityWeights: { common: 5, uncommon: 2 } 
+        emoji: '⭐', 
+        color: '#06b6d4',
+        borderColor: '#0369a1',
+        rarityWeights: { common: 7, uncommon: 3 } 
       },
       { 
         name: 'Стандарт', 
         price: 100, 
         cardCount: 5, 
-        emoji: '🎳', 
+        emoji: '🏆', 
         color: '#f59e0b',
-        borderColor: '#d97706',
-        rarityWeights: { uncommon: 4, rare: 2 } 
+        borderColor: '#b45309',
+        rarityWeights: { uncommon: 5, rare: 2 } 
       },
       { 
         name: 'Премиум', 
         price: 200, 
         cardCount: 7, 
-        emoji: '🎴', 
+        emoji: '💎', 
         color: '#a855f7',
-        borderColor: '#9333ea',
-        rarityWeights: { rare: 3, mythical: 2, legendary: 1 } 
+        borderColor: '#6d28d9',
+        rarityWeights: { rare: 4, mythical: 2, legendary: 1 } 
+      },
+      { 
+        name: 'Легендарный', 
+        price: 350, 
+        cardCount: 10, 
+        emoji: '🌟', 
+        color: '#ec4899',
+        borderColor: '#831843',
+        rarityWeights: { rare: 3, mythical: 3, legendary: 2, ancient: 1 } 
+      },
+      { 
+        name: 'Бессмертный', 
+        price: 500, 
+        cardCount: 12, 
+        emoji: '👑', 
+        color: '#ef4444',
+        borderColor: '#7f1d1d',
+        rarityWeights: { mythical: 4, legendary: 3, ancient: 2, exceedingly_rare: 1 } 
       }
     ];
     
@@ -80,42 +107,59 @@ export function renderShop() {
   list.innerHTML = '';
   
   if (!state.packs.length) {
-    list.innerHTML = '<div style="color:var(--text-secondary);">No packs</div>';
+    list.innerHTML = '<div style="color:var(--text-secondary);">Нет паков</div>';
     return;
   }
   
   // БЕСПЛАТНЫЙ ПАК В НАЧАЛЕ
   const dailyPack = document.createElement('div');
   dailyPack.style.cssText = `
-    min-width: 200px;
+    min-width: 220px;
     background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
-    border: 2px solid #10b981;
-    border-radius: 12px;
-    padding: 16px;
+    border: 3px solid #6ee7b7;
+    border-radius: 16px;
+    padding: 20px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     position: relative;
     overflow: hidden;
-  `;
-  dailyPack.innerHTML = `
-    <div style="position:absolute; top:0; right:0; background:#fff3cd; color:#856404; padding:4px 8px; border-radius:0 12px 0 8px; font-size:10px; font-weight:700;">DAILY FREE</div>
-    <div style="font-size:32px; text-align:center; margin-top:8px;">🎁</div>
-    <div style="font-weight:600; font-size:16px; color:#fff; text-align:center;">Daily Free Pack</div>
-    <div style="font-size:12px; color:rgba(255,255,255,0.9); text-align:center;">3 cards - Free!</div>
-    <div style="margin-top:auto; text-align:center; font-size:14px; color:#fff; font-weight:600;">Open Now</div>
-    <button class="btn" style="width:100%; margin-top:8px; background:#fff; color:#047857; border:none; cursor:pointer; font-weight:600;">GET FREE</button>
+    box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3);
+    flex-shrink: 0;
   `;
   
+  // Анимация фона
+  const gradientBg = document.createElement('div');
+  gradientBg.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.2), transparent);
+    pointer-events: none;
+  `;
+  
+  dailyPack.innerHTML = `
+    <div style="position:absolute; top:0; right:0; background:#fbbf24; color:#7c2d12; padding:6px 12px; border-radius:0 16px 0 12px; font-size:11px; font-weight:700; z-index:10;">БЕСПЛАТНО</div>
+    <div style="font-size:48px; text-align:center; margin-top:8px; position:relative; z-index:5;">🎁</div>
+    <div style="font-weight:700; font-size:18px; color:#fff; text-align:center; position:relative; z-index:5;">Ежедневный Пак</div>
+    <div style="font-size:13px; color:rgba(255,255,255,0.95); text-align:center; position:relative; z-index:5;">3 карты | Каждый день</div>
+    <div style="margin-top:auto; text-align:center; font-size:16px; color:#fff; font-weight:700; position:relative; z-index:5;">✨ ОТКРЫТЬ</div>
+    <button class="btn" style="width:100%; margin-top:12px; background:#fff; color:#047857; border:none; cursor:pointer; font-weight:700; font-size:14px; padding:10px; border-radius:10px; transition:all 0.3s; position:relative; z-index:5;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">ПОЛУЧИТЬ</button>
+  `;
+  
+  dailyPack.appendChild(gradientBg);
+  
   dailyPack.addEventListener('mouseenter', () => {
-    dailyPack.style.transform = 'translateY(-8px) scale(1.02)';
-    dailyPack.style.boxShadow = '0 20px 25px -5px rgba(16, 185, 129, 0.4)';
+    dailyPack.style.transform = 'translateY(-12px) scale(1.03)';
+    dailyPack.style.boxShadow = '0 25px 35px -5px rgba(16, 185, 129, 0.5)';
   });
   dailyPack.addEventListener('mouseleave', () => {
     dailyPack.style.transform = 'translateY(0) scale(1)';
-    dailyPack.style.boxShadow = 'none';
+    dailyPack.style.boxShadow = '0 10px 25px -5px rgba(16, 185, 129, 0.3)';
   });
   
   dailyPack.querySelector('button').addEventListener('click', async (e) => {
@@ -125,40 +169,59 @@ export function renderShop() {
   
   list.appendChild(dailyPack);
   
-  // ОБЫчные ПАКЫ с КАЖДЫМ своим цветом
-  state.packs.forEach(pack => {
+  // ОБЫчные ПАКЫ с КАЖДЫМ своим цветом И УЛУЧШЕНЫМ СТИЛЕМ
+  state.packs.forEach((pack, idx) => {
     const packColor = pack.color || '#6366f1';
     const packBorderColor = pack.borderColor || packColor;
     const div = document.createElement('div');
     div.style.cssText = `
-      min-width: 200px;
-      background: linear-gradient(135deg, ${packColor}22 0%, ${packColor}11 100%);
-      border: 2px solid ${packBorderColor};
-      border-radius: 12px;
-      padding: 16px;
+      min-width: 220px;
+      background: linear-gradient(135deg, ${packColor}20 0%, ${packColor}08 100%);
+      border: 3px solid ${packBorderColor};
+      border-radius: 16px;
+      padding: 20px;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.3s ease;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1);
+      flex-shrink: 0;
+      background-clip: padding-box;
     `;
-    div.innerHTML = `
-      <div style="font-size:24px; text-align:center;">${pack.emoji || '📦'}</div>
-      <div style="font-weight:600; font-size:16px; color:${packColor}; text-align:center;">${pack.name}</div>
-      <div style="font-size:12px; color:var(--text-secondary); text-align:center;">${pack.cardCount} cards</div>
-      <div style="margin-top:auto; text-align:center; font-size:14px; color:${packColor}; font-weight:600;">${pack.price} 💎</div>
-      <button class="btn btn-primary" style="width:100%; margin-top:8px; background:${packColor}; border:none; color:white; font-weight:600;">Open</button>
+    
+    // Внутренний глянец
+    const gloss = document.createElement('div');
+    gloss.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, ${packBorderColor}40, transparent);
+    `;
+    
+    div.appendChild(gloss);
+    
+    div.innerHTML += `
+      <div style="font-size:40px; text-align:center; position:relative; z-index:2;">${pack.emoji || '📦'}</div>
+      <div style="font-weight:700; font-size:18px; color:${packBorderColor}; text-align:center; position:relative; z-index:2;">${pack.name}</div>
+      <div style="font-size:13px; color:var(--text-secondary); text-align:center; position:relative; z-index:2;">${pack.cardCount} карт</div>
+      <div style="margin-top:auto; text-align:center; font-size:16px; color:${packBorderColor}; font-weight:700; position:relative; z-index:2;">${pack.price} 💎</div>
+      <button class="btn btn-primary" style="width:100%; margin-top:12px; background:linear-gradient(135deg, ${packColor}, ${packBorderColor}); border:none; color:white; font-weight:700; font-size:14px; padding:10px; border-radius:10px; transition:all 0.3s; cursor:pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">ОТКРЫТЬ</button>
     `;
     
     div.addEventListener('mouseenter', () => {
-      div.style.transform = 'translateY(-8px)';
-      div.style.boxShadow = `0 20px 25px -5px rgba(99, 102, 241, 0.2)`;
-      div.style.background = `linear-gradient(135deg, ${packColor}33 0%, ${packColor}22 100%)`;
+      div.style.transform = 'translateY(-12px) scale(1.02)';
+      div.style.boxShadow = `0 25px 35px -5px rgba(99, 102, 241, 0.25)`;
+      div.style.background = `linear-gradient(135deg, ${packColor}30 0%, ${packColor}15 100%)`;
     });
     div.addEventListener('mouseleave', () => {
-      div.style.transform = 'translateY(0)';
-      div.style.boxShadow = 'none';
-      div.style.background = `linear-gradient(135deg, ${packColor}22 0%, ${packColor}11 100%)`;
+      div.style.transform = 'translateY(0) scale(1)';
+      div.style.boxShadow = '0 10px 25px -5px rgba(99, 102, 241, 0.1)';
+      div.style.background = `linear-gradient(135deg, ${packColor}20 0%, ${packColor}08 100%)`;
     });
     
     div.querySelector('button').addEventListener('click', (e) => {
@@ -187,7 +250,7 @@ async function openDailyPack() {
   const lastDaily = u.lastDailyPackDate || '';
   
   if (lastDaily === today) {
-    ui.showError('Пак уже открыт сегодня! Остаяться ' + (24 - new Date().getHours()) + ' часов');
+    ui.showError('Пак уже открыт сегодня! Осталось ' + (24 - new Date().getHours()) + ' часов');
     return;
   }
   
@@ -251,7 +314,7 @@ async function openPack(pack) {
     }
     
     if (drawnCards.length === 0) {
-      ui.showError('Error opening pack');
+      ui.showError('Ошибка открытия пака');
       return;
     }
     
@@ -278,7 +341,7 @@ async function openPack(pack) {
     cardMod.renderCollection();
   } catch (e) {
     console.error('Error opening pack:', e);
-    ui.showError('Error opening pack');
+    ui.showError('Ошибка открытия пака');
   }
 }
 
