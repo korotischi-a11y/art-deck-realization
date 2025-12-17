@@ -1,9 +1,5 @@
 /**
  * modules/decks.js - система колод
- * 
- * НОВОЕ:
- * - Панель колод теперь показывает рейтинг активной колоды
- * - Карты отображаются выбранной колоды
  */
 
 import { state, openModal, closeModal } from '../app.js';
@@ -14,7 +10,6 @@ const db = firebase.firestore();
 const MAX_DECKS = 10;
 const MAX_CARDS_IN_DECK = 60;
 
-// Лоадит колоды
 export async function loadDecks() {
   const { currentUser } = state;
   if (!currentUser) return;
@@ -25,19 +20,13 @@ export async function loadDecks() {
     state.currentUser.activeDeckId = data.activeDeckId;
     if (!state.currentUser.activeDeckId || !state.currentUser.decks[state.currentUser.activeDeckId]) {
       const firstDeckId = Object.keys(state.currentUser.decks)[0];
-      if (firstDeckId) {
-        await selectDeck(firstDeckId);
-      } else {
-        await createDefaultDeck();
-      }
+      if (firstDeckId) { await selectDeck(firstDeckId); }
+      else { await createDefaultDeck(); }
     }
     console.log(`✔ Колод: ${Object.keys(state.currentUser.decks).length}`);
-  } catch (error) {
-    console.error('Ошибка колод:', error);
-  }
+  } catch (error) { console.error('Ошибка колод:', error); }
 }
 
-// Стартовая колода
 async function createDefaultDeck() {
   const deckId = `deck_${Date.now()}`;
   const deck = {
@@ -51,7 +40,6 @@ async function createDefaultDeck() {
   });
 }
 
-// Создать колоду
 export async function createDeck(name, desc = '', color = '#3a8d8e') {
   const { currentUser } = state;
   if (!currentUser || Object.keys(currentUser.decks).length >= MAX_DECKS) {
@@ -61,7 +49,7 @@ export async function createDeck(name, desc = '', color = '#3a8d8e') {
   try {
     const id = `deck_${Date.now()}`;
     const newDeck = {
-      id, name: name.trim(), description: desc.trim(), cards: {}, 
+      id, name: name.trim(), description: desc.trim(), cards: {},
       rating: 0, createdAt: new Date(), isActive: false, color
     };
     currentUser.decks[id] = newDeck;
@@ -69,12 +57,9 @@ export async function createDeck(name, desc = '', color = '#3a8d8e') {
     ui.showSuccess(`Колода «${name}» создана`);
     renderDecks();
     return id;
-  } catch (error) {
-    console.error('Ошибка:', error);
-  }
+  } catch (error) { console.error('Ошибка:', error); }
 }
 
-// Выбрать активную
 export async function selectDeck(deckId) {
   const { currentUser } = state;
   if (!currentUser || !currentUser.decks[deckId]) return;
@@ -86,14 +71,11 @@ export async function selectDeck(deckId) {
       decks: currentUser.decks, activeDeckId: deckId
     });
     renderDecks();
-    cards.renderCollection();  // Перерисовываем карты
+    cards.renderCollection();
     ui.showSuccess(`Выбрана «${currentUser.decks[deckId].name}»`);
-  } catch (error) {
-    console.error('Ошибка:', error);
-  }
+  } catch (error) { console.error('Ошибка:', error); }
 }
 
-// Удалить
 export async function deleteDeck(deckId) {
   const { currentUser } = state;
   if (!currentUser || !currentUser.decks[deckId]) return;
@@ -106,12 +88,9 @@ export async function deleteDeck(deckId) {
     await db.collection('users').doc(currentUser.uid).update({ decks: currentUser.decks });
     renderDecks();
     ui.showSuccess('Колода удалена');
-  } catch (error) {
-    console.error('Ошибка:', error);
-  }
+  } catch (error) { console.error('Ошибка:', error); }
 }
 
-// Дублировать
 export async function cloneDeck(deckId) {
   const { currentUser } = state;
   if (!currentUser || !currentUser.decks[deckId] || Object.keys(currentUser.decks).length >= MAX_DECKS) {
@@ -122,19 +101,16 @@ export async function cloneDeck(deckId) {
     const orig = currentUser.decks[deckId];
     const newId = `deck_${Date.now()}`;
     const cloned = {
-      ...orig, id: newId, name: `${orig.name} (copy)`, 
+      ...orig, id: newId, name: `${orig.name} (copy)`,
       cards: { ...orig.cards }, isActive: false, createdAt: new Date()
     };
     currentUser.decks[newId] = cloned;
     await db.collection('users').doc(currentUser.uid).update({ decks: currentUser.decks });
     renderDecks();
     ui.showSuccess('Колода скопирована');
-  } catch (error) {
-    console.error('Ошибка:', error);
-  }
+  } catch (error) { console.error('Ошибка:', error); }
 }
 
-// Отредактить
 export async function editDeck(deckId, name, desc, color) {
   const { currentUser } = state;
   if (!currentUser || !currentUser.decks[deckId]) return;
@@ -143,12 +119,9 @@ export async function editDeck(deckId, name, desc, color) {
     await db.collection('users').doc(currentUser.uid).update({ decks: currentUser.decks });
     renderDecks();
     ui.showSuccess('Обновлена');
-  } catch (error) {
-    console.error('Ошибка:', error);
-  }
+  } catch (error) { console.error('Ошибка:', error); }
 }
 
-// Добавить карту
 export async function addCardToDeck(deckId, cardId) {
   const { currentUser } = state;
   if (!currentUser || !currentUser.decks[deckId]) return false;
@@ -168,63 +141,51 @@ export async function addCardToDeck(deckId, cardId) {
     deck.cards[cardId] = (deck.cards[cardId] || 0) + 1;
     await db.collection('users').doc(currentUser.uid).update({ decks: currentUser.decks });
     return true;
-  } catch (error) {
-    console.error('Ошибка:', error);
-    return false;
-  }
+  } catch (error) { console.error('Ошибка:', error); return false; }
 }
 
-// Убрать карту
 export async function removeCardFromDeck(deckId, cardId) {
   const { currentUser } = state;
   if (!currentUser || !currentUser.decks[deckId]) return false;
   try {
     const count = currentUser.decks[deckId].cards[cardId] || 0;
     if (count <= 0) return false;
-    if (count === 1) {
-      delete currentUser.decks[deckId].cards[cardId];
-    } else {
-      currentUser.decks[deckId].cards[cardId] = count - 1;
-    }
+    if (count === 1) { delete currentUser.decks[deckId].cards[cardId]; }
+    else { currentUser.decks[deckId].cards[cardId] = count - 1; }
     await db.collection('users').doc(currentUser.uid).update({ decks: currentUser.decks });
     return true;
-  } catch (error) {
-    console.error('Ошибка:', error);
-    return false;
-  }
+  } catch (error) { console.error('Ошибка:', error); return false; }
 }
 
 /**
- * Нендер панели колод с рейтингом активной
+ * Нендер панели колод
  */
 export function renderDecks() {
   const { currentUser } = state;
   const panel = document.getElementById('decks-panel');
   if (!panel || !currentUser) return;
   panel.innerHTML = '';
-  
+
   const h = document.createElement('div');
   h.style.cssText = 'padding: 12px; border-bottom: 1px solid var(--border-color); font-weight: 600; font-size: 12px;';
   h.textContent = `🎲 Колоды (${Object.keys(currentUser.decks).length}/${MAX_DECKS})`;
   panel.appendChild(h);
-  
-  // Показываем рейтинг активной колоды
+
+  // МАКСИМАЛЬНЫЙ РЕЙТИНГ
   if (currentUser.activeDeckId) {
     const activeDeck = currentUser.decks[currentUser.activeDeckId];
     if (activeDeck) {
       const ratingDisplay = document.createElement('div');
       ratingDisplay.style.cssText = 'padding: 8px 12px; background: var(--bg-tertiary); margin-bottom: 8px; border-radius: 8px; font-size: 12px;';
-      
-      // Не берем из state.cards.calculateDeckRating, где рейтинг читается истинный
       const rating = cards.calculateDeckRating();
       ratingDisplay.innerHTML = `
-        <div style="color: var(--text-secondary); margin-bottom: 4px;">🏆 Рейтинг</div>
+        <div style="color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;">🏆 Максимальный рейтинг</div>
         <div style="font-size: 18px; font-weight: 700; color: var(--wood-light);">${Math.round(rating)}</div>
       `;
       panel.appendChild(ratingDisplay);
     }
   }
-  
+
   const btn = document.createElement('button');
   btn.className = 'btn btn-primary';
   btn.textContent = '➕ Новая';
@@ -232,7 +193,7 @@ export function renderDecks() {
   btn.style.width = 'calc(100% - 16px)';
   btn.addEventListener('click', () => showCreateDeckModal());
   panel.appendChild(btn);
-  
+
   Object.values(currentUser.decks).forEach(deck => {
     panel.appendChild(createDeckItemElement(deck));
   });
