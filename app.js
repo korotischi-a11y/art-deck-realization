@@ -1,5 +1,5 @@
 /**
- * app.js - оркестратор
+ * app.js
  */
 
 import * as auth from './modules/auth.js';
@@ -11,13 +11,7 @@ import * as packs from './modules/packs.js';
 import * as admin from './modules/admin.js';
 import * as ui from './modules/ui.js';
 
-export const state = {
-  currentUser: null,
-  cards: [],
-  packs: [],
-  isAdmin: false,
-  isLoginMode: true
-};
+export const state = { currentUser: null, cards: [], packs: [], isAdmin: false, isLoginMode: true };
 
 const QUESTS = {
   'first_pack': { id: 'first_pack', title: 'Первые шаги', desc: 'Откройте пак', reward: 100, progress: 'packsOpened', target: 1 },
@@ -28,149 +22,78 @@ const QUESTS = {
 };
 
 const TAB_TITLES = {
-  collection: '📚 Коллекция',
-  profile: '👤 Профиль',
-  leaderboard: '🏆 Рейтинг',
-  packs: '📋 Паки',
-  admin: '⚙ Админ'
+  collection: '📚 Коллекция', profile: '👤 Профиль', leaderboard: '🏆 Рейтинг', packs: '📋 Паки', admin: '⚙ Админ'
 };
-
-/**
- * НОВОЕ: инициализация 3D tilted эффекта для карт
- */
-function initTiltEffect() {
-  const cards = document.querySelectorAll('[data-tilt]');
-  const maxRotate = 10; // градусы
-
-  cards.forEach(card => {
-    card.addEventListener('mousemove', (event) => {
-      const rect = card.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-
-      // Рассчитываем углы наклона
-      const rotateX = ((y - centerY) / centerY) * maxRotate;
-      const rotateY = ((centerX - x) / centerX) * maxRotate;
-
-      // Настраиваем переменные для glare блика
-      card.style.setProperty('--glare-x', `${(x / rect.width) * 100}%`);
-      card.style.setProperty('--glare-y', `${(y / rect.height) * 100}%`);
-
-      // Применяем 3D наклон
-      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-      card.classList.add('tilt-active');
-    });
-
-    card.addEventListener('mouseleave', () => {
-      // Возвращаем в исходное состояние
-      card.style.transform = 'rotateX(0deg) rotateY(0deg)';
-      card.classList.remove('tilt-active');
-    });
-  });
-}
 
 async function checkDailyRewards() {
   try {
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-    const userRef = firebase.firestore().collection('users').doc(user.uid);
-    const userData = (await userRef.get()).data();
-    if (!userData) return;
-    const lastReward = userData.lastDailyReward?.toDate() || new Date(0);
-    const now = new Date();
-    const daysDiff = Math.floor((now - lastReward) / (1000 * 60 * 60 * 24));
-    if (daysDiff >= 1) {
-      await userRef.update({
-        currency: (userData.currency || 0) + 50,
-        lastDailyReward: new Date(),
-        dailyFreeOpens: (userData.dailyFreeOpens || 0) + 1
-      });
-      state.currentUser.currency = (userData.currency || 0) + 50;
-      state.currentUser.dailyFreeOpens = (userData.dailyFreeOpens || 0) + 1;
+    const u = firebase.auth().currentUser;
+    if (!u) return;
+    const r = firebase.firestore().collection('users').doc(u.uid);
+    const d = (await r.get()).data();
+    if (!d) return;
+    const l = d.lastDailyReward?.toDate() || new Date(0);
+    const n = new Date();
+    const diff = Math.floor((n - l) / (1000 * 60 * 60 * 24));
+    if (diff >= 1) {
+      await r.update({ currency: (d.currency || 0) + 50, lastDailyReward: new Date(), dailyFreeOpens: (d.dailyFreeOpens || 0) + 1 });
+      state.currentUser.currency = (d.currency || 0) + 50;
+      state.currentUser.dailyFreeOpens = (d.dailyFreeOpens || 0) + 1;
       ui.showToast('🎁 +50 💎', 'success');
       updateUserInterface();
     }
-  } catch (error) {
-    console.error('Daily:', error);
-  }
+  } catch (e) { console.error('Daily:', e); }
 }
 
 async function loadQuests() {
   try {
-    const user = firebase.auth().currentUser;
-    if (!user) return [];
-    const userData = (await firebase.firestore().collection('users').doc(user.uid).get()).data();
-    const completed = userData?.completedQuests || [];
-    return Object.values(QUESTS).map(q => ({ ...q, completed: completed.includes(q.id) }));
-  } catch (error) {
-    console.error('Quests:', error);
-    return [];
-  }
+    const u = firebase.auth().currentUser;
+    if (!u) return [];
+    const d = (await firebase.firestore().collection('users').doc(u.uid).get()).data();
+    const c = d?.completedQuests || [];
+    return Object.values(QUESTS).map(q => ({ ...q, completed: c.includes(q.id) }));
+  } catch (e) { console.error('Quests:', e); return []; }
 }
 
 export function renderQuests() {
-  loadQuests().then(quests => {
-    const container = document.getElementById('quests-container');
-    if (!container) return;
-    container.innerHTML = quests.map(q => `
-      <div class="quest-card ${q.completed ? 'completed' : ''}">
-        <div class="quest-icon">✨</div>
-        <div class="quest-info">
-          <h4>${q.title}</h4>
-          <p>${q.desc}</p>
-          <div class="quest-reward">+${q.reward} 💎</div>
-        </div>
-        ${q.completed ? '<span>✓</span>' : ''}
-      </div>
-    `).join('');
+  loadQuests().then(q => {
+    const c = document.getElementById('quests-container');
+    if (!c) return;
+    c.innerHTML = q.map(i => `<div class="quest-card ${i.completed ? 'completed' : ''}"><div class="quest-icon">✨</div><div class="quest-info"><h4>${i.title}</h4><p>${i.desc}</p><div class="quest-reward">+${i.reward} 💎</div></div>${i.completed ? '<span>✓</span>' : ''}</div>`).join('');
   });
 }
 
 export async function checkQuestCompletion() {
   try {
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-    const userData = (await firebase.firestore().collection('users').doc(user.uid).get()).data();
-    const completed = userData?.completedQuests || [];
-    for (const questId in QUESTS) {
-      if (completed.includes(questId)) continue;
-      const quest = QUESTS[questId];
-      if ((userData[quest.progress] || 0) >= quest.target) {
-        await firebase.firestore().collection('users').doc(user.uid).update({
-          completedQuests: [...completed, questId],
-          currency: (userData.currency || 0) + quest.reward
-        });
-        state.currentUser.currency = (userData.currency || 0) + quest.reward;
-        ui.showToast(`🌟 +${quest.reward} 💎`, 'success');
+    const u = firebase.auth().currentUser;
+    if (!u) return;
+    const d = (await firebase.firestore().collection('users').doc(u.uid).get()).data();
+    const c = d?.completedQuests || [];
+    for (const qId in QUESTS) {
+      if (c.includes(qId)) continue;
+      const q = QUESTS[qId];
+      if ((d[q.progress] || 0) >= q.target) {
+        await firebase.firestore().collection('users').doc(u.uid).update({ completedQuests: [...c, qId], currency: (d.currency || 0) + q.reward });
+        state.currentUser.currency = (d.currency || 0) + q.reward;
+        ui.showToast(`🌟 +${q.reward} 💎`, 'success');
         updateUserInterface();
         renderQuests();
       }
     }
-  } catch (error) {
-    console.error('CheckQuest:', error);
-  }
+  } catch (e) { console.error('CheckQuest:', e); }
 }
 
 async function initApp() {
   console.log('[INIT] Art Deck...');
   try {
     await auth.checkAuthState();
-    if (!state.currentUser) {
-      showAuthPage();
-      setupAuthListeners();
-      return;
-    }
+    if (!state.currentUser) { showAuthPage(); setupAuthListeners(); return; }
     showApp();
     await loadInitialData();
     setupEventListeners();
     await checkDailyRewards();
     console.log('✅ OK');
-  } catch (error) {
-    console.error('Error:', error);
-  }
+  } catch (e) { console.error('Error:', e); }
 }
 
 async function loadInitialData() {
@@ -182,21 +105,19 @@ async function loadInitialData() {
     await leaderboard.loadLeaderboard();
     updateUserInterface();
     switchTab('collection');
-  } catch (error) {
-    console.error('Load:', error);
-  }
+  } catch (e) { console.error('Load:', e); }
 }
 
 function updateUserInterface() {
   const { currentUser } = state;
   document.getElementById('user-name').textContent = currentUser.username || currentUser.email?.split('@')[0] || 'Guest';
   document.getElementById('coins-display').textContent = currentUser.currency || 100;
-  const deckRating = cardMod.calculateDeckRating();
-  const tier = user.getRatingTier(deckRating);
+  const dr = cardMod.calculateDeckRating();
+  const t = user.getRatingTier(dr);
   const tiers = { 'Common': '📑', 'Uncommon': '🎯', 'Rare': '🏆', 'Epic': '💎', 'Ancient': '🔥', 'Legendary': '⭐', 'Immortal': '👑' };
-  document.getElementById('user-rank').textContent = `${tiers[tier] || '📑'} ${tier}`;
-  const adminBtn = document.getElementById('admin-btn');
-  adminBtn.style.display = state.isAdmin ? 'flex' : 'none';
+  document.getElementById('user-rank').textContent = `${tiers[t] || '📑'} ${t}`;
+  const ab = document.getElementById('admin-btn');
+  ab.style.display = state.isAdmin ? 'flex' : 'none';
 }
 
 export function switchTab(tabName) {
@@ -204,63 +125,25 @@ export function switchTab(tabName) {
   document.getElementById(`${tabName}-tab`)?.classList.add('active');
   document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.getElementById('page-title').textContent = TAB_TITLES[tabName] || 'Art Deck';
-  
   switch (tabName) {
-    case 'collection': 
-      cardMod.renderCollection(); 
-      decks.renderDecks();
-      // НОВОЕ: инициализируем tilted эффект
-      setTimeout(() => initTiltEffect(), 100);
-      break;
-    case 'profile': 
-      user.renderProfile(); 
-      break;
-    case 'leaderboard': 
-      leaderboard.renderLeaderboard(); 
-      break;
-    case 'packs': 
-      packs.renderShop(); 
-      break;
-    case 'admin': 
-      admin.initAdminPanel(); 
-      break;
+    case 'collection': cardMod.renderCollection(); decks.renderDecks(); break;
+    case 'profile': user.renderProfile(); break;
+    case 'leaderboard': leaderboard.renderLeaderboard(); break;
+    case 'packs': packs.renderShop(); break;
+    case 'admin': admin.initAdminPanel(); break;
   }
 }
 
-export function openModal(modalId) {
-  const m = document.getElementById(modalId);
-  if (m) m.classList.add('active');
-}
-
-export function closeModal(modalId) {
-  const m = document.getElementById(modalId);
-  if (m) m.classList.remove('active');
-}
-
-function showApp() {
-  document.getElementById('app').style.display = 'grid';
-  document.getElementById('auth-page').style.display = 'none';
-}
-
-function showAuthPage() {
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('auth-page').style.display = 'flex';
-  state.isLoginMode = true;
-  updateAuthUI();
-}
-
+export function openModal(modalId) { const m = document.getElementById(modalId); if (m) m.classList.add('active'); }
+export function closeModal(modalId) { const m = document.getElementById(modalId); if (m) m.classList.remove('active'); }
+function showApp() { document.getElementById('app').style.display = 'grid'; document.getElementById('auth-page').style.display = 'none'; }
+function showAuthPage() { document.getElementById('app').style.display = 'none'; document.getElementById('auth-page').style.display = 'flex'; state.isLoginMode = true; updateAuthUI(); }
 function updateAuthUI() {
   const btn = document.getElementById('auth-btn');
   const toggleBtn = document.getElementById('toggle-auth');
-  if (state.isLoginMode) {
-    btn.textContent = '🔐 Вход';
-    toggleBtn.textContent = 'Регистрация';
-  } else {
-    btn.textContent = '✨ Рег';
-    toggleBtn.textContent = 'Уже есть?';
-  }
+  if (state.isLoginMode) { btn.textContent = '🔐 Вход'; toggleBtn.textContent = 'Регистрация'; }
+  else { btn.textContent = '✨ Рег'; toggleBtn.textContent = 'Уже есть?'; }
 }
-
 function setupAuthListeners() {
   const form = document.getElementById('auth-form');
   const toggleBtn = document.getElementById('toggle-auth');
@@ -276,38 +159,19 @@ function setupAuthListeners() {
       showApp();
       setupEventListeners();
       await checkDailyRewards();
-    } catch (error) {
-      document.getElementById('auth-error').textContent = error.message;
-    } finally {
-      submitBtn.disabled = false;
-    }
+    } catch (e) { document.getElementById('auth-error').textContent = e.message; }
+    finally { submitBtn.disabled = false; }
   });
-  toggleBtn?.addEventListener('click', () => {
-    state.isLoginMode = !state.isLoginMode;
-    updateAuthUI();
-  });
+  toggleBtn?.addEventListener('click', () => { state.isLoginMode = !state.isLoginMode; updateAuthUI(); });
 }
-
 function setupEventListeners() {
-  document.querySelectorAll('.sidebar-btn[data-tab]').forEach(b => {
-    b.addEventListener('click', () => switchTab(b.dataset.tab));
-  });
-  document.getElementById('logout-btn')?.addEventListener('click', async () => {
-    await auth.logout();
-    state.currentUser = null;
-    showAuthPage();
-  });
+  document.querySelectorAll('.sidebar-btn[data-tab]').forEach(b => { b.addEventListener('click', () => switchTab(b.dataset.tab)); });
+  document.getElementById('logout-btn')?.addEventListener('click', async () => { await auth.logout(); state.currentUser = null; showAuthPage(); });
   document.querySelectorAll('[id*="modal"]').forEach(m => {
     m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); });
     m.querySelector('.modal-close')?.addEventListener('click', () => m.classList.remove('active'));
   });
   document.getElementById('rarity-filter')?.addEventListener('change', () => cardMod.renderCollection());
 }
-
 export { updateUserInterface };
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
-}
+if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initApp); } else { initApp(); }
