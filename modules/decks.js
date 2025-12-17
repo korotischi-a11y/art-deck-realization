@@ -217,7 +217,7 @@ function openCreateDeckModal() {
         <button class="modal-close" style="padding:0; width:32px; height:32px;">✕</button>
       </div>
       <input type="text" id="new-deck-name" placeholder="Название колоды" style="width:100%; padding:10px; background:var(--bg-tertiary); border:1px solid var(--border); color:var(--text); border-radius:8px; margin-bottom:16px;" />
-      <button id="create-deck-confirm" class="btn btn-primary" style="width:100%;">Создать</button>
+      <button id="create-deck-confirm" class="btn btn-primary" style="width:100%;">Create</button>
     </div>
   `;
   document.body.appendChild(modal);
@@ -269,7 +269,7 @@ function openEditDeckModal(deckId) {
         <button class="modal-close" style="padding:0; width:32px; height:32px;">✕</button>
       </div>
       <input type="text" id="edit-deck-name" value="${deck.name}" style="width:100%; padding:10px; background:var(--bg-tertiary); border:1px solid var(--border); color:var(--text); border-radius:8px; margin-bottom:16px;" />
-      <button id="save-deck-name" class="btn btn-primary" style="width:100%;">Сохранить</button>
+      <button id="save-deck-name" class="btn btn-primary" style="width:100%;">Save</button>
     </div>
   `;
   document.body.appendChild(modal);
@@ -310,5 +310,3 @@ async function deleteDeck(deckId) {
     ui.showError('Ошибка удаления');
   }
 }
-
-export { activeDeckId };
