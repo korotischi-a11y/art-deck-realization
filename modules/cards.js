@@ -12,7 +12,7 @@ const db = firebase.firestore();
  * Загружает карты из мастер-коллекции
  */
 export async function loadCards() {
-  console.log('🎫 Loading cards...');
+  console.log('🎭 Loading cards...');
   try {
     const snap = await db.collection('masterCards')
       .orderBy('createdAt', 'desc')
@@ -39,22 +39,18 @@ function getCard(cardId) {
 }
 
 /**
- * ПРАВИЛЬНЫЕ счётчики
- * ВСЕГО = сумма карт ВО ВСЕХ КОЛОДАХ (с повторами)
- * УНИКАЛЬНЫЕ = все разные cardId ВО ВСЕХ КОЛОДАХ
+ * ПРАВИЛЬНАЯ ЛОГИКА СЧЁТЧИКОВ
+ * ВСЕГО = сумма карт ВО ВСЕХ КОЛОДАХ (включая сброс)
+ * УНИКАЛЬНЫЕ = разные cardId ВО ВСЕХ КОЛОДАХ (включая сброс)
  */
 function calculateStats() {
   const decksObj = state.currentUser?.decks || {};
   
-  // ВСЕГО КАРТ = сумма карт ВО ВСЕХ КОЛОДАХ (с повторами)
   let totalInAllDecks = 0;
-  
-  // УНИКАЛЬНЫЕ = все разные cardId которые есть ВО ВСЕХ КОЛОДАХ
   const uniqueCardIds = new Set();
   
+  // СЧИТАЕМ ВСЕ КОЛОДЫ ВКЛЮЧАЯ СБРОС
   for (const deck of Object.values(decksObj)) {
-    if (deck.isDiscardDeck) continue;  // НЕ считаем сброс
-    
     for (const [cardId, count] of Object.entries(deck.cards || {})) {
       totalInAllDecks += count;
       uniqueCardIds.add(cardId);
@@ -73,23 +69,20 @@ function calculateStats() {
 function getCardStatsInDecks(cardId) {
   const decksObj = state.currentUser?.decks || {};
   const inDecks = [];
-  const available = state.currentUser?.cards[cardId] || 0;
-  let inDecksTotal = 0;
+  let totalInAllDecks = 0;
   
   for (const [deckId, deck] of Object.entries(decksObj)) {
-    if (deck.isDiscardDeck) continue;  // Не считаем сбросовую
+    if (deck.isDiscardDeck) continue;  // Не считаем сброс отдельно
     const count = deck.cards?.[cardId] || 0;
     if (count > 0) {
       inDecks.push({ name: deck.name, count, deckId });
-      inDecksTotal += count;
+      totalInAllDecks += count;
     }
   }
   
   return {
-    total: available,
-    available: available - inDecksTotal,
     inDecks,
-    inDecksTotal
+    inDecksTotal: totalInAllDecks
   };
 }
 
@@ -106,7 +99,7 @@ export function renderCollection() {
   let title = 'Вся коллекция';
   const viewingDeck = decks.activeDeckId && state.currentUser?.decks?.[decks.activeDeckId];
   
-  // ОПРЕДЕЛЯЕМ ТОНКУЙ МОМЕНТ: ЧТО ПОКАЗЫВАТЬ
+  // ОПРЕДЕЛЯЕМ ТОНКИЙ МОМЕНТ: ЧТО ПОКАЗЫВАТЬ
   if (viewingDeck && !viewingDeck.isDiscardDeck) {
     // НОРМАЛЬНАЯ КОЛОДА: только карты ИЗ НЕЙ
     userCardIds = Object.keys(viewingDeck.cards || {});
@@ -116,8 +109,15 @@ export function renderCollection() {
     userCardIds = Object.keys(viewingDeck.cards || {});
     title = `🗑 Карты без колод`;
   } else {
-    // ВЕсЬ ГЛАВНЫЙ ЭКРАН: ВЕСЮ коллекцию
-    userCardIds = Object.keys(state.currentUser?.cards || {});
+    // ВЕСЬ ГЛАВНЫЙ ЭКРАН: ВСЮ коллекцию (ВСЕ УНИКАЛЬНЫЕ карты из всех колод)
+    const decksObj = state.currentUser?.decks || {};
+    const allCardIds = new Set();
+    for (const deck of Object.values(decksObj)) {
+      for (const cardId of Object.keys(deck.cards || {})) {
+        allCardIds.add(cardId);
+      }
+    }
+    userCardIds = Array.from(allCardIds);
   }
   
   let headerEl = document.getElementById('collection-deck-title');
@@ -140,9 +140,21 @@ export function renderCollection() {
   }
 
   cards.forEach(card => {
-    // Взэм кол-во МИНИМУМ из ОБЩЕЙ коллекции
-    const totalCount = state.currentUser?.cards[card.id] || 0;
-    const el = createCardElement(card, totalCount);
+    // Определяем что показывать в углу карты
+    let countInDisplay = 0;
+    
+    if (decks.activeDeckId) {
+      const deck = state.currentUser?.decks?.[decks.activeDeckId];
+      countInDisplay = deck?.cards?.[card.id] || 0;
+    } else {
+      // Если нет активной колоды - считаем во всех
+      const decksObj = state.currentUser?.decks || {};
+      for (const deck of Object.values(decksObj)) {
+        countInDisplay += deck.cards?.[card.id] || 0;
+      }
+    }
+    
+    const el = createCardElement(card, countInDisplay);
     grid.appendChild(el);
   });
 
@@ -166,17 +178,17 @@ function createCardElement(card, count) {
   
   div.innerHTML = `
     <div class="card-image" style="position:relative; overflow:hidden;">
-      <!-- Параметры верху -->
+      <!-- Параметры вверху -->
       <div style="position:absolute; top:0; left:0; right:0; padding:6px 4px; background:rgba(50, 50, 50, 0.9); font-size:10px; font-weight:600; color:#d0d0d0; text-shadow:0 1px 3px rgba(0,0,0,0.95); z-index:10; border-bottom:1px solid rgba(200,200,200,0.15);">${params}</div>
       
-      <!-- Кол-во карт в правом уголке -->
+      <!-- Кол-во карт В АКТИВНОЙ КОЛОДЕ (или во всех) -->
       <div style="position:absolute; top:4px; right:4px; z-index:11; background:rgba(30,30,30,0.8); padding:3px 6px; border-radius:4px; font-size:11px; font-weight:600; color:${rarity.color}; border:1px solid ${rarity.color};">${count}</div>
       
       <!-- Центрированное изображение -->
       ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" style="width:100%; height:100%; object-fit:cover; object-position:center;" />` : '🎨'}
     </div>
     <div class="card-body" style="display:flex; flex-direction:column; min-height:0;">
-      <!-- ТИТУЛ ВИДЕН НОРМАЛЬНО (МИН 6px, МАКС 11px) -->
+      <!-- ТИТУЛ ВИДЕНЫ НОРМАЛЬНО (МИН 6px, МАКС 11px) -->
       <div class="card-title" style="flex:1; overflow:hidden; display:flex; align-items:center; font-size:clamp(6px, 2.8vw, 11px); word-break:break-word; line-height:1.2;">${ui.sanitizeHTML(card.title)}</div>
       
       <!-- Артист слева и год справа -->
@@ -204,7 +216,7 @@ function createCardElement(card, count) {
  */
 function initTiltEffect() {
   const cards = document.querySelectorAll('[data-tilt="true"]');
-  console.log(`🎪 Init tilt for ${cards.length} cards`);
+  console.log(`🔮 Init tilt for ${cards.length} cards`);
   
   cards.forEach(card => {
     card.addEventListener('mousemove', (e) => {
@@ -264,19 +276,17 @@ function showCardDetail(card, count) {
   
   descEl.textContent = card.description || 'Нет описания';
   
-  // динАМИЧНЫЙ счётчик
-  let countHTML = `<strong>📦 В коллекции:</strong> ${cardStats.total} копий`;
-  if (cardStats.inDecksTotal > 0) {
-    countHTML += `<br/><strong>🎴 В колодах:</strong> ${cardStats.inDecksTotal} копий`;
-    if (cardStats.inDecks.length > 0) {
-      countHTML += '<div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">';
-      cardStats.inDecks.forEach(d => {
-        countHTML += `• ${d.name}: ${d.count}<br/>`;
-      });
-      countHTML += '</div>';
-    }
-    countHTML += `<br/><strong>🎯 Доступно:</strong> ${cardStats.available} копий`;
+  // ДИНАМИЧЕСКИЙ счётчик
+  let countHTML = `<strong>🎁 В активной колоде:</strong> ${count} копий`;
+  
+  if (cardStats.inDecksTotal > 0 && cardStats.inDecks.length > 0) {
+    countHTML += `<div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">`;
+    cardStats.inDecks.forEach(d => {
+      countHTML += `• ${d.name}: ${d.count}<br/>`;
+    });
+    countHTML += '</div>';
   }
+  
   countEl.innerHTML = countHTML;
   
   paramsTable.innerHTML = '';
@@ -412,12 +422,12 @@ function renderCardActionButtons(cardId, container) {
   deleteBtn.type = 'button';
   deleteBtn.className = 'btn';
   deleteBtn.style.cssText = 'width:100%; background:#ef4444; color:white; border:none; cursor:pointer; font-weight:600; padding:10px; border-radius:6px;';
-  deleteBtn.textContent = '⚠ ПОРВАТЬ НАВсЕГДА';
+  deleteBtn.textContent = '⚠️ ПОРВАТЬ НАВСЕГДА';
   deleteBtn.onclick = async () => {
-    const confirm1 = confirm('⚠ Ето ПОРВЕТ карту из ВСЕХ колод и коллекции!\n\nВы уверены?');
+    const confirm1 = confirm('⚠️ Это ПОРВЕТ карту из ВСЕХ колод и коллекции!\n\nВы уверены?');
     if (!confirm1) return;
     
-    const confirm2 = confirm('⚠ ПОСЛЕДНЕЕ ПОПНИНАНИЕ: так и ПОРВАТЬ?');
+    const confirm2 = confirm('⚠️ ПОСЛЕДНЕЕ ПОПИНАНИЕ: так и ПОРВАТЬ?');
     if (!confirm2) return;
     
     const success = await decks.deleteCardFromCollection(cardId);
