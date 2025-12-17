@@ -1,5 +1,5 @@
 /**
- * app.js
+ * app.js - Main application logic
  */
 
 import * as auth from './modules/auth.js';
@@ -11,44 +11,30 @@ import * as packs from './modules/packs.js';
 import * as admin from './modules/admin.js';
 import * as ui from './modules/ui.js';
 
-export const state = { currentUser: null, cards: [], packs: [], isAdmin: false, isLoginMode: true };
-
-const QUESTS = {
-  'first_pack': { id: 'first_pack', title: 'Первые шаги', desc: 'Откройте пак', reward: 100, progress: 'packsOpened', target: 1 },
-  'collect_5': { id: 'collect_5', title: 'Коллекционер', desc: '5 карт', reward: 150, progress: 'uniqueCards', target: 5 },
-  'collect_10': { id: 'collect_10', title: 'Мастер', desc: '10 карт', reward: 200, progress: 'uniqueCards', target: 10 },
-  'first_legendary': { id: 'first_legendary', title: 'Легенда', desc: 'Легенда', reward: 250, progress: 'legendaryCards', target: 1 },
-  'rare_collector': { id: 'rare_collector', title: 'Мастер редкостей', desc: 'редкие карты', reward: 300, progress: 'rareCards', target: 5 }
-};
+export const state = { currentUser: null, cards: [], packs: [], leaderboard: [], isAdmin: false, isLoginMode: true };
 
 const TAB_TITLES = {
   collection: '📚 Коллекция', profile: '👤 Профиль', leaderboard: '🏆 Рейтинг', packs: '📋 Паки', admin: '⚙ Админ'
 };
 
 /**
- * 3D Tilted эффект для карт
+ * 3D Tilt эффект
  */
 function initTiltEffect() {
-  const cards = document.querySelectorAll('[data-tilt]');
-  const maxRotate = 10;
-
+  const cards = document.querySelectorAll('[data-tilt="true"]');
   cards.forEach(card => {
-    card.addEventListener('mousemove', (event) => {
+    card.addEventListener('mousemove', (e) => {
       const rect = card.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      const rotateX = ((y - centerY) / centerY) * maxRotate;
-      const rotateY = ((centerX - x) / centerX) * maxRotate;
-      card.style.setProperty('--glare-x', `${(x / rect.width) * 100}%`);
-      card.style.setProperty('--glare-y', `${(y / rect.height) * 100}%`);
-      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-      card.classList.add('tilt-active');
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const rotX = ((y - cy) / cy) * 10;
+      const rotY = ((cx - x) / cx) * 10;
+      card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
     });
     card.addEventListener('mouseleave', () => {
       card.style.transform = 'rotateX(0deg) rotateY(0deg)';
-      card.classList.remove('tilt-active');
     });
   });
 }
@@ -57,58 +43,22 @@ async function checkDailyRewards() {
   try {
     const u = firebase.auth().currentUser;
     if (!u) return;
-    const r = firebase.firestore().collection('users').doc(u.uid);
-    const d = (await r.get()).data();
-    if (!d) return;
-    const l = d.lastDailyReward?.toDate() || new Date(0);
-    const n = new Date();
-    const diff = Math.floor((n - l) / (1000 * 60 * 60 * 24));
+    const userRef = firebase.firestore().collection('users').doc(u.uid);
+    const data = (await userRef.get()).data();
+    if (!data) return;
+    
+    const lastDay = data.lastDailyReward?.toDate() || new Date(0);
+    const now = new Date();
+    const diff = Math.floor((now - lastDay) / (1000 * 60 * 60 * 24));
+    
     if (diff >= 1) {
-      await r.update({ currency: (d.currency || 0) + 50, lastDailyReward: new Date(), dailyFreeOpens: 1 });
-      state.currentUser.currency = (d.currency || 0) + 50;
+      await userRef.update({ currency: (data.currency || 0) + 50, lastDailyReward: new Date(), dailyFreeOpens: 1 });
+      state.currentUser.currency = (data.currency || 0) + 50;
       state.currentUser.dailyFreeOpens = 1;
       ui.showToast('🎁 +50 💎', 'success');
       updateUserInterface();
     }
-  } catch (e) { console.error('Daily:', e); }
-}
-
-async function loadQuests() {
-  try {
-    const u = firebase.auth().currentUser;
-    if (!u) return [];
-    const d = (await firebase.firestore().collection('users').doc(u.uid).get()).data();
-    const c = d?.completedQuests || [];
-    return Object.values(QUESTS).map(q => ({ ...q, completed: c.includes(q.id) }));
-  } catch (e) { console.error('Quests:', e); return []; }
-}
-
-export function renderQuests() {
-  loadQuests().then(q => {
-    const c = document.getElementById('quests-container');
-    if (!c) return;
-    c.innerHTML = q.map(i => `<div class="quest-card ${i.completed ? 'completed' : ''}"><div class="quest-icon">✨</div><div class="quest-info"><h4>${i.title}</h4><p>${i.desc}</p><div class="quest-reward">+${i.reward} 💎</div></div>${i.completed ? '<span>✓</span>' : ''}</div>`).join('');
-  });
-}
-
-export async function checkQuestCompletion() {
-  try {
-    const u = firebase.auth().currentUser;
-    if (!u) return;
-    const d = (await firebase.firestore().collection('users').doc(u.uid).get()).data();
-    const c = d?.completedQuests || [];
-    for (const qId in QUESTS) {
-      if (c.includes(qId)) continue;
-      const q = QUESTS[qId];
-      if ((d[q.progress] || 0) >= q.target) {
-        await firebase.firestore().collection('users').doc(u.uid).update({ completedQuests: [...c, qId], currency: (d.currency || 0) + q.reward });
-        state.currentUser.currency = (d.currency || 0) + q.reward;
-        ui.showToast(`🌟 +${q.reward} 💎`, 'success');
-        updateUserInterface();
-        renderQuests();
-      }
-    }
-  } catch (e) { console.error('CheckQuest:', e); }
+  } catch (e) { console.error('Daily check:', e); }
 }
 
 async function initApp() {
@@ -120,8 +70,8 @@ async function initApp() {
     await loadInitialData();
     setupEventListeners();
     await checkDailyRewards();
-    console.log('✅ OK');
-  } catch (e) { console.error('Error:', e); }
+    console.log('✅ Ready');
+  } catch (e) { console.error('Init error:', e); }
 }
 
 async function loadInitialData() {
@@ -133,17 +83,15 @@ async function loadInitialData() {
     await leaderboard.loadLeaderboard();
     updateUserInterface();
     switchTab('collection');
-  } catch (e) { console.error('Load:', e); }
+  } catch (e) { console.error('Load error:', e); }
 }
 
 function updateUserInterface() {
   const { currentUser } = state;
-  document.getElementById('user-name').textContent = currentUser.username || currentUser.email?.split('@')[0] || 'Guest';
-  document.getElementById('coins-display').textContent = currentUser.currency || 100;
-  const dr = cardMod.calculateDeckRating();
-  const t = user.getRatingTier(dr);
+  document.getElementById('user-name').textContent = currentUser?.username || currentUser?.email?.split('@')[0] || 'Guest';
+  document.getElementById('coins-display').textContent = currentUser?.currency || 100;
   const tiers = { 'Common': '📑', 'Uncommon': '🎯', 'Rare': '🏆', 'Epic': '💎', 'Ancient': '🔥', 'Legendary': '⭐', 'Immortal': '👑' };
-  document.getElementById('user-rank').textContent = `${tiers[t] || '📑'} ${t}`;
+  document.getElementById('user-rank').textContent = `${tiers['Common'] || '📑'} Common`;
   const ab = document.getElementById('admin-btn');
   ab.style.display = state.isAdmin ? 'flex' : 'none';
 }
@@ -153,11 +101,12 @@ export function switchTab(tabName) {
   document.getElementById(`${tabName}-tab`)?.classList.add('active');
   document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.getElementById('page-title').textContent = TAB_TITLES[tabName] || 'Art Deck';
+  
   switch (tabName) {
-    case 'collection': 
+    case 'collection':
       cardMod.renderCollection();
       decks.renderDecks();
-      setTimeout(() => initTiltEffect(), 100);
+      setTimeout(() => initTiltEffect(), 50);
       break;
     case 'profile': user.renderProfile(); break;
     case 'leaderboard': leaderboard.renderLeaderboard(); break;
@@ -166,39 +115,31 @@ export function switchTab(tabName) {
   }
 }
 
-export function openModal(modalId) { const m = document.getElementById(modalId); if (m) m.classList.add('active'); }
-export function closeModal(modalId) { const m = document.getElementById(modalId); if (m) m.classList.remove('active'); }
+export function openModal(id) { document.getElementById(id)?.classList.add('active'); }
+export function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
 function showApp() { document.getElementById('app').style.display = 'grid'; document.getElementById('auth-page').style.display = 'none'; }
 function showAuthPage() { document.getElementById('app').style.display = 'none'; document.getElementById('auth-page').style.display = 'flex'; state.isLoginMode = true; updateAuthUI(); }
 function updateAuthUI() {
   const btn = document.getElementById('auth-btn');
-  const toggleBtn = document.getElementById('toggle-auth');
-  if (state.isLoginMode) { btn.textContent = '🔐 Вход'; toggleBtn.textContent = 'Регистрация'; }
-  else { btn.textContent = '✨ Рег'; toggleBtn.textContent = 'Уже есть?'; }
+  const toggle = document.getElementById('toggle-auth');
+  if (state.isLoginMode) { btn.textContent = '🔐 Login'; toggle.textContent = 'Register'; }
+  else { btn.textContent = '✨ Reg'; toggle.textContent = 'Have account?'; }
 }
 function setupAuthListeners() {
-  // Show/Hide пароль
   document.getElementById('toggle-password')?.addEventListener('click', (e) => {
     e.preventDefault();
-    const input = document.getElementById('auth-password');
-    const btn = e.target;
-    if (input.type === 'password') {
-      input.type = 'text';
-      btn.textContent = '🙈';
-    } else {
-      input.type = 'password';
-      btn.textContent = '👁';
-    }
+    const inp = document.getElementById('auth-password');
+    if (inp.type === 'password') { inp.type = 'text'; e.target.textContent = '🙈'; }
+    else { inp.type = 'password'; e.target.textContent = '👁'; }
   });
-
+  
   const form = document.getElementById('auth-form');
-  const toggleBtn = document.getElementById('toggle-auth');
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
     try {
       state.isLoginMode ? await auth.login(email, password) : await auth.register(email, password);
       await loadInitialData();
@@ -206,85 +147,18 @@ function setupAuthListeners() {
       setupEventListeners();
       await checkDailyRewards();
     } catch (e) { document.getElementById('auth-error').textContent = e.message; }
-    finally { submitBtn.disabled = false; }
+    finally { btn.disabled = false; }
   });
-  toggleBtn?.addEventListener('click', () => { state.isLoginMode = !state.isLoginMode; updateAuthUI(); });
+  document.getElementById('toggle-auth')?.addEventListener('click', () => { state.isLoginMode = !state.isLoginMode; updateAuthUI(); });
 }
-
 function setupEventListeners() {
   document.querySelectorAll('.sidebar-btn[data-tab]').forEach(b => { b.addEventListener('click', () => switchTab(b.dataset.tab)); });
-  document.getElementById('logout-btn')?.addEventListener('click', async () => { await auth.logout(); state.currentUser = null; showAuthPage(); setupAuthListeners(); });
+  document.getElementById('logout-btn')?.addEventListener('click', async () => { await auth.logout(); state.currentUser = null; showAuthPage(); });
   document.querySelectorAll('[id*="modal"]').forEach(m => {
     m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); });
     m.querySelector('.modal-close')?.addEventListener('click', () => m.classList.remove('active'));
   });
   document.getElementById('rarity-filter')?.addEventListener('change', () => cardMod.renderCollection());
-  
-  // Add to Deck button
-  const addToDeckBtn = document.getElementById('add-to-deck-btn');
-  if (addToDeckBtn) {
-    // Удалить старые обработчики
-    const newBtn = addToDeckBtn.cloneNode(true);
-    addToDeckBtn.parentNode.replaceChild(newBtn, addToDeckBtn);
-    
-    document.getElementById('add-to-deck-btn').addEventListener('click', async (e) => {
-      e.preventDefault();
-      const cardId = e.target.getAttribute('data-card-id');
-      if (!cardId) {
-        ui.showToast('❌ Card ID не найден', 'error');
-        return;
-      }
-      
-      try {
-        const u = firebase.auth().currentUser;
-        if (!u) {
-          ui.showToast('❌ Не авторизован', 'error');
-          return;
-        }
-        
-        const card = state.cards.find(c => c.id === cardId);
-        if (!card) {
-          ui.showToast('❌ Карта не найдена', 'error');
-          return;
-        }
-        
-        const userRef = firebase.firestore().collection('users').doc(u.uid);
-        const deckSnaps = await userRef.collection('decks').get();
-        
-        let defaultDeck = null;
-        deckSnaps.forEach(doc => {
-          const data = doc.data();
-          if (data.isDefault) defaultDeck = { id: doc.id, ...data };
-        });
-        
-        if (!defaultDeck) {
-          const newRef = userRef.collection('decks').doc();
-          await newRef.set({ 
-            name: 'Основная колода', 
-            isDefault: true, 
-            cards: { [cardId]: 1 },
-            createdAt: new Date() 
-          });
-          ui.showToast(`✅ "${card.title}" добавлена в новую колоду!`, 'success');
-        } else {
-          defaultDeck.cards[cardId] = (defaultDeck.cards[cardId] || 0) + 1;
-          await userRef.collection('decks').doc(defaultDeck.id)
-            .update({ cards: defaultDeck.cards });
-          ui.showToast(`✅ "${card.title}" добавлена в колоду!`, 'success');
-        }
-        
-        // Обновить UI
-        await decks.loadDecks();
-        decks.renderDecks();
-        closeModal('card-detail-modal');
-        
-      } catch (e) {
-        console.error('Add to deck error:', e);
-        ui.showToast(`❌ Ошибка: ${e.message}`, 'error');
-      }
-    });
-  }
 }
-
 export { updateUserInterface };
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initApp); } else { initApp(); }

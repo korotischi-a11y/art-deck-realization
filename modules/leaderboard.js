@@ -1,70 +1,38 @@
 /**
  * modules/leaderboard.js
- * Глобальный рейтинг всех игроков
  */
 
-import { state, openModal } from '../app.js';
-import * as user from './user.js';
-import * as ui from './ui.js';
-
+import { state } from '../app.js';
 const db = firebase.firestore();
 
-/**
- * Загружает всех пользователей и рассчитывает их рейтинг
- */
 export async function loadLeaderboard() {
-  console.log('🏆 Загружаю рейтинг...');
   try {
-    const snapshot = await db.collection('users').get();
+    const snap = await db.collection('leaderboard')
+      .orderBy('rating', 'desc')
+      .limit(100)
+      .get();
     
-    state.leaderboard = snapshot.docs.map(doc => {
-      const userData = doc.data();
-      return {
-        uid: doc.id,
-        ...userData
-      };
-    }).sort((a, b) => (b.currency || 0) - (a.currency || 0));
+    state.leaderboard = snap.docs.map(doc => ({
+      uid: doc.id,
+      ...doc.data()
+    }));
     
-    console.log(`✔️ Загружено ${state.leaderboard.length} игроков`);
-  } catch (error) {
-    console.error('Ошибка загружки рейтинга:', error);
+    console.log('✅ Leaderboard loaded');
+  } catch (e) {
+    console.error('Leaderboard error:', e);
+    state.leaderboard = [];
   }
 }
 
-/**
- * Отображает таблицу лидеров
- */
 export function renderLeaderboard() {
-  const tbody = document.getElementById('leaderboard-body');
-  tbody.innerHTML = '';
+  const table = document.getElementById('leaderboard-body');
+  if (!table) return;
   
-  state.leaderboard.forEach((player, index) => {
-    const tier = user.getRatingTier(player.currency || 0);
-    const tierEmojis = {
-      'Common': '📍',
-      'Uncommon': '🎯',
-      'Rare': '🏆',
-      'Epic': '💎',
-      'Ancient': '🔥',
-      'Legendary': '⭐',
-      'Immortal': '👑'
-    };
-    
-    const isCurrentUser = player.uid === state.currentUser?.uid;
-    
-    const row = document.createElement('tr');
-    row.style.backgroundColor = isCurrentUser ? 'rgba(212, 165, 116, 0.1)' : '';
-    row.style.fontWeight = isCurrentUser ? 'bold' : 'normal';
-    
-    row.innerHTML = `
-      <td class="leaderboard-rank">#${index + 1}</td>
-      <td>${ui.sanitizeHTML(player.username || player.email?.split('@')[0] || 'Гость')}</td>
-      <td>${ui.formatCurrency(player.currency || 0)}</td>
-      <td>
-        <span class="leaderboard-tier">${tierEmojis[tier] || '📍'} ${tier}</span>
-      </td>
-    `;
-    
-    tbody.appendChild(row);
-  });
+  table.innerHTML = state.leaderboard?.map((user, idx) => `
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:12px; text-align:center; color:var(--wood-light); font-weight:600;">#${idx + 1}</td>
+      <td style="padding:12px; color:var(--text-accent);">${user.username || 'Player'}</td>
+      <td style="padding:12px; text-align:right; color:var(--text-secondary);">${Math.round(user.rating || 0)}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="3" style="text-align:center; color:var(--text-secondary);">No data</td></tr>';
 }
