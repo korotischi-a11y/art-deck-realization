@@ -15,38 +15,6 @@ export let activeDeckId = null;
 const DISCARD_DECK_NAME = '🗑 Колода Сброса';
 
 /**
- * Получить или создать колоду сброса
- */
-export async function getOrCreateDiscardDeck() {
-  try {
-    const u = state.currentUser;
-    if (!u) return null;
-
-    // Поиск наличие колоды
-    const existingDeck = Object.values(u.decks || {}).find(d => d.name === DISCARD_DECK_NAME);
-    if (existingDeck) {
-      return existingDeck.id;
-    }
-
-    // Нет - создаём
-    const ref = db.collection('users').doc(u.uid).collection('decks').doc();
-    await ref.set({ 
-      name: DISCARD_DECK_NAME, 
-      cards: {}, 
-      createdAt: new Date(),
-      isDiscardDeck: true,  // Метка для распознания
-      isLocked: true        // Неизменяемая
-    });
-
-    await loadDecks();
-    return ref.id;
-  } catch (e) {
-    console.error('Error getting discard deck:', e);
-    return null;
-  }
-}
-
-/**
  * Загружает колоды пользователя
  */
 export async function loadDecks() {
@@ -62,7 +30,7 @@ export async function loadDecks() {
       u.decks[doc.id] = { id: doc.id, ...doc.data() };
     });
 
-    console.log('✅ Decks loaded:', Object.keys(u.decks).length);
+    console.log('📂 Decks loaded:', Object.keys(u.decks).length);
     
     // Обеспечиваем, что колода сброса существует
     await getOrCreateDiscardDeck();
@@ -76,6 +44,38 @@ export async function loadDecks() {
     }
   } catch (e) {
     console.error('Error loading decks:', e);
+  }
+}
+
+/**
+ * Получить или создать колоду сброса
+ */
+export async function getOrCreateDiscardDeck() {
+  try {
+    const u = state.currentUser;
+    if (!u) return null;
+
+    // Поиск наличие колоды
+    const existingDeck = Object.values(u.decks || {}).find(d => d.isDiscardDeck);
+    if (existingDeck) {
+      return existingDeck.id;
+    }
+
+    // Нет - создаём
+    const ref = db.collection('users').doc(u.uid).collection('decks').doc();
+    await ref.set({ 
+      name: DISCARD_DECK_NAME, 
+      cards: {}, 
+      createdAt: new Date(),
+      isDiscardDeck: true,  // Метка для распознания
+      isLocked: false       // НЕ блокируем - МОЖНО смотреть!
+    });
+
+    await loadDecks();
+    return ref.id;
+  } catch (e) {
+    console.error('Error getting discard deck:', e);
+    return null;
   }
 }
 
@@ -120,7 +120,7 @@ export function renderDecks() {
     decksList.appendChild(deckEl);
   });
   
-  // КОЛОДА СБРОСА (ОТДЕЛЬНО, В КОНЦЕ, ЗАБЛОКИРОВАНА)
+  // КОЛОДА СБРОСА (ОТДЕЛьНО, В КОНЦЕ, НЕ блокируемая, активная)
   if (discardDeck) {
     const separator = document.createElement('div');
     separator.style.cssText = 'border-top: 2px dashed var(--border); margin: 8px 0;';
@@ -128,7 +128,8 @@ export function renderDecks() {
     
     const uniqueCount = Object.keys(discardDeck.cards || {}).length;
     const deckRating = calculateDeckRating(discardDeck.cards || {});
-    const deckEl = createDeckElement(discardDeck, uniqueCount, false, deckRating, true);
+    const isActive = activeDeckId === discardDeck.id;  // ОНА МОЖЕТ БЫТЬ АКТИВНОЙ!
+    const deckEl = createDeckElement(discardDeck, uniqueCount, isActive, deckRating, false);  // НЕ заблокируемая!
     decksList.appendChild(deckEl);
   }
   
@@ -163,46 +164,44 @@ function createDeckElement(deck, uniqueCount, isActive, deckRating, isLocked) {
   deckEl.style.cssText = `
     padding: 12px 16px;
     border-left: 3px solid ${isActive ? 'var(--wood-light)' : 'transparent'};
-    cursor: ${isLocked ? 'default' : 'pointer'};
+    cursor: pointer;
     transition: all 0.2s;
     background: ${isActive ? 'var(--bg-tertiary)' : 'transparent'};
-    opacity: ${isLocked ? 0.8 : 1};
+    opacity: 1;
     position: relative;
   `;
   
-  const label = isLocked ? '🗑' : '🎴';
-  const lockedNote = isLocked ? ' (ЗАБЛОКИРОВАНА)' : '';
+  const label = deck.isDiscardDeck ? '🗑' : '🎴';
+  const noteExtra = deck.isDiscardDeck ? ' (Карты без колод)' : '';
   
   deckEl.innerHTML = `
-    <div style="font-weight:600; color:var(--text-accent); font-size:13px; word-break: break-word; margin-bottom:4px;">${label} ${deck.name}${lockedNote}</div>
+    <div style="font-weight:600; color:var(--text-accent); font-size:13px; word-break: break-word; margin-bottom:4px;">${label} ${deck.name}${noteExtra}</div>
     <div style="font-size:11px; color:var(--text-secondary);">
-      🎰 ${uniqueCount} уник. (в этой колоде) | ⭐ ${Math.round(deckRating)}
+      🎰 ${uniqueCount} уник. | ⭐ ${Math.round(deckRating)}
     </div>
-    ${!isLocked ? `<div class="deck-actions" style="position:absolute; top:8px; right:8px; display:none; gap:4px;">
+    ${!deck.isDiscardDeck ? `<div class="deck-actions" style="position:absolute; top:8px; right:8px; display:none; gap:4px;">
       <button class="deck-edit-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:var(--wood-medium); border:none; border-radius:4px; color:var(--bg-primary); font-size:10px; cursor:pointer;">✏️</button>
       <button class="deck-delete-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:var(--resonance); border:none; border-radius:4px; color:white; font-size:10px; cursor:pointer;">🗑</button>
     </div>` : ''}
   `;
   
-  if (!isLocked) {
-    deckEl.addEventListener('mouseover', () => {
-      deckEl.style.background = 'var(--bg-tertiary)';
-      const actions = deckEl.querySelector('.deck-actions');
-      if (actions) actions.style.display = 'flex';
-    });
-    deckEl.addEventListener('mouseout', () => {
-      if (!isActive) deckEl.style.background = 'transparent';
-      const actions = deckEl.querySelector('.deck-actions');
-      if (actions) actions.style.display = 'none';
-    });
-    deckEl.addEventListener('click', (e) => {
-      if (e.target.classList.contains('deck-edit-btn') || e.target.classList.contains('deck-delete-btn')) return;
-      activeDeckId = deck.id;
-      renderDecks();
-      cardMod.renderCollection();
-      ui.showToast(`📂 Выбрана: ${deck.name}`, 'success');
-    });
-  }
+  deckEl.addEventListener('mouseover', () => {
+    deckEl.style.background = 'var(--bg-tertiary)';
+    const actions = deckEl.querySelector('.deck-actions');
+    if (actions) actions.style.display = 'flex';
+  });
+  deckEl.addEventListener('mouseout', () => {
+    if (!isActive) deckEl.style.background = 'transparent';
+    const actions = deckEl.querySelector('.deck-actions');
+    if (actions) actions.style.display = 'none';
+  });
+  deckEl.addEventListener('click', (e) => {
+    if (e.target.classList.contains('deck-edit-btn') || e.target.classList.contains('deck-delete-btn')) return;
+    activeDeckId = deck.id;
+    renderDecks();
+    cardMod.renderCollection();
+    ui.showToast(`📂 Выбрана: ${deck.name}`, 'success');
+  });
   
   return deckEl;
 }
@@ -266,9 +265,18 @@ export async function removeCardFromActiveDeck(cardId) {
     const deck = u.decks[activeDeckId];
     if (!deck || !deck.cards || !deck.cards[cardId]) return false;
     
+    // КОЛОДА СБРОСА: НЕ делете, только просматривайте оттуда карты
+    if (deck.isDiscardDeck) {
+      ui.showToast('🗑 Где карты бес колод - только просмотр', 'info');
+      return false;
+    }
+    
     deck.cards[cardId] -= 1;
     if (deck.cards[cardId] <= 0) {
       delete deck.cards[cardId];
+      
+      // ПЕРЕНОСИМ В КОЛОДУ СБРОСА
+      await addCardToDiscardDeck(cardId);
     }
     
     await db.collection('users').doc(u.uid)
@@ -294,36 +302,6 @@ export async function addCardToDiscardDeck(cardId) {
     return await addCardToDeckById(cardId, discardDeckId);
   } catch (e) {
     console.error('Error adding to discard deck:', e);
-    return false;
-  }
-}
-
-/**
- * Оставляет карту НО НЕ делете её (ПЕРЕНОС В КОЛОДУ СБРОСА)
- */
-export async function moveCardToDiscardDeck(cardId) {
-  try {
-    const u = state.currentUser;
-    if (!u || !u.decks) return false;
-    
-    // Удаляем из ВСЕХ нормальных колод
-    for (const deck of Object.values(u.decks)) {
-      if (deck.isDiscardDeck) continue;
-      if (deck.cards && deck.cards[cardId]) {
-        delete deck.cards[cardId];
-        await db.collection('users').doc(u.uid)
-          .collection('decks').doc(deck.id)
-          .update({ cards: deck.cards });
-      }
-    }
-    
-    // Добавляем в колоду сброса
-    await addCardToDiscardDeck(cardId);
-    
-    await loadDecks();
-    return true;
-  } catch (e) {
-    console.error('Error moving to discard deck:', e);
     return false;
   }
 }
