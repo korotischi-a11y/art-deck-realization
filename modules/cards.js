@@ -5,6 +5,7 @@
 
 import { state, closeModal, openModal } from '../app.js';
 import * as ui from './ui.js';
+import * as decks from './decks.js';
 
 const db = firebase.firestore();
 
@@ -71,7 +72,63 @@ export async function updateCardCount(cardId, newCount) {
 }
 
 /**
- * Нендерит сетку карт
+ * Добавляет карту в колоду
+ */
+async function addCardToDeck(cardId) {
+  try {
+    const u = firebase.auth().currentUser;
+    if (!u) {
+      ui.showToast('❌ Не авторизован', 'error');
+      return;
+    }
+    
+    const card = getCard(cardId);
+    if (!card) {
+      ui.showToast('❌ Карта не найдена', 'error');
+      return;
+    }
+    
+    const userRef = db.collection('users').doc(u.uid);
+    const deckSnaps = await userRef.collection('decks').get();
+    
+    let defaultDeck = null;
+    deckSnaps.forEach(doc => {
+      if (doc.data().isDefault) {
+        defaultDeck = { id: doc.id, ...doc.data() };
+      }
+    });
+    
+    if (!defaultDeck) {
+      // Создаём дефолтную колоду
+      const newRef = userRef.collection('decks').doc();
+      const newCards = { [cardId]: 1 };
+      await newRef.set({ 
+        name: 'Основная колода', 
+        isDefault: true, 
+        cards: newCards,
+        createdAt: new Date() 
+      });
+    } else {
+      // Добавляем в существующую
+      if (!defaultDeck.cards) defaultDeck.cards = {};
+      defaultDeck.cards[cardId] = (defaultDeck.cards[cardId] || 0) + 1;
+      await userRef.collection('decks').doc(defaultDeck.id)
+        .update({ cards: defaultDeck.cards });
+    }
+    
+    ui.showToast(`✅ "${card.title}" добавлена в колоду!`, 'success');
+    closeModal('card-detail-modal');
+    await decks.loadDecks();
+    decks.renderDecks();
+    
+  } catch (e) {
+    console.error('Add to deck error:', e);
+    ui.showToast(`❌ Ошибка: ${e.message}`, 'error');
+  }
+}
+
+/**
+ * Рендерит сетку карт
  */
 export function renderCollection() {
   const grid = document.getElementById('cards-grid');
@@ -218,6 +275,16 @@ function showCardDetail(card, count) {
       ? `В колоде: ${count} шт.` 
       : `В коллекции: ${count} шт.`);
   document.getElementById('modal-card-count').textContent = countText;
+  
+  // Обработчик Add to Deck
+  const addToDeckBtn = document.getElementById('add-to-deck-btn');
+  if (addToDeckBtn) {
+    addToDeckBtn.setAttribute('data-card-id', card.id);
+    addToDeckBtn.onclick = async (e) => {
+      e.preventDefault();
+      await addCardToDeck(card.id);
+    };
+  }
   
   openModal('card-detail-modal');
 }
@@ -416,12 +483,10 @@ function updateCollectionStats() {
   const uniqueCards = Object.keys(deckCards).length;
   const deckRating = calculateDeckRatingInternal();
   
-  // Обновляем статистику
   document.getElementById('stat-total-cards').textContent = totalCards;
   document.getElementById('stat-unique-cards').textContent = uniqueCards;
   document.getElementById('stat-deck-rating').textContent = Math.round(deckRating);
   
-  // Обновляем заголовок коллекции
   updateCollectionHeader(deckRating);
 }
 
