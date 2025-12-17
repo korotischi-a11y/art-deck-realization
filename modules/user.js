@@ -1,126 +1,68 @@
 /**
  * modules/user.js
- * Профиль пользователя и рейтинг на основе монет
- * 
- * Ответственность:
- * - Отображение профиля пользователя
- * - Расчет рейтинга колоды
- * - Определение тира
+ * Профиль пользователя
  */
 
 import { state } from '../app.js';
-import * as cards from './cards.js';
+import * as decks from './decks.js';
 import * as ui from './ui.js';
 
 const db = firebase.firestore();
-
-/**
- * Загружает данные пользователя (встроенно в app.js)
- */
-export async function loadUserData() {
-  // Тут та логика, что в auth.js
-}
-
-/**
- * Россчитывает рейтинг колоды
- * 
- * В этой системе рейтинг рассчитывается на основе силы колоды,
- * что включает: философские параметры, редкость, все бонусы.
- */
-export function calculateDeckRating() {
-  return cards.calculateDeckRating();
-}
-
-/**
- * Определяет тир на основе рейтинга
- */
-export function getRatingTier(rating) {
-  if (rating >= 10000) return 'Immortal';
-  if (rating >= 8000) return 'Legendary';
-  if (rating >= 6000) return 'Ancient';
-  if (rating >= 4000) return 'Epic';
-  if (rating >= 2000) return 'Rare';
-  if (rating >= 1000) return 'Uncommon';
-  return 'Common';
-}
-
-/**
- * Получает эмоджи тира
- */
-function getTierEmoji(tier) {
-  const emojis = {
-    'Common': '📍',
-    'Uncommon': '🎯',
-    'Rare': '🏆',
-    'Epic': '💎',
-    'Ancient': '🔥',
-    'Legendary': '⭐',
-    'Immortal': '👑'
-  };
-  return emojis[tier] || '📍';
-}
 
 /**
  * Отображает профиль
  */
 export function renderProfile() {
   const { currentUser } = state;
-  const deckRating = calculateDeckRating();
-  const tier = getRatingTier(deckRating);
-  const tierEmoji = getTierEmoji(tier);
+  if (!currentUser) return;
   
-  // Главная информация
-  document.getElementById('profile-username').textContent = currentUser.username;
-  document.getElementById('profile-email').textContent = currentUser.email;
-  document.getElementById('profile-rating').textContent = Math.round(deckRating);
-  
-  // Добавляем тир
-  const profileHeader = document.querySelector('.profile-header');
-  const tierDiv = profileHeader.querySelector('[style*="font-size: 32px"]');
-  if (tierDiv) {
-    tierDiv.textContent = tierEmoji;
-    tierDiv.parentElement.querySelector('[style*="Тир"]');
-  }
-  
-  // Разложение рейтинга
-  const breakdown = cards.getDeckRatingBreakdown();
-  const breakdownDiv = document.getElementById('rating-breakdown');
-  breakdownDiv.innerHTML = `
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-      <div class="stat-card">
-        <div class="stat-value" style="color: var(--text-accent);">${Math.round(breakdown.uniqueness)}</div>
-        <div class="stat-label">Уникальность</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="color: var(--text-accent);">${Math.round(breakdown.power)}</div>
-        <div class="stat-label">Сила карт</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="color: var(--virtuosity);">+${(breakdown.eraBonus * 100).toFixed(0)}%</div>
-        <div class="stat-label">Бонус эра</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="color: var(--harmony);">+${(breakdown.artistBonus * 100).toFixed(0)}%</div>
-        <div class="stat-label">Бонус художников</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="color: var(--harmony);">+${(breakdown.rarityBonus * 100).toFixed(0)}%</div>
-        <div class="stat-label">Бонус редкостей</div>
-      </div>
-      <div class="stat-card" style="border-color: var(--wood-light); background-color: rgba(212, 165, 116, 0.1);">
-        <div class="stat-value" style="color: var(--wood-light);">${Math.round(breakdown.total)}</div>
-        <div class="stat-label">Общий рейтинг</div>
-      </div>
-    </div>
-  `;
+  // Основная информация
+  document.getElementById('profile-username').textContent = currentUser.username || currentUser.email?.split('@')[0] || '-';
+  document.getElementById('profile-email').textContent = currentUser.email || '-';
+  document.getElementById('profile-rating').textContent = Math.round(currentUser.currency || 0);
   
   // Количество карт
   const cards_obj = currentUser.cards || {};
   const totalCards = Object.values(cards_obj).reduce((a, b) => a + b, 0);
   const uniqueCards = Object.keys(cards_obj).length;
   
-  document.getElementById('profile-total-cards').textContent = totalCards;
-  document.getElementById('profile-unique-cards').textContent = uniqueCards;
-  document.getElementById('profile-coins').textContent = currentUser.currency;
-  document.getElementById('profile-packs-opened').textContent = '0'; // Обновляться у packs.js
+  const totalEl = document.getElementById('profile-total-cards');
+  const uniqueEl = document.getElementById('profile-unique-cards');
+  const coinsEl = document.getElementById('profile-coins');
+  
+  if (totalEl) totalEl.textContent = totalCards;
+  if (uniqueEl) uniqueEl.textContent = uniqueCards;
+  if (coinsEl) coinsEl.textContent = currentUser.currency || 0;
+  
+  // Рейтинг распределения (алтернативные данные)
+  const decksObj = currentUser.decks || {};
+  const maxDeckRating = Object.values(decksObj).map(d => {
+    const total = Object.values(d.cards || {}).reduce((a, b) => a + b, 0);
+    const unique = Object.keys(d.cards || {}).length;
+    return (unique / total) * 100 + unique * 10;
+  }).reduce((a, b) => Math.max(a, b), 0);
+  
+  const breakdownDiv = document.getElementById('rating-breakdown');
+  if (breakdownDiv) {
+    breakdownDiv.innerHTML = `
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--wood-light);">${uniqueCards}</div>
+          <div class="stat-label">Уникальные</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--virtuosity);">${totalCards}</div>
+          <div class="stat-label">Всего карт</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--harmony);">${Object.keys(decksObj).length}</div>
+          <div class="stat-label">Колод</div>
+        </div>
+        <div class="stat-card" style="border-color: var(--wood-light); background-color: rgba(212, 165, 116, 0.1);">
+          <div class="stat-value" style="color: var(--wood-light);">${Math.round(maxDeckRating)}</div>
+          <div class="stat-label">Макс. рейтинг</div>
+        </div>
+      </div>
+    `;
+  }
 }

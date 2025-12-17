@@ -17,8 +17,34 @@ export async function loadPacks() {
     const snap = await db.collection('packs').orderBy('price').get();
     state.packs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     console.log('✅ Packs loaded:', state.packs.length);
+    
+    // Если нет - создаём тестовые
+    if (state.packs.length === 0) {
+      await initDefaultPacks();
+    }
   } catch (e) {
     console.error('Error loading packs:', e);
+  }
+}
+
+/**
+ * Инициализируем тестовые паки
+ */
+async function initDefaultPacks() {
+  try {
+    const defaultPacks = [
+      { name: 'Стартер', price: 50, cardCount: 3, emoji: '🃦', rarityWeights: { common: 5, uncommon: 2 } },
+      { name: 'Стандарт', price: 100, cardCount: 5, emoji: '🃥', rarityWeights: { uncommon: 4, rare: 2 } },
+      { name: 'Премиум', price: 200, cardCount: 7, emoji: '🃤', rarityWeights: { rare: 3, mythical: 2, legendary: 1 } }
+    ];
+    
+    for (const pack of defaultPacks) {
+      await db.collection('packs').add(pack);
+    }
+    
+    await loadPacks();
+  } catch (e) {
+    console.error('Error creating default packs:', e);
   }
 }
 
@@ -74,7 +100,6 @@ export function renderShop() {
     list.appendChild(div);
   });
   
-  // 🔥 ПРОКРУТКА КОЛЕСОМ МЫШИ
   list.addEventListener('wheel', (e) => {
     e.preventDefault();
     list.scrollLeft += e.deltaY;
@@ -108,13 +133,11 @@ async function openPack(pack) {
       return;
     }
     
-    // Списать монеты
     await db.collection('users').doc(u.uid).update({
       currency: firebase.firestore.FieldValue.increment(-pack.price)
     });
     u.currency -= pack.price;
     
-    // Добавить карты в коллекцию
     const updates = {};
     drawnCards.forEach(c => {
       const key = `cards.${c.id}`;
@@ -122,7 +145,6 @@ async function openPack(pack) {
     });
     await db.collection('users').doc(u.uid).update(updates);
     
-    // Обновить локально
     drawnCards.forEach(c => {
       u.cards = u.cards || {};
       u.cards[c.id] = (u.cards[c.id] || 0) + 1;

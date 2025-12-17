@@ -50,7 +50,6 @@ export function renderCollection() {
   let userCardIds;
   let title = 'Вся коллекция';
   
-  // Если есть активная колода → показываем её
   if (decks.activeDeckId && state.currentUser?.decks?.[decks.activeDeckId]) {
     const activeDeck = state.currentUser.decks[decks.activeDeckId];
     userCardIds = Object.keys(activeDeck.cards || {});
@@ -59,7 +58,6 @@ export function renderCollection() {
     userCardIds = Object.keys(state.currentUser?.cards || {});
   }
   
-  // Обновляем заголовок над сеткой
   let headerEl = document.getElementById('collection-deck-title');
   if (!headerEl) {
     headerEl = document.createElement('div');
@@ -95,19 +93,21 @@ export function renderCollection() {
 }
 
 /**
- * Создаёт элемент карты
+ * Создаёт элемент карты (добавляются клик обработчики сразу)
  */
 function createCardElement(card, count) {
   const div = document.createElement('div');
   div.className = 'card-item';
   div.setAttribute('data-tilt', 'true');
   div.setAttribute('data-rarity', card.rarity);
+  div.style.cursor = 'pointer';
   
   const rarity = ui.getRarityBadge(card.rarity);
   const params = `💓${card.power?.resonance || 0} 🎯${card.power?.virtuosity || 0} 🧠${card.power?.profundity || 0} ⚖${card.power?.harmony || 0}`;
   
   div.innerHTML = `
     <div class="card-image">
+      <div style="position:absolute; top:4px; left:4px; right:4px; font-size:9px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.8); z-index:10;">${params}</div>
       ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" />` : '🎨'}
     </div>
     <div class="card-body">
@@ -116,12 +116,13 @@ function createCardElement(card, count) {
       <div class="card-rarity" style="background:${rarity.color}15; border-color:${rarity.color}; color:${rarity.color};">
         ${rarity.emoji} ${rarity.name}
       </div>
-      <div class="card-params"><div class="card-param-line"><span>${params}</span></div></div>
       <div class="card-count" style="border-color:${rarity.color}; color:${rarity.color};">${count} шт.</div>
     </div>
   `;
   
   div.style.borderColor = rarity.color;
+  
+  // Навесить click обработчик
   div.addEventListener('click', () => showCardDetail(card, count));
   
   return div;
@@ -137,6 +138,11 @@ function initTiltEffect() {
   cards.forEach(card => {
     const newCard = card.cloneNode(true);
     card.replaceWith(newCard);
+    
+    // Перевесим click обработчик
+    newCard.addEventListener('click', (e) => {
+      if (e.target.closest('.card-image')) return;
+    });
     
     newCard.addEventListener('mousemove', (e) => {
       const rect = newCard.getBoundingClientRect();
@@ -210,8 +216,6 @@ function showCardDetail(card, count) {
   document.getElementById('modal-card-count').textContent = `In collection: ${count}`;
   
   renderDeckSelector(card.id);
-  
-  // Кнопка удаления из активной колоды
   renderRemoveFromDeckButton(card.id);
   
   openModal('card-detail-modal');
@@ -268,7 +272,7 @@ function renderDeckSelector(cardId) {
 }
 
 /**
- * Рендерит кнопку удаления из активной колоды (если она открыта)
+ * Рендерит кнопку удаления из активной колоды
  */
 function renderRemoveFromDeckButton(cardId) {
   let removeBtn = document.getElementById('remove-from-deck-btn');
