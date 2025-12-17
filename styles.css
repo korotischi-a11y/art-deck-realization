@@ -251,21 +251,48 @@ body {
   margin-top: var(--spacing-lg);
 }
 
+/* === TILTED CARD ЭФФЕКТ === */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
-  transition: all var(--transition-normal);
+  transition: all 120ms ease-out;
   display: flex;
   flex-direction: column;
+  
+  /* 3D перспектива */
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .card-item:hover {
-  transform: translateY(-8px);
   border-color: var(--wood-medium);
-  box-shadow: var(--shadow-lg);
+}
+
+.card-item.tilt-active {
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45),
+              0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+/* Мягкий глянцевый блик на картах */
+.card-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 0%),
+    rgba(255, 255, 255, 0.18),
+    transparent 55%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease-out;
+  z-index: 5;
+}
+
+.card-item.tilt-active::before {
+  opacity: 1;
 }
 
 /* === ГРАДИЕНТНЫЕ БОРДЕРЫ ДЛЯ РЕДКИХ КАРТ === */
@@ -323,12 +350,19 @@ body {
   font-size: var(--font-size-2xl);
   color: var(--text-secondary);
   overflow: hidden;
+  position: relative;
+  cursor: pointer;
 }
 
 .card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.card-image img:hover {
+  transform: scale(1.05);
 }
 
 .card-body {
@@ -452,10 +486,64 @@ body {
   color: var(--text-secondary);
   cursor: pointer;
   transition: color var(--transition-fast);
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-close:hover {
   color: var(--text-accent);
+}
+
+/* === ПОЛНОЭКРАННОЕ ИЗОБРАЖЕНИЕ === */
+.modal-fullscreen-image {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.95);
+  z-index: 1001;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.modal-fullscreen-image.active {
+  display: flex;
+}
+
+.modal-fullscreen-image img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: var(--radius-lg);
+  object-fit: contain;
+}
+
+.modal-fullscreen-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: var(--text-accent);
+  font-size: var(--font-size-2xl);
+  cursor: pointer;
+  z-index: 1002;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-fast);
+}
+
+.modal-fullscreen-close:hover {
+  transform: scale(1.1);
 }
 
 /* === ФОРМА === */
