@@ -62,10 +62,11 @@ export function renderDecks() {
   
   const decksList = document.createElement('div');
   decksList.id = 'decks-list';
-  decksList.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
+  decksList.style.cssText = 'display: flex; flex-direction: column; gap: 8px; padding: 8px;';
   
   deckList.forEach(deck => {
     const cardCount = Object.values(deck.cards || {}).reduce((a, b) => a + b, 0);
+    const uniqueCount = Object.keys(deck.cards || {}).length;
     const deckRating = calculateDeckRating(deck.cards || {});
     const isActive = activeDeckId === deck.id;
     
@@ -82,7 +83,7 @@ export function renderDecks() {
     deckEl.innerHTML = `
       <div style="font-weight:600; color:var(--text-accent); font-size:13px; word-break: break-word; margin-bottom:4px;">${deck.name}</div>
       <div style="font-size:11px; color:var(--text-secondary);">
-        🎰 ${cardCount} карт | ⭐ ${Math.round(deckRating)}
+        🎰 ${uniqueCount} уник. (в этой колоде) | ⭐ ${Math.round(deckRating)}
       </div>
       <div class="deck-actions" style="position:absolute; top:8px; right:8px; display:none; gap:4px;">
         <button class="deck-edit-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:var(--wood-medium); border:none; border-radius:4px; color:var(--bg-primary); font-size:10px; cursor:pointer;">✏️</button>
@@ -179,7 +180,7 @@ export async function addCardToDeckById(cardId, deckId) {
 }
 
 /**
- * Удалить карту ИЗ АКТИВНОЙ КОЛОДЫ (не из обычной коллекции!)
+ * Удалить карту ИЗ АКТИВНОЙ КОЛОДЫ
  */
 export async function removeCardFromActiveDeck(cardId) {
   try {
@@ -188,10 +189,9 @@ export async function removeCardFromActiveDeck(cardId) {
     const deck = u.decks[activeDeckId];
     if (!deck || !deck.cards || !deck.cards[cardId]) return false;
     
-    // Уменьшаем на 1 В КОЛОДЕ
     deck.cards[cardId] -= 1;
     if (deck.cards[cardId] <= 0) {
-      delete deck.cards[cardId];  // Удаляем ИЗ КОЛОДЫ, но КАРТА ОстАЕТСЯ в обычной!
+      delete deck.cards[cardId];
     }
     
     await db.collection('users').doc(u.uid)
@@ -207,17 +207,15 @@ export async function removeCardFromActiveDeck(cardId) {
 }
 
 /**
- * Удалить карту ПОЛНОстью из ОБЫЧНОЙ КОЛЛЕКЦИИ
+ * Удалить карту ПОЛНОстью
  */
 export async function deleteCardFromCollection(cardId) {
   try {
     const u = state.currentUser;
     if (!u.cards || !u.cards[cardId]) return false;
     
-    // Удаляем ВСЕ копии из обычной коллекции
     delete u.cards[cardId];
     
-    // Также удаляем из ВСЕХ колод
     if (u.decks) {
       for (const deck of Object.values(u.decks)) {
         if (deck.cards && deck.cards[cardId]) {
@@ -229,7 +227,6 @@ export async function deleteCardFromCollection(cardId) {
       }
     }
     
-    // Обновляем в Firestore
     await db.collection('users').doc(u.uid).update({ cards: u.cards });
     
     await loadDecks();
