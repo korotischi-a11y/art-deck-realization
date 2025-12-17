@@ -3,7 +3,7 @@
  */
 
 import * as auth from './modules/auth.js';
-import * as cardMod from './modules/cards-new.js';
+import * as cardMod from './modules/cards.js';
 import * as decks from './modules/decks.js';
 import * as user from './modules/user.js';
 import * as leaderboard from './modules/leaderboard.js';
@@ -34,6 +34,43 @@ const TAB_TITLES = {
   packs: '📋 Паки',
   admin: '⚙ Админ'
 };
+
+/**
+ * НОВОЕ: инициализация 3D tilted эффекта для карт
+ */
+function initTiltEffect() {
+  const cards = document.querySelectorAll('[data-tilt]');
+  const maxRotate = 10; // градусы
+
+  cards.forEach(card => {
+    card.addEventListener('mousemove', (event) => {
+      const rect = card.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      // Рассчитываем углы наклона
+      const rotateX = ((y - centerY) / centerY) * maxRotate;
+      const rotateY = ((centerX - x) / centerX) * maxRotate;
+
+      // Настраиваем переменные для glare блика
+      card.style.setProperty('--glare-x', `${(x / rect.width) * 100}%`);
+      card.style.setProperty('--glare-y', `${(y / rect.height) * 100}%`);
+
+      // Применяем 3D наклон
+      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      card.classList.add('tilt-active');
+    });
+
+    card.addEventListener('mouseleave', () => {
+      // Возвращаем в исходное состояние
+      card.style.transform = 'rotateX(0deg) rotateY(0deg)';
+      card.classList.remove('tilt-active');
+    });
+  });
+}
 
 async function checkDailyRewards() {
   try {
@@ -167,12 +204,26 @@ export function switchTab(tabName) {
   document.getElementById(`${tabName}-tab`)?.classList.add('active');
   document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.getElementById('page-title').textContent = TAB_TITLES[tabName] || 'Art Deck';
+  
   switch (tabName) {
-    case 'collection': cardMod.renderCollection(); decks.renderDecks(); break;
-    case 'profile': user.renderProfile(); break;
-    case 'leaderboard': leaderboard.renderLeaderboard(); break;
-    case 'packs': packs.renderShop(); break;
-    case 'admin': admin.initAdminPanel(); break;
+    case 'collection': 
+      cardMod.renderCollection(); 
+      decks.renderDecks();
+      // НОВОЕ: инициализируем tilted эффект
+      setTimeout(() => initTiltEffect(), 100);
+      break;
+    case 'profile': 
+      user.renderProfile(); 
+      break;
+    case 'leaderboard': 
+      leaderboard.renderLeaderboard(); 
+      break;
+    case 'packs': 
+      packs.renderShop(); 
+      break;
+    case 'admin': 
+      admin.initAdminPanel(); 
+      break;
   }
 }
 
