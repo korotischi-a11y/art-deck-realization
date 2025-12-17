@@ -89,78 +89,85 @@ export function renderCollection() {
   });
 
   updateStats();
-  setTimeout(() => initTiltEffect(), 30);
+  initTiltEffect();
 }
 
 /**
- * Создаёт элемент карты (добавляются клик обработчики сразу)
+ * Создаёт элемент карты
  */
 function createCardElement(card, count) {
   const div = document.createElement('div');
   div.className = 'card-item';
   div.setAttribute('data-tilt', 'true');
+  div.setAttribute('data-card-id', card.id);
   div.setAttribute('data-rarity', card.rarity);
   div.style.cursor = 'pointer';
   
   const rarity = ui.getRarityBadge(card.rarity);
   const params = `💓${card.power?.resonance || 0} 🎯${card.power?.virtuosity || 0} 🧠${card.power?.profundity || 0} ⚖${card.power?.harmony || 0}`;
   
+  // НАОБОРОТ - Центрированное изображение + кол-во вверху
   div.innerHTML = `
-    <div class="card-image">
+    <div class="card-image" style="position:relative; overflow:hidden;">
+      <!-- Параметры верху -->
       <div style="position:absolute; top:0; left:0; right:0; padding:6px 4px; background:rgba(50, 50, 50, 0.9); font-size:10px; font-weight:600; color:#d0d0d0; text-shadow:0 1px 3px rgba(0,0,0,0.95); z-index:10; border-bottom:1px solid rgba(200,200,200,0.15);">${params}</div>
-      ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" />` : '🎨'}
+      
+      <!-- Кол-во карт в правом уголке -->
+      <div style="position:absolute; top:4px; right:4px; z-index:11; background:rgba(30,30,30,0.8); padding:3px 6px; border-radius:4px; font-size:11px; font-weight:600; color:${rarity.color}; border:1px solid ${rarity.color};">${count}</div>
+      
+      <!-- Центрированное изображение -->
+      ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" style="width:100%; height:100%; object-fit:cover; object-position:center;" />` : '🎨'}
     </div>
     <div class="card-body">
+      <!-- Титул -->
       <div class="card-title">${ui.sanitizeHTML(card.title)}</div>
-      <div class="card-artist">${ui.sanitizeHTML(card.artist)} (${card.year})</div>
+      
+      <!-- Артист слева и год справа -->
+      <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary); margin-bottom:6px;">
+        <span>${ui.sanitizeHTML(card.artist)}</span>
+        <span>${card.year}</span>
+      </div>
+      
+      <!-- Редкость -->
       <div class="card-rarity" style="background:${rarity.color}15; border-color:${rarity.color}; color:${rarity.color};">
         ${rarity.emoji} ${rarity.name}
       </div>
-      <div class="card-count" style="border-color:${rarity.color}; color:${rarity.color};">${count} шт.</div>
     </div>
   `;
   
   div.style.borderColor = rarity.color;
   
-  // Навесить click обработчик
+  // Клик НЕ ремовинг
   div.addEventListener('click', () => showCardDetail(card, count));
   
   return div;
 }
 
 /**
- * Инициализирует 3D Tilt эффект
+ * Инициализирует 3D Tilt без ремовинг
  */
 function initTiltEffect() {
   const cards = document.querySelectorAll('[data-tilt="true"]');
   console.log(`🎪 Init tilt for ${cards.length} cards`);
   
   cards.forEach(card => {
-    const newCard = card.cloneNode(true);
-    card.replaceWith(newCard);
-    
-    // Перевесим click обработчик
-    newCard.addEventListener('click', (e) => {
-      if (e.target.closest('.card-image')) return;
-    });
-    
-    newCard.addEventListener('mousemove', (e) => {
-      const rect = newCard.getBoundingClientRect();
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       const cx = rect.width / 2;
       const cy = rect.height / 2;
       const rotX = ((y - cy) / cy) * 8;
       const rotY = ((cx - x) / cx) * 8;
-      newCard.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-      newCard.classList.add('tilt-active');
-      newCard.style.setProperty('--glare-x', `${(x / rect.width) * 100}%`);
-      newCard.style.setProperty('--glare-y', `${(y / rect.height) * 100}%`);
+      card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+      card.classList.add('tilt-active');
+      card.style.setProperty('--glare-x', `${(x / rect.width) * 100}%`);
+      card.style.setProperty('--glare-y', `${(y / rect.height) * 100}%`);
     });
     
-    newCard.addEventListener('mouseleave', () => {
-      newCard.style.transform = 'rotateX(0deg) rotateY(0deg)';
-      newCard.classList.remove('tilt-active');
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'rotateX(0deg) rotateY(0deg)';
+      card.classList.remove('tilt-active');
     });
   });
 }
@@ -170,28 +177,38 @@ function initTiltEffect() {
  */
 function showCardDetail(card, count) {
   const modal = document.getElementById('card-detail-modal');
-  if (!modal) return;
+  if (!modal) { console.error('Modal not found'); return; }
   
   const rarity = ui.getRarityBadge(card.rarity);
   
-  document.getElementById('modal-card-title').textContent = card.title;
-  document.getElementById('modal-card-artist').textContent = card.artist;
-  document.getElementById('modal-card-year').textContent = `Year: ${card.year}`;
-  
-  const img = document.getElementById('modal-card-image');
-  img.src = card.imageUrl || '';
-  img.style.cursor = 'pointer';
-  img.onclick = () => openFullscreenImage(card.imageUrl);
-  
+  const titleEl = document.getElementById('modal-card-title');
+  const artistEl = document.getElementById('modal-card-artist');
+  const yearEl = document.getElementById('modal-card-year');
+  const imgEl = document.getElementById('modal-card-image');
   const rarityDiv = document.getElementById('modal-card-rarity');
+  const descEl = document.getElementById('modal-card-description');
+  const countEl = document.getElementById('modal-card-count');
+  const paramsTable = document.getElementById('modal-params-table');
+  
+  if (!titleEl) { console.error('Modal elements not found'); return; }
+  
+  titleEl.textContent = card.title;
+  artistEl.textContent = card.artist;
+  yearEl.textContent = `Year: ${card.year}`;
+  
+  imgEl.src = card.imageUrl || '';
+  imgEl.style.cursor = 'pointer';
+  imgEl.onclick = () => openFullscreenImage(card.imageUrl);
+  
   rarityDiv.innerHTML = `${rarity.emoji} ${rarity.name}`;
   rarityDiv.style.backgroundColor = `${rarity.color}15`;
   rarityDiv.style.borderColor = rarity.color;
   rarityDiv.style.color = rarity.color;
   
-  const paramsTable = document.getElementById('modal-params-table');
-  paramsTable.innerHTML = '';
+  descEl.textContent = card.description || 'Нет описания';
+  countEl.textContent = `В коллекции: ${count}`;
   
+  paramsTable.innerHTML = '';
   const params = [
     { name: '💓 Resonance', value: card.power?.resonance || 0, color: 'var(--resonance)' },
     { name: '🎯 Virtuosity', value: card.power?.virtuosity || 0, color: 'var(--virtuosity)' },
@@ -211,9 +228,6 @@ function showCardDetail(card, count) {
     `;
     paramsTable.appendChild(cell);
   });
-  
-  document.getElementById('modal-card-description').textContent = card.description;
-  document.getElementById('modal-card-count').textContent = `In collection: ${count}`;
   
   renderDeckSelector(card.id);
   renderRemoveFromDeckButton(card.id);
@@ -237,13 +251,13 @@ function renderDeckSelector(cardId) {
   const decksList = decks.getDecksForDropdown();
   
   if (!decksList.length) {
-    container.innerHTML = '<div style="color:var(--text-secondary); font-size:12px; margin-bottom:12px;">No decks yet</div>';
+    container.innerHTML = '<div style="color:var(--text-secondary); font-size:12px; margin-bottom:12px;">Нет колод</div>';
     return;
   }
   
   container.innerHTML = `
     <div style="margin-bottom:12px;">
-      <label style="display:block; color:var(--text-secondary); font-size:11px; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Select deck</label>
+      <label style="display:block; color:var(--text-secondary); font-size:11px; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Выберите колоду</label>
       <select id="deck-choice" style="width:100%; padding:8px; background:var(--bg-tertiary); border:1px solid var(--border-light); color:var(--text); border-radius:6px; font-size:13px;">
         ${decksList.map(d => `<option value="${d.id}">${d.name}</option>`).join('')}
       </select>
@@ -251,24 +265,26 @@ function renderDeckSelector(cardId) {
   `;
   
   const addBtn = document.getElementById('add-to-deck-btn');
-  addBtn.onclick = async () => {
-    const deckId = document.getElementById('deck-choice')?.value;
-    if (!deckId) {
-      ui.showError('Select a deck');
-      return;
-    }
-    
-    const success = await decks.addCardToDeckById(cardId, deckId);
-    if (success) {
-      ui.showToast(`✅ Added to deck!`, 'success');
-      closeModal('card-detail-modal');
-      await decks.loadDecks();
-      decks.renderDecks();
-      renderCollection();
-    } else {
-      ui.showError('Error adding card');
-    }
-  };
+  if (addBtn) {
+    addBtn.onclick = async () => {
+      const deckId = document.getElementById('deck-choice')?.value;
+      if (!deckId) {
+        ui.showError('Выберите колоду');
+        return;
+      }
+      
+      const success = await decks.addCardToDeckById(cardId, deckId);
+      if (success) {
+        ui.showToast(`✅ Добавлено!`, 'success');
+        closeModal('card-detail-modal');
+        await decks.loadDecks();
+        decks.renderDecks();
+        renderCollection();
+      } else {
+        ui.showError('Ошибка');
+      }
+    };
+  }
 }
 
 /**
@@ -292,12 +308,12 @@ function renderRemoveFromDeckButton(cardId) {
   removeBtn.onclick = async () => {
     const success = await decks.removeCardFromActiveDeck(cardId);
     if (success) {
-      ui.showToast('✅ Удалено из колоды', 'success');
+      ui.showToast('✅ Удалено', 'success');
       closeModal('card-detail-modal');
       decks.renderDecks();
       renderCollection();
     } else {
-      ui.showError('Ошибка удаления');
+      ui.showError('Ошибка');
     }
   };
   
@@ -308,6 +324,7 @@ function renderRemoveFromDeckButton(cardId) {
  * Открывает картинку на полный экран
  */
 function openFullscreenImage(imageUrl) {
+  if (!imageUrl) return;
   let modal = document.getElementById('modal-fullscreen-image');
   if (!modal) {
     modal = document.createElement('div');
@@ -341,13 +358,14 @@ function updateStats() {
 }
 
 /**
- * Рассчитывает максимальный рейтинг ИЗ ВСЕХ колод
+ * Рассчитывает максимальный рейтинг
  */
 function calculateMaxRating() {
   const decksObj = state.currentUser?.decks || {};
   const ratings = Object.values(decksObj).map(d => {
     const total = Object.values(d.cards || {}).reduce((a, b) => a + b, 0);
     const unique = Object.keys(d.cards || {}).length;
+    if (total === 0) return 0;
     return (unique / total) * 100 + unique * 10;
   });
   return Math.max(...ratings, 0);
