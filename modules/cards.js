@@ -336,7 +336,7 @@ function showCardDetail(card, count) {
 }
 
 /**
- * Рендерит селектор колод
+ * 🔥 ИСПРАВЛЕНО: Рендерит селектор колод с ПЕРЕНОСОМ из сброса
  */
 function renderDeckSelector(cardId, container) {
   const decksList = decks.getDecksForDropdown();
@@ -375,15 +375,45 @@ function renderDeckSelector(cardId, container) {
       return;
     }
     
-    const success = await decks.addCardToDeckById(cardId, deckId);
-    if (success) {
-      ui.showToast(`✅ Добавлено в ${select.options[select.selectedIndex].text}!`, 'success');
+    // ПРОВЕРЯЕМ: есть ли карта в сбросе?
+    const u = state.currentUser;
+    const discardDeckId = await decks.getOrCreateDiscardDeck();
+    const discardDeck = u.decks[discardDeckId];
+    const countInDiscard = discardDeck?.cards?.[cardId] || 0;
+    
+    if (countInDiscard === 0) {
+      ui.showError('❌ Нет этой карты в сбросе!');
+      return;
+    }
+    
+    // ПЕРЕНОСИМ: минус из сброса, плюс в целевую колоду
+    try {
+      const targetDeck = u.decks[deckId];
+      
+      // МИНУС ИЗ СБРОСА
+      discardDeck.cards[cardId] -= 1;
+      if (discardDeck.cards[cardId] <= 0) {
+        delete discardDeck.cards[cardId];
+      }
+      await db.collection('users').doc(u.uid)
+        .collection('decks').doc(discardDeckId)
+        .update({ cards: discardDeck.cards });
+      
+      // ПЛЮС В ЦЕЛЕВУЮ КОЛОДУ
+      targetDeck.cards = targetDeck.cards || {};
+      targetDeck.cards[cardId] = (targetDeck.cards[cardId] || 0) + 1;
+      await db.collection('users').doc(u.uid)
+        .collection('decks').doc(deckId)
+        .update({ cards: targetDeck.cards });
+      
+      ui.showToast(`✅ Перенесено в ${select.options[select.selectedIndex].text}!`, 'success');
       closeModal('card-detail-modal');
       await decks.loadDecks();
       decks.renderDecks();
       renderCollection();
-    } else {
-      ui.showError('Ошибка');
+    } catch (e) {
+      console.error('Error moving card:', e);
+      ui.showError('Ошибка переноса');
     }
   };
   
