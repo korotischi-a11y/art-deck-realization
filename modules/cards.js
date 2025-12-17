@@ -5,8 +5,7 @@
  * Ответственность:
  * - Загружа все карты из masterCards
  * - Нендер сетки карт из коллекции или активной колоды пользователя
- * - Расчет силы колоды и рейтинга
- * - Открытие нового модального окна с полной информацией
+ * - Новые стили: параметры в тексте, читаемые статы
  */
 
 import { state, closeModal, openModal } from '../app.js';
@@ -80,36 +79,29 @@ export async function updateCardCount(cardId, newCount) {
 /**
  * Нендерит сетку карт
  * 
- * НОВОЕ:
- * - Обычные пользователи видят карты ИЗ АКТИВНОЙ КОЛОДЫ (если выбрана)
- * - Админы видят ВСЕ созданные карты 
- * - Если нет активной колоды, показываем глобальнюю коллекцию
+ * Фильтр:
+ * - Обычные пользователи видят карты из активной колоды или глобальною
+ * - Админы видят ВСЕ созданные карты
  */
 export function renderCollection() {
   const grid = document.getElementById('cards-grid');
   const rarityFilter = document.getElementById('rarity-filter').value;
   
-  // Очистка сетки
   grid.innerHTML = '';
   
   let cardsToDisplay;
   
-  // Основная логика: активная колода
   if (state.currentUser?.activeDeckId && state.currentUser.decks?.[state.currentUser.activeDeckId]) {
-    // Карты ИЗ активной колоды
     const activeDeck = state.currentUser.decks[state.currentUser.activeDeckId];
     const deckCardIds = Object.keys(activeDeck.cards || {});
     cardsToDisplay = deckCardIds.map(cardId => getCard(cardId)).filter(card => card !== undefined);
   } else if (state.isAdmin) {
-    // Админы видят ВСЕ
     cardsToDisplay = state.cards;
   } else {
-    // Обычные пользователи - глобальная коллекция
     const userCardIds = Object.keys(state.currentUser?.cards || {});
     cardsToDisplay = userCardIds.map(cardId => getCard(cardId)).filter(card => card !== undefined);
   }
   
-  // Применяем фильтр редкости
   let filteredCards = cardsToDisplay;
   if (rarityFilter) {
     filteredCards = cardsToDisplay.filter(card => card.rarity === rarityFilter);
@@ -123,9 +115,7 @@ export function renderCollection() {
     return;
   }
   
-  // Нендер карт
   filteredCards.forEach(card => {
-    // Количество в активной колоде или глобально
     let count;
     if (state.currentUser?.activeDeckId) {
       count = state.currentUser.decks[state.currentUser.activeDeckId].cards[card.id] || 0;
@@ -137,27 +127,25 @@ export function renderCollection() {
     grid.appendChild(element);
   });
   
-  // Обновляю статистику
   updateCollectionStats();
 }
 
 /**
  * Создает DOM-элемент карты
- * НОВОЕ: добавлен data-tilt для 3D эффекта
+ * НОВОЕ: Параметры в тексте, а не в секциях
  */
 function createCardElement(card, count) {
   const div = document.createElement('div');
   div.className = 'card-item';
-  div.setAttribute('data-tilt', 'true');  // для tilted эффекта
   
-  // Нередкость карты
   const rarity = ui.getRarityBadge(card.rarity);
   const borderColor = rarity.color;
   
-  // Добавляем data-rarity атрибут
   div.setAttribute('data-rarity', card.rarity);
   
-  // HTML карты
+  // Форматированные параметры в текстовом виде
+  const paramsText = `💓${card.power?.resonance || 0} 🎯${card.power?.virtuosity || 0} 🧠${card.power?.profundity || 0} ⚖${card.power?.harmony || 0}`;
+  
   div.innerHTML = `
     <div class="card-image">
       ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22%3E%3C/svg%3E'">` : `<div style="font-size: 48px;">🎨</div>`}
@@ -168,11 +156,10 @@ function createCardElement(card, count) {
       <div class="card-rarity" style="background-color: ${rarity.color}15; border-color: ${rarity.color}; color: ${rarity.color};">
         ${rarity.emoji} ${rarity.name}
       </div>
-      <div class="card-stats">
-        <div class="card-stat" style="color: var(--resonance);">💓 ${card.power?.resonance || 0}</div>
-        <div class="card-stat" style="color: var(--virtuosity);">🎯 ${card.power?.virtuosity || 0}</div>
-        <div class="card-stat" style="color: var(--profundity);">🧠 ${card.power?.profundity || 0}</div>
-        <div class="card-stat" style="color: var(--harmony);">⚖️ ${card.power?.harmony || 0}</div>
+      <div class="card-params">
+        <div class="card-param-line">
+          <span>${paramsText}</span>
+        </div>
       </div>
       <div class="card-count" style="border-color: ${borderColor}; color: ${borderColor};">
         ${count > 0 ? `${count} шт.` : (state.isAdmin ? '📋 Превью' : '0 шт.')}
@@ -180,17 +167,14 @@ function createCardElement(card, count) {
     </div>
   `;
   
-  // Обновляем стиль карт по редкости
   div.style.borderColor = borderColor;
-  
-  // Событие клика
   div.addEventListener('click', () => showCardDetail(card, count));
   
   return div;
 }
 
 /**
- * Показывает новое модальное окно с ПОЛНОЙ информацией карты
+ * Показывает модальное окно с полной информацией
  */
 function showCardDetail(card, count) {
   const modal = document.getElementById('card-detail-modal');
@@ -198,28 +182,22 @@ function showCardDetail(card, count) {
   
   const rarity = ui.getRarityBadge(card.rarity);
   
-  // Основная информация
   document.getElementById('modal-card-title').textContent = card.title;
   document.getElementById('modal-card-artist').textContent = card.artist;
   document.getElementById('modal-card-year').textContent = `Год: ${card.year}`;
   document.getElementById('modal-card-description').textContent = card.description;
   
-  // Изображение
   const img = document.getElementById('modal-card-image');
   img.src = card.imageUrl || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22%3E%3C/svg%3E';
-  
-  // Клик на изображение - открываем fullscreen
   img.style.cursor = 'pointer';
   img.onclick = () => openFullscreenImage(card.imageUrl);
   
-  // Редкость
   const rarityDiv = document.getElementById('modal-card-rarity');
   rarityDiv.innerHTML = `${rarity.emoji} ${rarity.name}`;
   rarityDiv.style.backgroundColor = `${rarity.color}15`;
   rarityDiv.style.borderColor = rarity.color;
   rarityDiv.style.color = rarity.color;
   
-  // Параметры (динамически)
   const params = [
     { name: '💓 Резонанс', value: card.power?.resonance || 0, color: 'var(--resonance)' },
     { name: '🎯 Виртуозность', value: card.power?.virtuosity || 0, color: 'var(--virtuosity)' },
@@ -227,7 +205,6 @@ function showCardDetail(card, count) {
     { name: '⚖️ Гармония', value: card.power?.harmony || 0, color: 'var(--harmony)' }
   ];
   
-  // Очистим старые параметры и создаем новые
   const paramsContainer = document.getElementById('modal-card-params') || createParamsContainer();
   paramsContainer.innerHTML = '';
   
@@ -256,7 +233,6 @@ function showCardDetail(card, count) {
     paramsContainer.appendChild(paramEl);
   });
   
-  // Количество в контексте
   const countText = state.isAdmin && count === 0 
     ? `📋 создана админом` 
     : (state.currentUser?.activeDeckId 
@@ -264,7 +240,6 @@ function showCardDetail(card, count) {
       : `В коллекции: ${count} шт.`);
   document.getElementById('modal-card-count').textContent = countText;
   
-  // Открываем модаль
   openModal('card-detail-modal');
 }
 
@@ -317,26 +292,14 @@ function createFullscreenModal() {
 }
 
 /**
- * === СИСТЕМА РАСЧЕТА СИЛЫ КОЛОДЫ ===
- * 
- * Рейтинг Колоды = (Уникальность + Сила/10) × Множитель Бонусов
- * 
- * где:
- *   Множитель Бонусов = 1 + Бонус Эр + Бонус Художников + Бонус Нередкостей
+ * === СИСТЕМА РАСЧЕТА РЕЙТИНГА ===
  */
 
-/**
- * Получит рейтинг для импорта из user.js
- */
 export function calculateDeckRating() {
   return calculateDeckRatingInternal();
 }
 
-/**
- * Внутренняя реализация
- */
 function calculateDeckRatingInternal() {
-  // Определяем какая колода рассчитывается
   let deckCards;
   if (state.currentUser?.activeDeckId && state.currentUser.decks?.[state.currentUser.activeDeckId]) {
     deckCards = state.currentUser.decks[state.currentUser.activeDeckId].cards;
@@ -356,9 +319,6 @@ function calculateDeckRatingInternal() {
   return (uniqueness + power) * bonusMultiplier;
 }
 
-/**
- * Получает информацию о разложении рейтинга
- */
 export function getDeckRatingBreakdown() {
   let deckCards;
   if (state.currentUser?.activeDeckId && state.currentUser.decks?.[state.currentUser.activeDeckId]) {
@@ -377,9 +337,6 @@ export function getDeckRatingBreakdown() {
   };
 }
 
-/**
- * Рассчитывает уникальность колоды
- */
 function calculateUniqueness(deckCards) {
   const uniqueCards = Object.keys(deckCards).length;
   const totalCards = Object.values(deckCards).reduce((a, b) => a + b, 0);
@@ -387,8 +344,6 @@ function calculateUniqueness(deckCards) {
   if (totalCards === 0) return 0;
   
   const uniquenessRatio = uniqueCards / totalCards;
-  
-  // Бонус за диверсификацию
   let uniquenessBonus = 1.0;
   if (uniqueCards > 20) uniquenessBonus = 1.5;
   else if (uniqueCards > 10) uniquenessBonus = 1.25;
@@ -396,9 +351,6 @@ function calculateUniqueness(deckCards) {
   return (uniquenessRatio * 100) * uniquenessBonus;
 }
 
-/**
- * Рассчитывает суммарную силу карт
- */
 function calculatePower(deckCards) {
   const rarityMultipliers = {
     'common': 1.0,
@@ -429,9 +381,6 @@ function calculatePower(deckCards) {
   return totalPower / 10;
 }
 
-/**
- * Рассчитывает бонус за разнообразие эпох
- */
 function calculateEraBonus(deckCards) {
   const eraSet = new Set();
   
@@ -443,9 +392,6 @@ function calculateEraBonus(deckCards) {
   return Math.min(eraSet.size * 0.05, 0.5);
 }
 
-/**
- * Рассчитывает бонус за синергию художников
- */
 function calculateArtistBonus(deckCards) {
   const artistMap = {};
   
@@ -462,9 +408,6 @@ function calculateArtistBonus(deckCards) {
   return Math.min(artistsWithMultiple * 0.1, 0.6);
 }
 
-/**
- * Рассчитывает бонус за распределение редкостей
- */
 function calculateRarityBonus(deckCards) {
   const raritySet = new Set();
   
@@ -477,7 +420,7 @@ function calculateRarityBonus(deckCards) {
 }
 
 /**
- * Обновляет статистику коллекции
+ * Обновляет статистику
  */
 function updateCollectionStats() {
   let deckCards;
