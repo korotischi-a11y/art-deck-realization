@@ -59,7 +59,7 @@ function getCardStatsInDecks(cardId) {
   let inDecksTotal = 0;
   
   for (const [deckId, deck] of Object.entries(decksObj)) {
-    if (deck.isLocked || deck.isDiscardDeck) continue;  // Не считаем сбросовую
+    if (deck.isDiscardDeck) continue;  // Не считаем сбросовую
     const count = deck.cards?.[cardId] || 0;
     if (count > 0) {
       inDecks.push({ name: deck.name, count, deckId });
@@ -88,10 +88,17 @@ export function renderCollection() {
   let title = 'Вся коллекция';
   const viewingDeck = decks.activeDeckId && state.currentUser?.decks?.[decks.activeDeckId];
   
-  if (viewingDeck) {
+  // ОПРЕДЕЛЯЕМ ТОНКУЙ МОМЕНТ: ЧТО ПОКАЗЫВАТЬ
+  if (viewingDeck && !viewingDeck.isDiscardDeck) {
+    // НОРМАЛЬНАЯ КОЛОДА: только карты ИЗ НЕЙ
     userCardIds = Object.keys(viewingDeck.cards || {});
     title = `🎴 ${viewingDeck.name}`;
+  } else if (viewingDeck && viewingDeck.isDiscardDeck) {
+    // КОЛОДА СБРОСА: карты БЕЗ других колод
+    userCardIds = Object.keys(viewingDeck.cards || {});
+    title = `🗑 Карты без колод`;
   } else {
+    // ВЕСЬ ГЛАВНЫЙ ЭКРАН: ВЕСЮ коллекцию
     userCardIds = Object.keys(state.currentUser?.cards || {});
   }
   
@@ -151,17 +158,17 @@ function createCardElement(card, count) {
       ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" style="width:100%; height:100%; object-fit:cover; object-position:center;" />` : '🎨'}
     </div>
     <div class="card-body" style="display:flex; flex-direction:column; min-height:0;">
-      <!-- Титул с динамическим размером текста -->
-      <div class="card-title" style="flex:1; overflow:hidden; display:flex; align-items:center; font-size:clamp(8px, 3.5vw, 11px); word-break:break-word;">${ui.sanitizeHTML(card.title)}</div>
+      <!-- ТИТУЛ ВИДЕН НОРМАЛЬНО (МИН 6px, МАКС 11px) -->
+      <div class="card-title" style="flex:1; overflow:hidden; display:flex; align-items:center; font-size:clamp(6px, 2.8vw, 11px); word-break:break-word; line-height:1.2;">${ui.sanitizeHTML(card.title)}</div>
       
       <!-- Артист слева и год справа -->
-      <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary); margin-bottom:6px;">
-        <span>${ui.sanitizeHTML(card.artist)}</span>
+      <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-secondary); margin-bottom:6px; min-height:14px;">
+        <span style="overflow:hidden; text-overflow:ellipsis;">${ui.sanitizeHTML(card.artist)}</span>
         <span>${card.year}</span>
       </div>
       
-      <!-- Редкость - ОДНО строка, ЦЕНТРИРОВАННАя -->
-      <div class="card-rarity" style="background:${rarity.color}15; border-color:${rarity.color}; color:${rarity.color}; white-space:nowrap; text-align:center;">
+      <!-- РЕДКОСТЬ -->
+      <div class="card-rarity" style="background:${rarity.color}15; border-color:${rarity.color}; color:${rarity.color}; white-space:nowrap; text-align:center; font-size:10px;">
         ${rarity.emoji} ${rarity.name}
       </div>
     </div>
@@ -387,12 +394,12 @@ function renderCardActionButtons(cardId, container) {
   deleteBtn.type = 'button';
   deleteBtn.className = 'btn';
   deleteBtn.style.cssText = 'width:100%; background:#ef4444; color:white; border:none; cursor:pointer; font-weight:600; padding:10px; border-radius:6px;';
-  deleteBtn.textContent = '⚠ ПОРВАТЬ НАВСЕГДА';
+  deleteBtn.textContent = '⚠ ПОРВАТЬ НАВсЕГДА';
   deleteBtn.onclick = async () => {
     const confirm1 = confirm('⚠ Ето ПОРВЕТ карту из ВСЕХ колод и коллекции!\n\nВы уверены?');
     if (!confirm1) return;
     
-    const confirm2 = confirm('⚠ ПОСЛЕДНЕЕ ПОПНиНАНИЕ: так и ПОРВАТЬ?');
+    const confirm2 = confirm('⚠ ПОСЛЕДНЕЕ ПОПНИНАНИЕ: так и ПОРВАТЬ?');
     if (!confirm2) return;
     
     const success = await decks.deleteCardFromCollection(cardId);
