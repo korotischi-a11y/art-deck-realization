@@ -113,9 +113,9 @@ function createCardElement(card, count) {
       <!-- Центрированное изображение -->
       ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" style="width:100%; height:100%; object-fit:cover; object-position:center;" />` : '🎨'}
     </div>
-    <div class="card-body" style="display:flex; flex-direction:column;">
-      <!-- Титул -->
-      <div class="card-title" style="flex:1;">${ui.sanitizeHTML(card.title)}</div>
+    <div class="card-body" style="display:flex; flex-direction:column; min-height:0;">
+      <!-- Титул с динамическим размером текста -->
+      <div class="card-title" style="flex:1; overflow:hidden; display:flex; align-items:center; font-size:clamp(10px, 4vw, 13px); word-break:break-word;">${ui.sanitizeHTML(card.title)}</div>
       
       <!-- Артист слева и год справа -->
       <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary); margin-bottom:6px;">
@@ -294,7 +294,7 @@ function renderRemoveFromDeckButton(cardId) {
   const addBtn = document.getElementById('add-to-deck-btn');
   if (!modal || !addBtn) return;
   
-  // Кнопка УДАЛЕНИЯ ИЗ КОЛОДЫ (только в колоде, но не в коллекции)
+  // Кнопка УДАЛЕНИЯ ИЗ КОЛОДЫ
   if (decks.activeDeckId) {
     removeBtn = document.createElement('button');
     removeBtn.id = 'remove-from-deck-btn';
@@ -316,24 +316,30 @@ function renderRemoveFromDeckButton(cardId) {
     modal.insertBefore(removeBtn, addBtn.nextSibling);
   }
   
-  // Кнопка ПОЛНОГО УДАЛЕНИЯ (из ВСЕХ колод и коллекции)
+  // Кнопка "ПОРВАТЬ" - ПОЛНОЕ УДАЛЕНИЕ
   deleteCompletelyBtn = document.createElement('button');
   deleteCompletelyBtn.id = 'delete-completely-btn';
   deleteCompletelyBtn.className = 'btn';
-  deleteCompletelyBtn.style.cssText = 'width:100%; margin-top:8px; background:#666; color:white; border:none; border-radius:6px; cursor:pointer;';
-  deleteCompletelyBtn.textContent = '⚠ НУКЛеарная опция: Удалить навсегда';
+  deleteCompletelyBtn.style.cssText = 'width:100%; margin-top:8px; background:#666; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600;';
+  deleteCompletelyBtn.textContent = '⚠ ПОРВАТЬ НАВСЕГДА';
   deleteCompletelyBtn.onclick = async () => {
-    if (confirm('⚠ Это удалит карту ГОДЕЙТЕ ИЗ ВСЕХ колод и коллекции!')) {
-      const success = await decks.deleteCardFromCollection(cardId);
-      if (success) {
-        ui.showToast('✅ Карта полностью удалена', 'success');
-        closeModal('card-detail-modal');
-        await decks.loadDecks();
-        decks.renderDecks();
-        renderCollection();
-      } else {
-        ui.showError('Ошибка');
-      }
+    // Первое потверждение
+    const confirm1 = confirm('✅ Это ПОРВЕТ карту из ВСЕХ колод и коллекции!\n\nВы уверены?');
+    if (!confirm1) return;
+    
+    // Второе потверждение
+    const confirm2 = confirm('✅ ПОСЛЕДНЕЕ ПОПНИЯНИЕ: так и ПОРВАТЬ?');
+    if (!confirm2) return;
+    
+    const success = await decks.deleteCardFromCollection(cardId);
+    if (success) {
+      ui.showToast('✅ Карта развались в клочья', 'success');
+      closeModal('card-detail-modal');
+      await decks.loadDecks();
+      decks.renderDecks();
+      renderCollection();
+    } else {
+      ui.showError('Ошибка');
     }
   };
   
