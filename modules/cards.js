@@ -126,7 +126,7 @@ function createCardElement(card, count) {
     </div>
     <div class="card-body" style="display:flex; flex-direction:column; min-height:0;">
       <!-- Титул с динамическим размером текста -->
-      <div class="card-title" style="flex:1; overflow:hidden; display:flex; align-items:center; font-size:clamp(10px, 4vw, 13px); word-break:break-word;">${ui.sanitizeHTML(card.title)}</div>
+      <div class="card-title" style="flex:1; overflow:hidden; display:flex; align-items:center; font-size:clamp(8px, 3.5vw, 11px); word-break:break-word;">${ui.sanitizeHTML(card.title)}</div>
       
       <!-- Артист слева и год справа -->
       <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary); margin-bottom:6px;">
@@ -211,7 +211,7 @@ function showCardDetail(card, count) {
   rarityDiv.style.color = rarity.color;
   
   descEl.textContent = card.description || 'Нет описания';
-  countEl.textContent = `📦 В коллекции: ${count} копий`;
+  countEl.innerHTML = `📦 <strong>В коллекции:</strong> ${count} копий`;
   
   paramsTable.innerHTML = '';
   const params = [
@@ -245,7 +245,6 @@ function showCardDetail(card, count) {
   
   const modalContent = document.querySelector('.modal-content');
   if (modalContent) {
-    // НАЙНИ НИКГДЕ НЕ Убирай это
     const closeBtnDiv = document.querySelector('.modal-close');
     if (closeBtnDiv && closeBtnDiv.parentElement === modalContent) {
       modalContent.insertBefore(buttonContainer, closeBtnDiv.nextSibling);
@@ -389,7 +388,7 @@ function openFullscreenImage(imageUrl) {
 }
 
 /**
- * Обновляет статистику – ПРАВИЛЬНЫЙ РАСЧЁТ
+ * Обновляет статистику
  */
 function updateStats() {
   const { total, unique } = calculateStats();
