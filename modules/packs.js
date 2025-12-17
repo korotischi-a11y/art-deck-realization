@@ -32,9 +32,33 @@ export async function loadPacks() {
 async function initDefaultPacks() {
   try {
     const defaultPacks = [
-      { name: 'Стартер', price: 50, cardCount: 3, emoji: '🎲', color: '#3b82f6', rarityWeights: { common: 5, uncommon: 2 } },
-      { name: 'Стандарт', price: 100, cardCount: 5, emoji: '🎳', color: '#f59e0b', rarityWeights: { uncommon: 4, rare: 2 } },
-      { name: 'Премиум', price: 200, cardCount: 7, emoji: '🎴', color: '#a855f7', rarityWeights: { rare: 3, mythical: 2, legendary: 1 } }
+      { 
+        name: 'Стартер', 
+        price: 50, 
+        cardCount: 3, 
+        emoji: '🎲', 
+        color: '#3b82f6',
+        borderColor: '#2563eb',
+        rarityWeights: { common: 5, uncommon: 2 } 
+      },
+      { 
+        name: 'Стандарт', 
+        price: 100, 
+        cardCount: 5, 
+        emoji: '🎳', 
+        color: '#f59e0b',
+        borderColor: '#d97706',
+        rarityWeights: { uncommon: 4, rare: 2 } 
+      },
+      { 
+        name: 'Премиум', 
+        price: 200, 
+        cardCount: 7, 
+        emoji: '🎴', 
+        color: '#a855f7',
+        borderColor: '#9333ea',
+        rarityWeights: { rare: 3, mythical: 2, legendary: 1 } 
+      }
     ];
     
     for (const pack of defaultPacks) {
@@ -101,14 +125,15 @@ export function renderShop() {
   
   list.appendChild(dailyPack);
   
-  // Обычные ПАКЫ
+  // ОБЫчные ПАКЫ с КАЖДЫМ своим цветом
   state.packs.forEach(pack => {
     const packColor = pack.color || '#6366f1';
+    const packBorderColor = pack.borderColor || packColor;
     const div = document.createElement('div');
     div.style.cssText = `
       min-width: 200px;
       background: linear-gradient(135deg, ${packColor}22 0%, ${packColor}11 100%);
-      border: 2px solid ${packColor};
+      border: 2px solid ${packBorderColor};
       border-radius: 12px;
       padding: 16px;
       cursor: pointer;
@@ -122,7 +147,7 @@ export function renderShop() {
       <div style="font-weight:600; font-size:16px; color:${packColor}; text-align:center;">${pack.name}</div>
       <div style="font-size:12px; color:var(--text-secondary); text-align:center;">${pack.cardCount} cards</div>
       <div style="margin-top:auto; text-align:center; font-size:14px; color:${packColor}; font-weight:600;">${pack.price} 💎</div>
-      <button class="btn btn-primary" style="width:100%; margin-top:8px;">Open</button>
+      <button class="btn btn-primary" style="width:100%; margin-top:8px; background:${packColor}; border:none; color:white; font-weight:600;">Open</button>
     `;
     
     div.addEventListener('mouseenter', () => {
@@ -162,7 +187,7 @@ async function openDailyPack() {
   const lastDaily = u.lastDailyPackDate || '';
   
   if (lastDaily === today) {
-    ui.showError('Пак уже открыт сегодня! Остаыться ' + (24 - new Date().getHours()) + ' часов');
+    ui.showError('Пак уже открыт сегодня! Остаяться ' + (24 - new Date().getHours()) + ' часов');
     return;
   }
   
