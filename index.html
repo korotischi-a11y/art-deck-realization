@@ -9,7 +9,7 @@
 <body>
   <div id="app">
     <aside class="sidebar">
-      <button class="sidebar-btn active" data-tab="collection" title="Коллекция">🎨</button>
+      <button class="sidebar-btn active" data-tab="collection" title="Коллекция">🎫</button>
       <button class="sidebar-btn" data-tab="profile" title="Профиль">👤</button>
       <button class="sidebar-btn" data-tab="leaderboard" title="Рейтинг">🏆</button>
       <button class="sidebar-btn" data-tab="packs" title="Паки">📋</button>
@@ -45,7 +45,7 @@
                   <option value="legendary">⭐ Легендарная</option>
                   <option value="ancient">🔥 Древняя</option>
                   <option value="exceedingly_rare">✨ Исключительно редкая</option>
-                  <option value="immortal">⛔ Бессмертная</option>
+                  <option value="immortal">⚠ Бессмертная</option>
                 </select>
               </div>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px;">
@@ -62,7 +62,7 @@
                   <div class="stat-label">Рейтинг</div>
                 </div>
               </div>
-              <div id="cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; overflow-y: auto;"></div>
+              <div id="cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px; overflow-y: auto;"></div>
             </div>
             <!-- ПАНЕЛЬ КОЛОД -->
             <div id="decks-panel" style="border: 1px solid var(--border); border-radius: 12px; background: var(--bg-secondary); overflow-y: auto; max-height: calc(100vh - 120px);"></div>
@@ -130,7 +130,7 @@
         <div class="tab-content" id="admin-tab">
           <h2>⚙ Admin Panel</h2>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <!-- ФОРМА НОВых КАРТ -->
+            <!-- ФОРМА НОВЫХ КАРТ -->
             <form id="admin-form" style="border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: var(--bg-secondary);">
               <h3 style="margin-bottom: 16px;">➕ Add Card</h3>
               <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -205,7 +205,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛи -->
+  <!-- МОДАЛИ -->
   <div id="card-detail-modal" class="modal">
     <div class="modal-content" style="max-width: 400px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -218,8 +218,9 @@
       <div id="modal-card-artist" style="color: var(--text-secondary); margin-bottom: 4px;">-</div>
       <div id="modal-card-year" style="color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">-</div>
       <div id="modal-card-rarity" style="display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; margin-bottom: 12px;">-</div>
+      <div id="modal-params-table" class="modal-params-table" style="margin-bottom: 12px;"></div>
       <div id="modal-card-description" style="color: var(--text); line-height: 1.5; margin-bottom: 12px; font-size: 14px;">-</div>
-      <button id="add-to-deck-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;">Add to Deck</button>
+      <button id="add-to-deck-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;" data-card-id="">Add to Deck</button>
       <div id="modal-card-count" style="color: var(--text-secondary); font-size: 12px; text-align: center;">-</div>
     </div>
   </div>
