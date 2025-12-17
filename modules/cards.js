@@ -50,6 +50,32 @@ function calculateStats() {
 }
 
 /**
+ * Определяет кол-во и доступность карты в колодах
+ */
+function getCardStatsInDecks(cardId) {
+  const decksObj = state.currentUser?.decks || {};
+  const inDecks = [];
+  const available = state.currentUser?.cards[cardId] || 0;
+  let inDecksTotal = 0;
+  
+  for (const [deckId, deck] of Object.entries(decksObj)) {
+    if (deck.isLocked || deck.isDiscardDeck) continue;  // Не считаем сбросовую
+    const count = deck.cards?.[cardId] || 0;
+    if (count > 0) {
+      inDecks.push({ name: deck.name, count, deckId });
+      inDecksTotal += count;
+    }
+  }
+  
+  return {
+    total: available,
+    available: available - inDecksTotal,
+    inDecks,
+    inDecksTotal
+  };
+}
+
+/**
  * Рендерит коллекцию карт (всю или активную колоду)
  */
 export function renderCollection() {
@@ -185,6 +211,7 @@ function showCardDetail(card, count) {
   if (!modal) { console.error('Modal not found'); return; }
   
   const rarity = ui.getRarityBadge(card.rarity);
+  const cardStats = getCardStatsInDecks(card.id);
   
   const titleEl = document.getElementById('modal-card-title');
   const artistEl = document.getElementById('modal-card-artist');
@@ -211,7 +238,21 @@ function showCardDetail(card, count) {
   rarityDiv.style.color = rarity.color;
   
   descEl.textContent = card.description || 'Нет описания';
-  countEl.innerHTML = `📦 <strong>В коллекции:</strong> ${count} копий`;
+  
+  // динАМИЧНЫЙ счётчик
+  let countHTML = `<strong>📦 В коллекции:</strong> ${cardStats.total} копий`;
+  if (cardStats.inDecksTotal > 0) {
+    countHTML += `<br/><strong>🎴 В колодах:</strong> ${cardStats.inDecksTotal} копий`;
+    if (cardStats.inDecks.length > 0) {
+      countHTML += '<div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">';
+      cardStats.inDecks.forEach(d => {
+        countHTML += `• ${d.name}: ${d.count}<br/>`;
+      });
+      countHTML += '</div>';
+    }
+    countHTML += `<br/><strong>🎯 Доступно:</strong> ${cardStats.available} копий`;
+  }
+  countEl.innerHTML = countHTML;
   
   paramsTable.innerHTML = '';
   const params = [
@@ -351,7 +392,7 @@ function renderCardActionButtons(cardId, container) {
     const confirm1 = confirm('⚠ Ето ПОРВЕТ карту из ВСЕХ колод и коллекции!\n\nВы уверены?');
     if (!confirm1) return;
     
-    const confirm2 = confirm('⚠ ПОСЛЕДНЕЕ ПОПНИЯНИЕ: так и ПОРВАТЬ?');
+    const confirm2 = confirm('⚠ ПОСЛЕДНЕЕ ПОПНиНАНИЕ: так и ПОРВАТЬ?');
     if (!confirm2) return;
     
     const success = await decks.deleteCardFromCollection(cardId);
