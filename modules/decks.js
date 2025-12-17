@@ -82,7 +82,7 @@ export function renderDecks() {
     deckEl.innerHTML = `
       <div style="font-weight:600; color:var(--text-accent); font-size:13px; word-break: break-word; margin-bottom:4px;">${deck.name}</div>
       <div style="font-size:11px; color:var(--text-secondary);">
-        🂠 ${cardCount} карт | ⭐ ${Math.round(deckRating)}
+        🎰 ${cardCount} карт | ⭐ ${Math.round(deckRating)}
       </div>
       <div class="deck-actions" style="position:absolute; top:8px; right:8px; display:none; gap:4px;">
         <button class="deck-edit-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:var(--wood-medium); border:none; border-radius:4px; color:var(--bg-primary); font-size:10px; cursor:pointer;">✏️</button>
@@ -179,7 +179,7 @@ export async function addCardToDeckById(cardId, deckId) {
 }
 
 /**
- * Удалить карту из активной колоды
+ * Удалить карту ИЗ АКТИВНОЙ КОЛОДЫ (не из обычной коллекции!)
  */
 export async function removeCardFromActiveDeck(cardId) {
   try {
@@ -188,8 +188,11 @@ export async function removeCardFromActiveDeck(cardId) {
     const deck = u.decks[activeDeckId];
     if (!deck || !deck.cards || !deck.cards[cardId]) return false;
     
+    // Уменьшаем на 1 В КОЛОДЕ
     deck.cards[cardId] -= 1;
-    if (deck.cards[cardId] <= 0) delete deck.cards[cardId];
+    if (deck.cards[cardId] <= 0) {
+      delete deck.cards[cardId];  // Удаляем ИЗ КОЛОДЫ, но КАРТА ОстАЕТСЯ в обычной!
+    }
     
     await db.collection('users').doc(u.uid)
       .collection('decks').doc(activeDeckId)
@@ -204,6 +207,40 @@ export async function removeCardFromActiveDeck(cardId) {
 }
 
 /**
+ * Удалить карту ПОЛНОстью из ОБЫЧНОЙ КОЛЛЕКЦИИ
+ */
+export async function deleteCardFromCollection(cardId) {
+  try {
+    const u = state.currentUser;
+    if (!u.cards || !u.cards[cardId]) return false;
+    
+    // Удаляем ВСЕ копии из обычной коллекции
+    delete u.cards[cardId];
+    
+    // Также удаляем из ВСЕХ колод
+    if (u.decks) {
+      for (const deck of Object.values(u.decks)) {
+        if (deck.cards && deck.cards[cardId]) {
+          delete deck.cards[cardId];
+          await db.collection('users').doc(u.uid)
+            .collection('decks').doc(deck.id)
+            .update({ cards: deck.cards });
+        }
+      }
+    }
+    
+    // Обновляем в Firestore
+    await db.collection('users').doc(u.uid).update({ cards: u.cards });
+    
+    await loadDecks();
+    return true;
+  } catch (e) {
+    console.error('Error deleting card:', e);
+    return false;
+  }
+}
+
+/**
  * Открыть модалку создания колоды
  */
 function openCreateDeckModal() {
@@ -213,8 +250,8 @@ function openCreateDeckModal() {
   modal.innerHTML = `
     <div class="modal-content" style="max-width:400px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h2 style="margin:0;">📦 Новая колода</h2>
-        <button class="modal-close" style="padding:0; width:32px; height:32px;">✕</button>
+        <h2 style="margin:0;">📮 Новая колода</h2>
+        <button class="modal-close" style="padding:0; width:32px; height:32px;">✗</button>
       </div>
       <input type="text" id="new-deck-name" placeholder="Название колоды" style="width:100%; padding:10px; background:var(--bg-tertiary); border:1px solid var(--border); color:var(--text); border-radius:8px; margin-bottom:16px;" />
       <button id="create-deck-confirm" class="btn btn-primary" style="width:100%;">Create</button>
@@ -266,7 +303,7 @@ function openEditDeckModal(deckId) {
     <div class="modal-content" style="max-width:400px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
         <h2 style="margin:0;">✏️ Редактировать</h2>
-        <button class="modal-close" style="padding:0; width:32px; height:32px;">✕</button>
+        <button class="modal-close" style="padding:0; width:32px; height:32px;">✗</button>
       </div>
       <input type="text" id="edit-deck-name" value="${deck.name}" style="width:100%; padding:10px; background:var(--bg-tertiary); border:1px solid var(--border); color:var(--text); border-radius:8px; margin-bottom:16px;" />
       <button id="save-deck-name" class="btn btn-primary" style="width:100%;">Save</button>
