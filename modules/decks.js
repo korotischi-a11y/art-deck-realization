@@ -32,10 +32,8 @@ export async function loadDecks() {
 
     console.log('📂 Decks loaded:', Object.keys(u.decks).length);
     
-    // Обеспечиваем, что колода сброса существует
     await getOrCreateDiscardDeck();
     
-    // Если активная не установлена, берём первую НЕ сбросовую
     if (!activeDeckId && Object.keys(u.decks).length > 0) {
       const normalDeck = Object.values(u.decks).find(d => !d.isDiscardDeck);
       if (normalDeck) {
@@ -55,20 +53,18 @@ export async function getOrCreateDiscardDeck() {
     const u = state.currentUser;
     if (!u) return null;
 
-    // Поиск наличие колоды
     const existingDeck = Object.values(u.decks || {}).find(d => d.isDiscardDeck);
     if (existingDeck) {
       return existingDeck.id;
     }
 
-    // Нет - создаём
     const ref = db.collection('users').doc(u.uid).collection('decks').doc();
     await ref.set({ 
       name: DISCARD_DECK_NAME, 
       cards: {}, 
       createdAt: new Date(),
-      isDiscardDeck: true,  // Метка для распознания
-      isLocked: false       // НЕ блокируем - МОЖНО смотреть!
+      isDiscardDeck: true,
+      isLocked: false
     });
 
     await loadDecks();
@@ -94,7 +90,6 @@ export function renderDecks() {
     return;
   }
 
-  // Отделяем колоду сброса и нормальные
   const discardDeck = deckList.find(d => d.isDiscardDeck);
   const normalDecks = deckList.filter(d => !d.isDiscardDeck);
 
@@ -109,7 +104,6 @@ export function renderDecks() {
   decksList.id = 'decks-list';
   decksList.style.cssText = 'display: flex; flex-direction: column; gap: 8px; padding: 8px;';
   
-  // НОРМАЛЬНЫЕ КОЛОДЫ
   normalDecks.forEach(deck => {
     const cardCount = Object.values(deck.cards || {}).reduce((a, b) => a + b, 0);
     const uniqueCount = Object.keys(deck.cards || {}).length;
@@ -120,7 +114,6 @@ export function renderDecks() {
     decksList.appendChild(deckEl);
   });
   
-  // КОЛОДА СБРОСА (ОТДЕЛьНО, В КОНЦЕ, НЕ блокируемая, активная)
   if (discardDeck) {
     const separator = document.createElement('div');
     separator.style.cssText = 'border-top: 2px dashed var(--border); margin: 8px 0;';
@@ -128,14 +121,13 @@ export function renderDecks() {
     
     const uniqueCount = Object.keys(discardDeck.cards || {}).length;
     const deckRating = calculateDeckRating(discardDeck.cards || {});
-    const isActive = activeDeckId === discardDeck.id;  // ОНА МОЖЕТ БЫТЬ АКТИВНОЙ!
-    const deckEl = createDeckElement(discardDeck, uniqueCount, isActive, deckRating, false);  // НЕ заблокируемая!
+    const isActive = activeDeckId === discardDeck.id;
+    const deckEl = createDeckElement(discardDeck, uniqueCount, isActive, deckRating, false);
     decksList.appendChild(deckEl);
   }
   
   panel.appendChild(decksList);
   
-  // Обработчики для кнопок edit/delete
   panel.querySelectorAll('.deck-edit-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -155,9 +147,6 @@ export function renderDecks() {
   document.getElementById('create-deck-btn')?.addEventListener('click', openCreateDeckModal);
 }
 
-/**
- * Создаёт DOM элемент колоды
- */
 function createDeckElement(deck, uniqueCount, isActive, deckRating, isLocked) {
   const deckEl = document.createElement('div');
   deckEl.className = 'deck-item';
@@ -206,9 +195,6 @@ function createDeckElement(deck, uniqueCount, isActive, deckRating, isLocked) {
   return deckEl;
 }
 
-/**
- * Рассчитывает рейтинг колоды
- */
 function calculateDeckRating(cards) {
   if (!cards || Object.keys(cards).length === 0) return 0;
   const totalCards = Object.values(cards).reduce((a, b) => a + b, 0);
@@ -216,22 +202,16 @@ function calculateDeckRating(cards) {
   return (uniqueCards / totalCards) * 100 + uniqueCards * 10;
 }
 
-/**
- * Получить все колоды для dropdown (БЕЗ колоды сброса)
- */
 export function getDecksForDropdown() {
   const { decks = {} } = state.currentUser || {};
   return Object.values(decks)
-    .filter(d => !d.isDiscardDeck)  // Исключаем колоду сброса
+    .filter(d => !d.isDiscardDeck)
     .map(d => ({
       id: d.id,
       name: d.name || 'Без имени'
     }));
 }
 
-/**
- * Добавить карту в конкретную колоду
- */
 export async function addCardToDeckById(cardId, deckId) {
   try {
     const u = state.currentUser;
@@ -255,9 +235,6 @@ export async function addCardToDeckById(cardId, deckId) {
   }
 }
 
-/**
- * Удалить карту ИЗ АКТИВНОЙ КОЛОДЫ - ИСПРАВЛЕНО: МИНУС 1, ПЛЮС 1 БЕЗ КОПИРОВАНИЯ
- */
 export async function removeCardFromActiveDeck(cardId) {
   try {
     if (!activeDeckId) return false;
@@ -265,24 +242,20 @@ export async function removeCardFromActiveDeck(cardId) {
     const deck = u.decks[activeDeckId];
     if (!deck || !deck.cards || !deck.cards[cardId]) return false;
     
-    // КОЛОДА СБРОСА: НЕ делете, только просматривайте оттуда карты
     if (deck.isDiscardDeck) {
       ui.showToast('🗑 Карты без колод - только просмотр', 'info');
       return false;
     }
     
-    // МИНУС 1 ИЗ АКТИВНОЙ
     deck.cards[cardId] -= 1;
     if (deck.cards[cardId] <= 0) {
       delete deck.cards[cardId];
     }
     
-    // ОБНОВЛЯЕМ АКТИВНУЮ КОЛОДУ
     await db.collection('users').doc(u.uid)
       .collection('decks').doc(activeDeckId)
       .update({ cards: deck.cards });
     
-    // ПЛЮС РОВНО 1 В СБРОС (ПРЯМОЕ ДОБАВЛЕНИЕ, БЕЗ addCardToDiscardDeck!)
     const discardDeckId = await getOrCreateDiscardDeck();
     if (discardDeckId) {
       const discardDeck = u.decks[discardDeckId];
@@ -303,8 +276,68 @@ export async function removeCardFromActiveDeck(cardId) {
 }
 
 /**
- * Добавить карту В КОЛОДУ СБРОСА
+ * 🔥 УНИВЕРСАЛЬНАЯ ФУНКЦИЯ: ПЕРЕМЕЩАТЬ КАРТУ МЕЖДУ КОЛОДАМИ
+ * МИНУС из исходной, ПЛЮС в целевую
+ * БЕЗ дублирования!
  */
+export async function moveCardBetweenDecks(cardId, fromDeckId, toDeckId, count = 1) {
+  try {
+    const u = state.currentUser;
+    if (!u || !fromDeckId || !toDeckId) return false;
+    if (fromDeckId === toDeckId) return false;
+    
+    const fromDeck = u.decks[fromDeckId];
+    const toDeck = u.decks[toDeckId];
+    
+    if (!fromDeck || !toDeck) return false;
+    
+    const countInFrom = fromDeck.cards?.[cardId] || 0;
+    if (countInFrom < count) return false;
+    
+    fromDeck.cards[cardId] -= count;
+    if (fromDeck.cards[cardId] <= 0) {
+      delete fromDeck.cards[cardId];
+    }
+    
+    toDeck.cards = toDeck.cards || {};
+    toDeck.cards[cardId] = (toDeck.cards[cardId] || 0) + count;
+    
+    await db.collection('users').doc(u.uid)
+      .collection('decks').doc(fromDeckId)
+      .update({ cards: fromDeck.cards });
+    
+    await db.collection('users').doc(u.uid)
+      .collection('decks').doc(toDeckId)
+      .update({ cards: toDeck.cards });
+    
+    await loadDecks();
+    return true;
+  } catch (e) {
+    console.error('Error moving card:', e);
+    return false;
+  }
+}
+
+export async function deleteCardFromCollection(cardId) {
+  try {
+    const u = state.currentUser;
+    const decksObj = u.decks || {};
+    for (const [deckId, deck] of Object.entries(decksObj)) {
+      if (deck.cards && deck.cards[cardId]) {
+        delete deck.cards[cardId];
+        await db.collection('users').doc(u.uid)
+          .collection('decks').doc(deckId)
+          .update({ cards: deck.cards });
+      }
+    }
+    await loadDecks();
+    return true;
+  } catch (e) {
+    console.error('Error deleting card:', e);
+    return false;
+  }
+}
+
 export async function addCardToDiscardDeck(cardId) {
   try {
     const discardDeckId = await getOrCreateDiscardDeck();
@@ -317,9 +350,6 @@ export async function addCardToDiscardDeck(cardId) {
   }
 }
 
-/**
- * Открыть модалку создания колоды
- */
 function openCreateDeckModal() {
   const modal = document.createElement('div');
   modal.className = 'modal active';
@@ -348,9 +378,6 @@ function openCreateDeckModal() {
   };
 }
 
-/**
- * Создать новую колоду
- */
 async function createDeck(name) {
   try {
     const u = state.currentUser;
@@ -366,9 +393,6 @@ async function createDeck(name) {
   }
 }
 
-/**
- * Открыть модалку редактирования колоды
- */
 function openEditDeckModal(deckId) {
   const deck = state.currentUser.decks[deckId];
   if (!deck) return;
@@ -406,9 +430,6 @@ function openEditDeckModal(deckId) {
   };
 }
 
-/**
- * Удалить колоду
- */
 async function deleteDeck(deckId) {
   try {
     await db.collection('users').doc(state.currentUser.uid)
