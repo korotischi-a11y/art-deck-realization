@@ -4,9 +4,9 @@
  * 
  * Ответственность:
  * - Загружа все карты из masterCards
- * - Нендер сетки карт из коллекции пользователя (или ВСЕ для админов)
+ * - Нендер сетки карт из коллекции или активной колоды пользователя
  * - Расчет силы колоды и рейтинга
- * - Детали карты
+ * - Открытие нового модального окна с полной информацией
  */
 
 import { state, closeModal, openModal } from '../app.js';
@@ -32,8 +32,8 @@ export async function loadCards() {
     
     console.log(`✔️ Загружено ${state.cards.length} карт`);
   } catch (error) {
-    console.error('Ошибка загружки карт:', error);
-    ui.showError('Ошибка загружки карт');
+    console.error('Ошибка загрузки карт:', error);
+    ui.showError('Ошибка загрузки карт');
   }
 }
 
@@ -80,9 +80,10 @@ export async function updateCardCount(cardId, newCount) {
 /**
  * Нендерит сетку карт
  * 
- * Философия:
- * - Обычные пользователи видят ТОЛЬКО свои карты
- * - Админы видят ВСЕ созданные карты для тестирования
+ * НОВОЕ:
+ * - Обычные пользователи видят карты ИЗ АКТИВНОЙ КОЛОДЫ (если выбрана)
+ * - Админы видят ВСЕ созданные карты 
+ * - Если нет активной колоды, показываем глобальнюю коллекцию
  */
 export function renderCollection() {
   const grid = document.getElementById('cards-grid');
@@ -91,14 +92,19 @@ export function renderCollection() {
   // Очистка сетки
   grid.innerHTML = '';
   
-  // ТО НОВОЕ: Привилегия для админов
   let cardsToDisplay;
   
-  if (state.isAdmin) {
-    // Админы видят ВСЕ карты для превью
+  // Основная логика: активная колода
+  if (state.currentUser?.activeDeckId && state.currentUser.decks?.[state.currentUser.activeDeckId]) {
+    // Карты ИЗ активной колоды
+    const activeDeck = state.currentUser.decks[state.currentUser.activeDeckId];
+    const deckCardIds = Object.keys(activeDeck.cards || {});
+    cardsToDisplay = deckCardIds.map(cardId => getCard(cardId)).filter(card => card !== undefined);
+  } else if (state.isAdmin) {
+    // Админы видят ВСЕ
     cardsToDisplay = state.cards;
   } else {
-    // Обычные пользователи видят только свои карты
+    // Обычные пользователи - глобальная коллекция
     const userCardIds = Object.keys(state.currentUser?.cards || {});
     cardsToDisplay = userCardIds.map(cardId => getCard(cardId)).filter(card => card !== undefined);
   }
@@ -119,7 +125,14 @@ export function renderCollection() {
   
   // Нендер карт
   filteredCards.forEach(card => {
-    const count = getCardCount(card.id);
+    // Количество в активной колоде или глобально
+    let count;
+    if (state.currentUser?.activeDeckId) {
+      count = state.currentUser.decks[state.currentUser.activeDeckId].cards[card.id] || 0;
+    } else {
+      count = getCardCount(card.id);
+    }
+    
     const element = createCardElement(card, count);
     grid.appendChild(element);
   });
@@ -130,10 +143,12 @@ export function renderCollection() {
 
 /**
  * Создает DOM-элемент карты
+ * НОВОЕ: добавлен data-tilt для 3D эффекта
  */
 function createCardElement(card, count) {
   const div = document.createElement('div');
   div.className = 'card-item';
+  div.setAttribute('data-tilt', 'true');  // для tilted эффекта
   
   // Нередкость карты
   const rarity = ui.getRarityBadge(card.rarity);
@@ -160,7 +175,7 @@ function createCardElement(card, count) {
         <div class="card-stat" style="color: var(--harmony);">⚖️ ${card.power?.harmony || 0}</div>
       </div>
       <div class="card-count" style="border-color: ${borderColor}; color: ${borderColor};">
-        ${count > 0 ? `${count} шт.` : (state.isAdmin ? '🗒 Превью' : '0 шт.')}
+        ${count > 0 ? `${count} шт.` : (state.isAdmin ? '📋 Превью' : '0 шт.')}
       </div>
     </div>
   `;
@@ -175,50 +190,130 @@ function createCardElement(card, count) {
 }
 
 /**
- * Показывает модальное окно с деталями карты
+ * Показывает новое модальное окно с ПОЛНОЙ информацией карты
  */
 function showCardDetail(card, count) {
   const modal = document.getElementById('card-detail-modal');
+  if (!modal) return;
+  
   const rarity = ui.getRarityBadge(card.rarity);
   
-  // Заполняем данные
+  // Основная информация
   document.getElementById('modal-card-title').textContent = card.title;
   document.getElementById('modal-card-artist').textContent = card.artist;
   document.getElementById('modal-card-year').textContent = `Год: ${card.year}`;
   document.getElementById('modal-card-description').textContent = card.description;
   
-  // Нзображение
+  // Изображение
   const img = document.getElementById('modal-card-image');
   img.src = card.imageUrl || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22%3E%3C/svg%3E';
   
-  // Передкость
+  // Клик на изображение - открываем fullscreen
+  img.style.cursor = 'pointer';
+  img.onclick = () => openFullscreenImage(card.imageUrl);
+  
+  // Редкость
   const rarityDiv = document.getElementById('modal-card-rarity');
   rarityDiv.innerHTML = `${rarity.emoji} ${rarity.name}`;
   rarityDiv.style.backgroundColor = `${rarity.color}15`;
   rarityDiv.style.borderColor = rarity.color;
   rarityDiv.style.color = rarity.color;
   
-  // Параметры
+  // Параметры (динамически)
   const params = [
-    { id: 'resonance', value: card.power?.resonance || 0, color: 'var(--resonance)' },
-    { id: 'virtuosity', value: card.power?.virtuosity || 0, color: 'var(--virtuosity)' },
-    { id: 'profundity', value: card.power?.profundity || 0, color: 'var(--profundity)' },
-    { id: 'harmony', value: card.power?.harmony || 0, color: 'var(--harmony)' }
+    { name: '💓 Резонанс', value: card.power?.resonance || 0, color: 'var(--resonance)' },
+    { name: '🎯 Виртуозность', value: card.power?.virtuosity || 0, color: 'var(--virtuosity)' },
+    { name: '🧠 Глубина', value: card.power?.profundity || 0, color: 'var(--profundity)' },
+    { name: '⚖️ Гармония', value: card.power?.harmony || 0, color: 'var(--harmony)' }
   ];
   
-  params.forEach(param => {
-    document.getElementById(`modal-${param.id}`).textContent = `${param.value}/10`;
-    document.getElementById(`modal-${param.id}-bar`).style.width = (param.value * 10) + '%';
+  // Очистим старые параметры и создаем новые
+  const paramsContainer = document.getElementById('modal-card-params') || createParamsContainer();
+  paramsContainer.innerHTML = '';
+  
+  params.forEach((param, idx) => {
+    const paramEl = document.createElement('div');
+    paramEl.style.cssText = `margin-bottom: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center;`;
+    
+    const label = document.createElement('div');
+    label.style.cssText = `font-size: 12px; font-weight: 600; color: ${param.color};`;
+    label.textContent = param.name;
+    
+    const bar = document.createElement('div');
+    bar.style.cssText = `height: 8px; background-color: var(--bg-tertiary); border-radius: 4px; overflow: hidden;`;
+    
+    const fill = document.createElement('div');
+    fill.style.cssText = `height: 100%; background-color: ${param.color}; width: ${(param.value / 10) * 100}%; border-radius: 4px; transition: width 0.3s ease;`;
+    
+    const value = document.createElement('div');
+    value.style.cssText = `text-align: right; font-weight: 600; font-size: 12px; color: ${param.color};`;
+    value.textContent = `${param.value}/10`;
+    
+    bar.appendChild(fill);
+    paramEl.appendChild(label);
+    paramEl.appendChild(bar);
+    paramEl.appendChild(value);
+    paramsContainer.appendChild(paramEl);
   });
   
-  // Количество в коллекции
+  // Количество в контексте
   const countText = state.isAdmin && count === 0 
-    ? `🗒 создана админом` 
-    : `В коллекции: ${count} шт.`;
+    ? `📋 создана админом` 
+    : (state.currentUser?.activeDeckId 
+      ? `В колоде: ${count} шт.` 
+      : `В коллекции: ${count} шт.`);
   document.getElementById('modal-card-count').textContent = countText;
   
   // Открываем модаль
   openModal('card-detail-modal');
+}
+
+/**
+ * Открывает изображение на полный экран
+ */
+function openFullscreenImage(imageUrl) {
+  const fullscreenModal = document.getElementById('modal-fullscreen-image') || createFullscreenModal();
+  fullscreenModal.style.display = 'flex';
+  const img = fullscreenModal.querySelector('img');
+  img.src = imageUrl;
+}
+
+/**
+ * Создает контейнер для параметров
+ */
+function createParamsContainer() {
+  const container = document.createElement('div');
+  container.id = 'modal-card-params';
+  const modalContent = document.querySelector('.modal-content');
+  if (modalContent && modalContent.querySelector('#modal-card-count')) {
+    const before = modalContent.querySelector('#modal-card-count').parentElement;
+    before.parentElement.insertBefore(container, before);
+  }
+  return container;
+}
+
+/**
+ * создает полноэкранное окно для изображения
+ */
+function createFullscreenModal() {
+  const modal = document.createElement('div');
+  modal.id = 'modal-fullscreen-image';
+  modal.className = 'modal-fullscreen-image';
+  modal.innerHTML = `
+    <button class="modal-fullscreen-close">✕</button>
+    <img src="" alt="fullscreen">
+  `;
+  
+  modal.querySelector('.modal-fullscreen-close').addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.style.display = 'none';
+  });
+  
+  document.body.appendChild(modal);
+  return modal;
 }
 
 /**
@@ -241,12 +336,20 @@ export function calculateDeckRating() {
  * Внутренняя реализация
  */
 function calculateDeckRatingInternal() {
-  const uniqueness = calculateUniqueness();
-  const power = calculatePower();
+  // Определяем какая колода рассчитывается
+  let deckCards;
+  if (state.currentUser?.activeDeckId && state.currentUser.decks?.[state.currentUser.activeDeckId]) {
+    deckCards = state.currentUser.decks[state.currentUser.activeDeckId].cards;
+  } else {
+    deckCards = state.currentUser?.cards || {};
+  }
   
-  const eraBonus = calculateEraBonus();
-  const artistBonus = calculateArtistBonus();
-  const rarityBonus = calculateRarityBonus();
+  const uniqueness = calculateUniqueness(deckCards);
+  const power = calculatePower(deckCards);
+  
+  const eraBonus = calculateEraBonus(deckCards);
+  const artistBonus = calculateArtistBonus(deckCards);
+  const rarityBonus = calculateRarityBonus(deckCards);
   
   const bonusMultiplier = 1 + eraBonus + artistBonus + rarityBonus;
   
@@ -257,23 +360,29 @@ function calculateDeckRatingInternal() {
  * Получает информацию о разложении рейтинга
  */
 export function getDeckRatingBreakdown() {
+  let deckCards;
+  if (state.currentUser?.activeDeckId && state.currentUser.decks?.[state.currentUser.activeDeckId]) {
+    deckCards = state.currentUser.decks[state.currentUser.activeDeckId].cards;
+  } else {
+    deckCards = state.currentUser?.cards || {};
+  }
+  
   return {
-    uniqueness: calculateUniqueness(),
-    power: calculatePower(),
-    eraBonus: calculateEraBonus(),
-    artistBonus: calculateArtistBonus(),
-    rarityBonus: calculateRarityBonus(),
+    uniqueness: calculateUniqueness(deckCards),
+    power: calculatePower(deckCards),
+    eraBonus: calculateEraBonus(deckCards),
+    artistBonus: calculateArtistBonus(deckCards),
+    rarityBonus: calculateRarityBonus(deckCards),
     total: calculateDeckRatingInternal()
   };
 }
 
 /**
- * Рассчитывает уникальность коллекции
+ * Рассчитывает уникальность колоды
  */
-function calculateUniqueness() {
-  const cards = state.currentUser?.cards || {};
-  const uniqueCards = Object.keys(cards).length;
-  const totalCards = Object.values(cards).reduce((a, b) => a + b, 0);
+function calculateUniqueness(deckCards) {
+  const uniqueCards = Object.keys(deckCards).length;
+  const totalCards = Object.values(deckCards).reduce((a, b) => a + b, 0);
   
   if (totalCards === 0) return 0;
   
@@ -290,8 +399,7 @@ function calculateUniqueness() {
 /**
  * Рассчитывает суммарную силу карт
  */
-function calculatePower() {
-  const cards = state.currentUser?.cards || {};
+function calculatePower(deckCards) {
   const rarityMultipliers = {
     'common': 1.0,
     'uncommon': 1.25,
@@ -305,7 +413,7 @@ function calculatePower() {
   
   let totalPower = 0;
   
-  Object.entries(cards).forEach(([cardId, count]) => {
+  Object.entries(deckCards).forEach(([cardId, count]) => {
     const card = getCard(cardId);
     if (!card) return;
     
@@ -324,11 +432,10 @@ function calculatePower() {
 /**
  * Рассчитывает бонус за разнообразие эпох
  */
-function calculateEraBonus() {
-  const cards = state.currentUser?.cards || {};
+function calculateEraBonus(deckCards) {
   const eraSet = new Set();
   
-  Object.keys(cards).forEach(cardId => {
+  Object.keys(deckCards).forEach(cardId => {
     const card = getCard(cardId);
     if (card) eraSet.add(card.year);
   });
@@ -339,11 +446,10 @@ function calculateEraBonus() {
 /**
  * Рассчитывает бонус за синергию художников
  */
-function calculateArtistBonus() {
-  const cards = state.currentUser?.cards || {};
+function calculateArtistBonus(deckCards) {
   const artistMap = {};
   
-  Object.keys(cards).forEach(cardId => {
+  Object.keys(deckCards).forEach(cardId => {
     const card = getCard(cardId);
     if (card) {
       artistMap[card.artist] = (artistMap[card.artist] || 0) + 1;
@@ -359,11 +465,10 @@ function calculateArtistBonus() {
 /**
  * Рассчитывает бонус за распределение редкостей
  */
-function calculateRarityBonus() {
-  const cards = state.currentUser?.cards || {};
+function calculateRarityBonus(deckCards) {
   const raritySet = new Set();
   
-  Object.keys(cards).forEach(cardId => {
+  Object.keys(deckCards).forEach(cardId => {
     const card = getCard(cardId);
     if (card) raritySet.add(card.rarity);
   });
@@ -375,9 +480,15 @@ function calculateRarityBonus() {
  * Обновляет статистику коллекции
  */
 function updateCollectionStats() {
-  const cards = state.currentUser?.cards || {};
-  const totalCards = Object.values(cards).reduce((a, b) => a + b, 0);
-  const uniqueCards = Object.keys(cards).length;
+  let deckCards;
+  if (state.currentUser?.activeDeckId && state.currentUser.decks?.[state.currentUser.activeDeckId]) {
+    deckCards = state.currentUser.decks[state.currentUser.activeDeckId].cards;
+  } else {
+    deckCards = state.currentUser?.cards || {};
+  }
+  
+  const totalCards = Object.values(deckCards).reduce((a, b) => a + b, 0);
+  const uniqueCards = Object.keys(deckCards).length;
   const deckRating = calculateDeckRatingInternal();
   
   document.getElementById('stat-total-cards').textContent = totalCards;
