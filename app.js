@@ -64,9 +64,9 @@ async function checkDailyRewards() {
     const n = new Date();
     const diff = Math.floor((n - l) / (1000 * 60 * 60 * 24));
     if (diff >= 1) {
-      await r.update({ currency: (d.currency || 0) + 50, lastDailyReward: new Date(), dailyFreeOpens: (d.dailyFreeOpens || 0) + 1 });
+      await r.update({ currency: (d.currency || 0) + 50, lastDailyReward: new Date(), dailyFreeOpens: 1 });
       state.currentUser.currency = (d.currency || 0) + 50;
-      state.currentUser.dailyFreeOpens = (d.dailyFreeOpens || 0) + 1;
+      state.currentUser.dailyFreeOpens = 1;
       ui.showToast('🎁 +50 💎', 'success');
       updateUserInterface();
     }
@@ -177,6 +177,20 @@ function updateAuthUI() {
   else { btn.textContent = '✨ Рег'; toggleBtn.textContent = 'Уже есть?'; }
 }
 function setupAuthListeners() {
+  // Show/Hide пароль
+  document.getElementById('toggle-password')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('auth-password');
+    const btn = e.target;
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁';
+    }
+  });
+
   const form = document.getElementById('auth-form');
   const toggleBtn = document.getElementById('toggle-auth');
   form?.addEventListener('submit', async (e) => {
@@ -196,14 +210,81 @@ function setupAuthListeners() {
   });
   toggleBtn?.addEventListener('click', () => { state.isLoginMode = !state.isLoginMode; updateAuthUI(); });
 }
+
 function setupEventListeners() {
   document.querySelectorAll('.sidebar-btn[data-tab]').forEach(b => { b.addEventListener('click', () => switchTab(b.dataset.tab)); });
-  document.getElementById('logout-btn')?.addEventListener('click', async () => { await auth.logout(); state.currentUser = null; showAuthPage(); });
+  document.getElementById('logout-btn')?.addEventListener('click', async () => { await auth.logout(); state.currentUser = null; showAuthPage(); setupAuthListeners(); });
   document.querySelectorAll('[id*="modal"]').forEach(m => {
     m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); });
     m.querySelector('.modal-close')?.addEventListener('click', () => m.classList.remove('active'));
   });
   document.getElementById('rarity-filter')?.addEventListener('change', () => cardMod.renderCollection());
+  
+  // Add to Deck button
+  const addToDeckBtn = document.getElementById('add-to-deck-btn');
+  if (addToDeckBtn) {
+    // Удалить старые обработчики
+    const newBtn = addToDeckBtn.cloneNode(true);
+    addToDeckBtn.parentNode.replaceChild(newBtn, addToDeckBtn);
+    
+    document.getElementById('add-to-deck-btn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const cardId = e.target.getAttribute('data-card-id');
+      if (!cardId) {
+        ui.showToast('❌ Card ID не найден', 'error');
+        return;
+      }
+      
+      try {
+        const u = firebase.auth().currentUser;
+        if (!u) {
+          ui.showToast('❌ Не авторизован', 'error');
+          return;
+        }
+        
+        const card = state.cards.find(c => c.id === cardId);
+        if (!card) {
+          ui.showToast('❌ Карта не найдена', 'error');
+          return;
+        }
+        
+        const userRef = firebase.firestore().collection('users').doc(u.uid);
+        const deckSnaps = await userRef.collection('decks').get();
+        
+        let defaultDeck = null;
+        deckSnaps.forEach(doc => {
+          const data = doc.data();
+          if (data.isDefault) defaultDeck = { id: doc.id, ...data };
+        });
+        
+        if (!defaultDeck) {
+          const newRef = userRef.collection('decks').doc();
+          await newRef.set({ 
+            name: 'Основная колода', 
+            isDefault: true, 
+            cards: { [cardId]: 1 },
+            createdAt: new Date() 
+          });
+          ui.showToast(`✅ "${card.title}" добавлена в новую колоду!`, 'success');
+        } else {
+          defaultDeck.cards[cardId] = (defaultDeck.cards[cardId] || 0) + 1;
+          await userRef.collection('decks').doc(defaultDeck.id)
+            .update({ cards: defaultDeck.cards });
+          ui.showToast(`✅ "${card.title}" добавлена в колоду!`, 'success');
+        }
+        
+        // Обновить UI
+        await decks.loadDecks();
+        decks.renderDecks();
+        closeModal('card-detail-modal');
+        
+      } catch (e) {
+        console.error('Add to deck error:', e);
+        ui.showToast(`❌ Ошибка: ${e.message}`, 'error');
+      }
+    });
+  }
 }
+
 export { updateUserInterface };
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initApp); } else { initApp(); }
