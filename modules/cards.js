@@ -107,7 +107,7 @@ function createCardElement(card, count) {
   
   div.innerHTML = `
     <div class="card-image">
-      <div style="position:absolute; top:4px; left:4px; right:4px; font-size:9px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.8); z-index:10;">${params}</div>
+      <div style="position:absolute; top:0; left:0; right:0; padding:6px 4px; background:rgba(50, 50, 50, 0.9); font-size:10px; font-weight:600; color:#d0d0d0; text-shadow:0 1px 3px rgba(0,0,0,0.95); z-index:10; border-bottom:1px solid rgba(200,200,200,0.15);">${params}</div>
       ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" />` : '🎨'}
     </div>
     <div class="card-body">
