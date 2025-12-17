@@ -35,7 +35,6 @@
           <div style="display: grid; grid-template-columns: 1fr 250px; gap: 16px; height: calc(100vh - 120px);">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h2>📚 Коллекция</h2>
                 <select id="rarity-filter" style="padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
                   <option value="">Все</option>
                   <option value="common">📑 Обычная</option>
@@ -47,19 +46,9 @@
                   <option value="exceedingly_rare">✨ Исключительно редкая</option>
                   <option value="immortal">⚠ Бессмертная</option>
                 </select>
-              </div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px;">
-                <div class="stat-card">
-                  <div class="stat-value" id="stat-total-cards">0</div>
-                  <div class="stat-label">Всего карт</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-value" id="stat-unique-cards">0</div>
-                  <div class="stat-label">Уникальных</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-value" id="stat-deck-rating">0</div>
-                  <div class="stat-label">Рейтинг</div>
+                <div class="collection-rating">
+                  <div class="collection-rating-label">Максимальный рейтинг:</div>
+                  <div class="collection-rating-value" id="max-rating">0</div>
                 </div>
               </div>
               <div id="cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px; overflow-y: auto;"></div>
@@ -123,7 +112,9 @@
         <!-- ПАКИ -->
         <div class="tab-content" id="packs-tab">
           <h2>📋 Packs</h2>
-          <div id="packs-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; overflow-y: auto;"></div>
+          <div id="packs-container" style="display: flex; flex-direction: column; gap: 20px; height: calc(100vh - 120px);">
+            <div id="packs-list" style="display: flex; gap: 20px; overflow-x: auto; padding-bottom: 10px;"></div>
+          </div>
         </div>
 
         <!-- АДМИН -->
@@ -195,11 +186,14 @@
           <input type="email" id="auth-email" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px; box-sizing: border-box;" required>
         </div>
         <div style="margin-bottom: 16px;">
-          <label style="display: block; color: var(--text-secondary); font-size: 12px; margin-bottom: 4px;">Password</label>
-          <input type="password" id="auth-password" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px; box-sizing: border-box;" required>
+          <label style="display: block; color: var(--text-secondary); font-size: 12px; margin-bottom: 4px;">Пароль</label>
+          <div style="position: relative;">
+            <input type="password" id="auth-password" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px; box-sizing: border-box;" required>
+            <button type="button" id="toggle-password" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 18px;">👁</button>
+          </div>
         </div>
-        <button type="submit" class="btn btn-primary" id="auth-btn" style="width: 100%; margin-bottom: 8px;">Login</button>
-        <button type="button" class="btn btn-secondary" id="toggle-auth" style="width: 100%;">Register</button>
+        <button type="submit" class="btn btn-primary" id="auth-btn" style="width: 100%; margin-bottom: 8px;">🔐 Вход</button>
+        <button type="button" class="btn btn-secondary" id="toggle-auth" style="width: 100%;">Регистрация</button>
       </form>
       <div id="auth-error" style="margin-top: 16px; padding: 12px; background: rgba(255,107,107,0.1); border: 1px solid red; border-radius: 8px; color: red; display: none; font-size: 12px;"></div>
     </div>
@@ -207,29 +201,29 @@
 
   <!-- МОДАЛИ -->
   <div id="card-detail-modal" class="modal">
-    <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-content" style="max-width: 450px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h2 id="modal-card-title">-</h2>
-        <button class="modal-close">✕</button>
+        <h2 id="modal-card-title" style="margin: 0;">-</h2>
+        <button class="modal-close" style="padding: 0; width: 32px; height: 32px;">✕</button>
       </div>
-      <div style="aspect-ratio: 1; background: var(--bg-tertiary); border-radius: 12px; overflow: hidden; margin-bottom: 12px;">
+      <div style="aspect-ratio: 155/268; background: var(--bg-tertiary); border-radius: 12px; overflow: hidden; margin-bottom: 12px;">
         <img id="modal-card-image" src="" style="width: 100%; height: 100%; object-fit: cover;">
       </div>
-      <div id="modal-card-artist" style="color: var(--text-secondary); margin-bottom: 4px;">-</div>
+      <div id="modal-card-artist" style="color: var(--text-secondary); margin-bottom: 4px; font-size: 14px;">-</div>
       <div id="modal-card-year" style="color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">-</div>
       <div id="modal-card-rarity" style="display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; margin-bottom: 12px;">-</div>
       <div id="modal-params-table" class="modal-params-table" style="margin-bottom: 12px;"></div>
-      <div id="modal-card-description" style="color: var(--text); line-height: 1.5; margin-bottom: 12px; font-size: 14px;">-</div>
+      <div id="modal-card-description" style="color: var(--text); line-height: 1.5; margin-bottom: 12px; font-size: 14px; max-height: 150px; overflow-y: auto;">-</div>
       <button id="add-to-deck-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;" data-card-id="">Add to Deck</button>
       <div id="modal-card-count" style="color: var(--text-secondary); font-size: 12px; text-align: center;">-</div>
     </div>
   </div>
 
   <div id="pack-opening-modal" class="modal">
-    <div class="modal-content" style="text-align: center; max-width: 400px;">
-      <h2>🎁 Pack Opening</h2>
-      <div id="pack-animation-container" style="margin: 20px 0; min-height: 150px;"></div>
-      <button type="button" class="btn btn-primary" id="pack-confirm-btn" style="width: 100%; display: none;">Done</button>
+    <div class="modal-content" style="max-width: 90vw; width: 90vw; max-height: 90vh; display: flex; flex-direction: column;">
+      <h2 style="margin: 0 0 16px 0;">🎁 Opening Pack</h2>
+      <div id="pack-animation-container" style="flex: 1; display: flex; gap: 16px; overflow-x: auto; padding-bottom: 10px; min-height: 400px;"></div>
+      <button type="button" class="btn btn-primary" id="pack-confirm-btn" style="width: 100%; margin-top: 16px; display: none;">Done</button>
     </div>
   </div>
 
