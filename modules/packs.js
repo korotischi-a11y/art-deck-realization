@@ -6,11 +6,12 @@ import { state, closeModal, openModal } from '../app.js';
 import * as ui from './ui.js';
 import * as user from './user.js';
 import * as cardMod from './cards.js';
+import * as decks from './decks.js';
 
 const db = firebase.firestore();
 
 /**
- * Загрузить все паки
+ * Загружить все паки
  */
 export async function loadPacks() {
   try {
@@ -36,7 +37,7 @@ async function initDefaultPacks() {
         name: 'Начало', 
         price: 25, 
         cardCount: 2, 
-        emoji: '🎲', 
+        emoji: '🌲', 
         color: '#3b82f6',
         borderColor: '#1e40af',
         rarityWeights: { common: 10 } 
@@ -81,7 +82,7 @@ async function initDefaultPacks() {
         name: 'Бессмертный', 
         price: 500, 
         cardCount: 12, 
-        emoji: '👑', 
+        emoji: '⚠️', 
         color: '#ef4444',
         borderColor: '#7f1d1d',
         rarityWeights: { mythical: 4, legendary: 3, ancient: 2, exceedingly_rare: 1 } 
@@ -107,7 +108,7 @@ export function renderShop() {
   list.innerHTML = '';
   
   if (!state.packs.length) {
-    list.innerHTML = '<div style="color:var(--text-secondary);">Нет паков</div>';
+    list.innerHTML = '<div style="color:var(--text-secondary);">No packs</div>';
     return;
   }
   
@@ -143,7 +144,7 @@ export function renderShop() {
   `;
   
   dailyPack.innerHTML = `
-    <div style="position:absolute; top:0; right:0; background:#fbbf24; color:#7c2d12; padding:6px 12px; border-radius:0 16px 0 12px; font-size:11px; font-weight:700; z-index:10;">БЕСПЛАТНО</div>
+    <div style="position:absolute; top:0; right:0; background:#fbbf24; color:#7c2d12; padding:6px 12px; border-radius:0 16px 0 12px; font-size:11px; font-weight:700; z-index:10;">ОБЕСПЛАТНО</div>
     <div style="font-size:48px; text-align:center; margin-top:8px; position:relative; z-index:5;">🎁</div>
     <div style="font-weight:700; font-size:18px; color:#fff; text-align:center; position:relative; z-index:5;">Ежедневный Пак</div>
     <div style="font-size:13px; color:rgba(255,255,255,0.95); text-align:center; position:relative; z-index:5;">3 карты | Каждый день</div>
@@ -169,7 +170,7 @@ export function renderShop() {
   
   list.appendChild(dailyPack);
   
-  // ОБЫчные ПАКЫ с КАЖДЫМ своим цветом И УЛУЧШЕНЫМ СТИЛЕМ
+  // ОБЫчНЫЕ ПАКЫ с КАЖДЫМ своим цветом И УЛУЧШЕННЫМ СТИЛЕМ
   state.packs.forEach((pack, idx) => {
     const packColor = pack.color || '#6366f1';
     const packBorderColor = pack.borderColor || packColor;
@@ -206,10 +207,10 @@ export function renderShop() {
     div.appendChild(gloss);
     
     div.innerHTML += `
-      <div style="font-size:40px; text-align:center; position:relative; z-index:2;">${pack.emoji || '📦'}</div>
+      <div style="font-size:40px; text-align:center; position:relative; z-index:2;">${pack.emoji || '📆'}</div>
       <div style="font-weight:700; font-size:18px; color:${packBorderColor}; text-align:center; position:relative; z-index:2;">${pack.name}</div>
       <div style="font-size:13px; color:var(--text-secondary); text-align:center; position:relative; z-index:2;">${pack.cardCount} карт</div>
-      <div style="margin-top:auto; text-align:center; font-size:16px; color:${packBorderColor}; font-weight:700; position:relative; z-index:2;">${pack.price} 💎</div>
+      <div style="margin-top:auto; text-align:center; font-size:16px; color:${packBorderColor}; font-weight:700; position:relative; z-index:2;">${pack.price} 💰</div>
       <button class="btn btn-primary" style="width:100%; margin-top:12px; background:linear-gradient(135deg, ${packColor}, ${packBorderColor}); border:none; color:white; font-weight:700; font-size:14px; padding:10px; border-radius:10px; transition:all 0.3s; cursor:pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">ОТКРЫТЬ</button>
     `;
     
@@ -250,7 +251,7 @@ async function openDailyPack() {
   const lastDaily = u.lastDailyPackDate || '';
   
   if (lastDaily === today) {
-    ui.showError('Пак уже открыт сегодня! Осталось ' + (24 - new Date().getHours()) + ' часов');
+    ui.showError('🔄 Пак уже открыт сегодня! Осталось ' + (24 - new Date().getHours()) + ' часов');
     return;
   }
   
@@ -283,6 +284,11 @@ async function openDailyPack() {
     });
     u.lastDailyPackDate = today;
     
+    // ДОБАВЛЯЕМ КАРТЫ В КОЛОДУ СБРОСА
+    for (const card of drawnCards) {
+      await decks.addCardToDiscardDeck(card.id);
+    }
+    
     showPackOpeningModal(drawnCards);
     cardMod.renderCollection();
   } catch (e) {
@@ -299,7 +305,7 @@ async function openPack(pack) {
   if (!u) return;
   
   if ((u.currency || 0) < pack.price) {
-    ui.showError('Не хватает монет!');
+    ui.showError('💰 Не хватает монет!');
     return;
   }
   
@@ -334,6 +340,11 @@ async function openPack(pack) {
       u.cards = u.cards || {};
       u.cards[c.id] = (u.cards[c.id] || 0) + 1;
     });
+    
+    // ДОБАВЛЯЕМ КАРТЫ В КОЛОДУ СБРОСА
+    for (const card of drawnCards) {
+      await decks.addCardToDiscardDeck(card.id);
+    }
     
     showPackOpeningModal(drawnCards);
     
