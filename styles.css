@@ -11,7 +11,7 @@
   --border-color: #3a3020;
   --border-light: #4a3a2a;
   
-  /* === ДРЕВЕСНАЯ ПАЛИТРА === */
+  /* === ДОВЕСНАЯ ПАЛИТРА === */
   --wood-light: #d4a574;
   --wood-medium: #c4956b;
   --wood-dark: #8b6f47;
@@ -131,7 +131,7 @@ body {
   color: var(--bg-primary);
 }
 
-/* === ГЛАВНЫЙ КОНТЕНт === */
+/* === ГЛАВНОЙ КОНТЕНТ === */
 .main-content {
   display: flex;
   flex-direction: column;
@@ -245,7 +245,7 @@ body {
   }
 }
 
-/* === КОЛЛЕКЦИОННЫЙ ЗАГОЛОВОК === */
+/* === КОЛЛЕКЦОННЫЙ ЗАГОЛОВОК === */
 .collection-header {
   display: flex;
   justify-content: space-between;
@@ -406,7 +406,7 @@ body {
   padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: 0;
   flex: 0.6;
   overflow: hidden;
   transform: translateZ(10px);
@@ -419,7 +419,8 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin: 0;
+  margin: 0 0 2px 0;
+  line-height: 1.2;
 }
 
 .card-artist {
@@ -431,13 +432,15 @@ body {
 .card-rarity {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-xs);
-  width: fit-content;
+  width: 100%;
   padding: 2px 6px;
   border-radius: var(--radius-md);
   font-size: 10px;
   font-weight: 600;
-  margin: 0;
+  margin: 2px 0 0 0;
+  white-space: nowrap;
 }
 
 .card-params {
