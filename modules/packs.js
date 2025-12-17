@@ -11,7 +11,7 @@ import * as decks from './decks.js';
 const db = firebase.firestore();
 
 /**
- * Загружить все паки
+ * Загружать все паки
  */
 export async function loadPacks() {
   try {
@@ -37,7 +37,7 @@ async function initDefaultPacks() {
         name: 'Начало', 
         price: 25, 
         cardCount: 2, 
-        emoji: '🌲', 
+        emoji: '🌢', 
         color: '#3b82f6',
         borderColor: '#1e40af',
         rarityWeights: { common: 10 } 
@@ -55,7 +55,7 @@ async function initDefaultPacks() {
         name: 'Стандарт', 
         price: 100, 
         cardCount: 5, 
-        emoji: '🏆', 
+        emoji: '🎆', 
         color: '#f59e0b',
         borderColor: '#b45309',
         rarityWeights: { uncommon: 5, rare: 2 } 
@@ -170,7 +170,7 @@ export function renderShop() {
   
   list.appendChild(dailyPack);
   
-  // ОБЫчНЫЕ ПАКЫ с КАЖДЫМ своим цветом И УЛУЧШЕННЫМ СТИЛЕМ
+  // ОБЫЧНЫЕ ПАКЫ с КАЖДЫМ своим цветом
   state.packs.forEach((pack, idx) => {
     const packColor = pack.color || '#6366f1';
     const packBorderColor = pack.borderColor || packColor;
@@ -207,7 +207,7 @@ export function renderShop() {
     div.appendChild(gloss);
     
     div.innerHTML += `
-      <div style="font-size:40px; text-align:center; position:relative; z-index:2;">${pack.emoji || '📆'}</div>
+      <div style="font-size:40px; text-align:center; position:relative; z-index:2;">${pack.emoji || '📅'}</div>
       <div style="font-weight:700; font-size:18px; color:${packBorderColor}; text-align:center; position:relative; z-index:2;">${pack.name}</div>
       <div style="font-size:13px; color:var(--text-secondary); text-align:center; position:relative; z-index:2;">${pack.cardCount} карт</div>
       <div style="margin-top:auto; text-align:center; font-size:16px; color:${packBorderColor}; font-weight:700; position:relative; z-index:2;">${pack.price} 💰</div>
@@ -271,16 +271,9 @@ async function openDailyPack() {
       return;
     }
     
-    const updates = { lastDailyPackDate: today };
-    drawnCards.forEach(c => {
-      const key = `cards.${c.id}`;
-      updates[key] = firebase.firestore.FieldValue.increment(1);
-    });
-    await db.collection('users').doc(u.uid).update(updates);
-    
-    drawnCards.forEach(c => {
-      u.cards = u.cards || {};
-      u.cards[c.id] = (u.cards[c.id] || 0) + 1;
+    // ОНО: ОБНОВЛЯЕМ ONLY lastDailyPackDate, БЕЗ state.currentUser.cards
+    await db.collection('users').doc(u.uid).update({
+      lastDailyPackDate: today
     });
     u.lastDailyPackDate = today;
     
@@ -291,6 +284,7 @@ async function openDailyPack() {
     
     showPackOpeningModal(drawnCards);
     cardMod.renderCollection();
+    decks.renderDecks();
   } catch (e) {
     console.error('Error opening daily pack:', e);
     ui.showError('Ошибка');
@@ -324,22 +318,12 @@ async function openPack(pack) {
       return;
     }
     
+    // ОНО: НУ НЕ трогаем state.currentUser.cards
+    // ТОЛЬКО вычитаем currency и перемещаем карты
     await db.collection('users').doc(u.uid).update({
       currency: firebase.firestore.FieldValue.increment(-pack.price)
     });
     u.currency -= pack.price;
-    
-    const updates = {};
-    drawnCards.forEach(c => {
-      const key = `cards.${c.id}`;
-      updates[key] = firebase.firestore.FieldValue.increment(1);
-    });
-    await db.collection('users').doc(u.uid).update(updates);
-    
-    drawnCards.forEach(c => {
-      u.cards = u.cards || {};
-      u.cards[c.id] = (u.cards[c.id] || 0) + 1;
-    });
     
     // ДОБАВЛЯЕМ КАРТЫ В КОЛОДУ СБРОСА
     for (const card of drawnCards) {
@@ -350,6 +334,7 @@ async function openPack(pack) {
     
     document.getElementById('coins-display').textContent = u.currency;
     cardMod.renderCollection();
+    decks.renderDecks();
   } catch (e) {
     console.error('Error opening pack:', e);
     ui.showError('Ошибка открытия пака');
