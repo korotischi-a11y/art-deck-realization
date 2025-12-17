@@ -256,7 +256,7 @@ export async function addCardToDeckById(cardId, deckId) {
 }
 
 /**
- * Удалить карту ИЗ АКТИВНОЙ КОЛОДЫ
+ * Удалить карту ИЗ АКТИВНОЙ КОЛОДЫ - ИСПРАВЛЕНО: МИНУС 1, ПЛЮС 1 БЕЗ КОПИРОВАНИЯ
  */
 export async function removeCardFromActiveDeck(cardId) {
   try {
@@ -267,21 +267,32 @@ export async function removeCardFromActiveDeck(cardId) {
     
     // КОЛОДА СБРОСА: НЕ делете, только просматривайте оттуда карты
     if (deck.isDiscardDeck) {
-      ui.showToast('🗑 Где карты бес колод - только просмотр', 'info');
+      ui.showToast('🗑 Карты без колод - только просмотр', 'info');
       return false;
     }
     
+    // МИНУС 1 ИЗ АКТИВНОЙ
     deck.cards[cardId] -= 1;
     if (deck.cards[cardId] <= 0) {
       delete deck.cards[cardId];
-      
-      // ПЕРЕНОСИМ В КОЛОДУ СБРОСА
-      await addCardToDiscardDeck(cardId);
     }
     
+    // ОБНОВЛЯЕМ АКТИВНУЮ КОЛОДУ
     await db.collection('users').doc(u.uid)
       .collection('decks').doc(activeDeckId)
       .update({ cards: deck.cards });
+    
+    // ПЛЮС РОВНО 1 В СБРОС (ПРЯМОЕ ДОБАВЛЕНИЕ, БЕЗ addCardToDiscardDeck!)
+    const discardDeckId = await getOrCreateDiscardDeck();
+    if (discardDeckId) {
+      const discardDeck = u.decks[discardDeckId];
+      discardDeck.cards = discardDeck.cards || {};
+      discardDeck.cards[cardId] = (discardDeck.cards[cardId] || 0) + 1;
+      
+      await db.collection('users').doc(u.uid)
+        .collection('decks').doc(discardDeckId)
+        .update({ cards: discardDeck.cards });
+    }
     
     await loadDecks();
     return true;
