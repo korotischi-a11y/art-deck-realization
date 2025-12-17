@@ -1,11 +1,6 @@
 /**
  * modules/cards.js
  * Обработка карт и коллекций
- * 
- * Ответственность:
- * - Загружа все карты из masterCards
- * - Нендер сетки карт из коллекции или активной колоды пользователя
- * - Новые стили: параметры в тексте, читаемые статы
  */
 
 import { state, closeModal, openModal } from '../app.js';
@@ -17,7 +12,7 @@ const db = firebase.firestore();
  * Загружает все карты из базы
  */
 export async function loadCards() {
-  console.log('🎨 Загружаю карты...');
+  console.log('🎫 Загружаю карты...');
   try {
     const snapshot = await db.collection('masterCards')
       .orderBy('createdAt', 'desc')
@@ -31,8 +26,8 @@ export async function loadCards() {
     
     console.log(`✔️ Загружено ${state.cards.length} карт`);
   } catch (error) {
-    console.error('Ошибка загрузки карт:', error);
-    ui.showError('Ошибка загрузки карт');
+    console.error('Ошибка загружки карт:', error);
+    ui.showError('Ошибка загружки карт');
   }
 }
 
@@ -44,14 +39,14 @@ function getCard(cardId) {
 }
 
 /**
- * Получает количество карт в коллекции пользователя
+ * Получает количество карт в коллекции
  */
 function getCardCount(cardId) {
   return state.currentUser?.cards[cardId] || 0;
 }
 
 /**
- * Обновляет количество карты в коллекции
+ * Обновляет количество карты
  */
 export async function updateCardCount(cardId, newCount) {
   if (!state.currentUser) return;
@@ -67,7 +62,6 @@ export async function updateCardCount(cardId, newCount) {
     
     state.currentUser.cards = cards;
     
-    // Обновляем в Firestore
     await db.collection('users').doc(state.currentUser.uid).update({
       cards
     });
@@ -78,10 +72,6 @@ export async function updateCardCount(cardId, newCount) {
 
 /**
  * Нендерит сетку карт
- * 
- * Фильтр:
- * - Обычные пользователи видят карты из активной колоды или глобальною
- * - Админы видят ВСЕ созданные карты
  */
 export function renderCollection() {
   const grid = document.getElementById('cards-grid');
@@ -109,7 +99,7 @@ export function renderCollection() {
   
   if (filteredCards.length === 0) {
     const message = state.isAdmin 
-      ? '📦 Не создано карт' 
+      ? '📊 Не создано карт' 
       : '🤷 Ни одной карты не найдено';
     grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">${message}</div>`;
     return;
@@ -132,23 +122,22 @@ export function renderCollection() {
 
 /**
  * Создает DOM-элемент карты
- * НОВОЕ: Параметры в тексте, а не в секциях
  */
 function createCardElement(card, count) {
   const div = document.createElement('div');
   div.className = 'card-item';
+  div.setAttribute('data-tilt', 'true');
   
   const rarity = ui.getRarityBadge(card.rarity);
   const borderColor = rarity.color;
   
   div.setAttribute('data-rarity', card.rarity);
   
-  // Форматированные параметры в текстовом виде
   const paramsText = `💓${card.power?.resonance || 0} 🎯${card.power?.virtuosity || 0} 🧠${card.power?.profundity || 0} ⚖${card.power?.harmony || 0}`;
   
   div.innerHTML = `
     <div class="card-image">
-      ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22%3E%3C/svg%3E'">` : `<div style="font-size: 48px;">🎨</div>`}
+      ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22%3E%3C/svg%3E'" />` : `<div style="font-size: 48px;">🎫</div>`}
     </div>
     <div class="card-body">
       <div class="card-title">${ui.sanitizeHTML(card.title)}</div>
@@ -185,7 +174,6 @@ function showCardDetail(card, count) {
   document.getElementById('modal-card-title').textContent = card.title;
   document.getElementById('modal-card-artist').textContent = card.artist;
   document.getElementById('modal-card-year').textContent = `Год: ${card.year}`;
-  document.getElementById('modal-card-description').textContent = card.description;
   
   const img = document.getElementById('modal-card-image');
   img.src = card.imageUrl || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22%3E%3C/svg%3E';
@@ -198,6 +186,10 @@ function showCardDetail(card, count) {
   rarityDiv.style.borderColor = rarity.color;
   rarityDiv.style.color = rarity.color;
   
+  // ТАБЛИЦА ПАРАМЕТРОВ 2x2
+  const paramsTable = document.getElementById('modal-params-table') || createParamsTable();
+  paramsTable.innerHTML = '';
+  
   const params = [
     { name: '💓 Резонанс', value: card.power?.resonance || 0, color: 'var(--resonance)' },
     { name: '🎯 Виртуозность', value: card.power?.virtuosity || 0, color: 'var(--virtuosity)' },
@@ -205,33 +197,20 @@ function showCardDetail(card, count) {
     { name: '⚖️ Гармония', value: card.power?.harmony || 0, color: 'var(--harmony)' }
   ];
   
-  const paramsContainer = document.getElementById('modal-card-params') || createParamsContainer();
-  paramsContainer.innerHTML = '';
-  
-  params.forEach((param, idx) => {
-    const paramEl = document.createElement('div');
-    paramEl.style.cssText = `margin-bottom: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center;`;
-    
-    const label = document.createElement('div');
-    label.style.cssText = `font-size: 12px; font-weight: 600; color: ${param.color};`;
-    label.textContent = param.name;
-    
-    const bar = document.createElement('div');
-    bar.style.cssText = `height: 8px; background-color: var(--bg-tertiary); border-radius: 4px; overflow: hidden;`;
-    
-    const fill = document.createElement('div');
-    fill.style.cssText = `height: 100%; background-color: ${param.color}; width: ${(param.value / 10) * 100}%; border-radius: 4px; transition: width 0.3s ease;`;
-    
-    const value = document.createElement('div');
-    value.style.cssText = `text-align: right; font-weight: 600; font-size: 12px; color: ${param.color};`;
-    value.textContent = `${param.value}/10`;
-    
-    bar.appendChild(fill);
-    paramEl.appendChild(label);
-    paramEl.appendChild(bar);
-    paramEl.appendChild(value);
-    paramsContainer.appendChild(paramEl);
+  params.forEach((param) => {
+    const cell = document.createElement('div');
+    cell.className = 'modal-param-cell';
+    cell.innerHTML = `
+      <div class="modal-param-label" style="color: ${param.color};">${param.name}</div>
+      <div class="modal-param-value">${param.value}/10</div>
+      <div class="modal-param-bar">
+        <div class="modal-param-bar-fill" style="background-color: ${param.color}; width: ${(param.value / 10) * 100}%;"></div>
+      </div>
+    `;
+    paramsTable.appendChild(cell);
   });
+  
+  document.getElementById('modal-card-description').textContent = card.description;
   
   const countText = state.isAdmin && count === 0 
     ? `📋 создана админом` 
@@ -254,21 +233,24 @@ function openFullscreenImage(imageUrl) {
 }
 
 /**
- * Создает контейнер для параметров
+ * Создает таблицу параметров 2x2
  */
-function createParamsContainer() {
+function createParamsTable() {
   const container = document.createElement('div');
-  container.id = 'modal-card-params';
+  container.id = 'modal-params-table';
+  container.className = 'modal-params-table';
   const modalContent = document.querySelector('.modal-content');
-  if (modalContent && modalContent.querySelector('#modal-card-count')) {
-    const before = modalContent.querySelector('#modal-card-count').parentElement;
-    before.parentElement.insertBefore(container, before);
+  if (modalContent) {
+    const before = modalContent.querySelector('#modal-card-description');
+    if (before) {
+      before.parentElement.insertBefore(container, before);
+    }
   }
   return container;
 }
 
 /**
- * создает полноэкранное окно для изображения
+ * Создает полноэкранное окно
  */
 function createFullscreenModal() {
   const modal = document.createElement('div');
@@ -276,7 +258,7 @@ function createFullscreenModal() {
   modal.className = 'modal-fullscreen-image';
   modal.innerHTML = `
     <button class="modal-fullscreen-close">✕</button>
-    <img src="" alt="fullscreen">
+    <img src="" alt="fullscreen" />
   `;
   
   modal.querySelector('.modal-fullscreen-close').addEventListener('click', () => {
@@ -420,7 +402,7 @@ function calculateRarityBonus(deckCards) {
 }
 
 /**
- * Обновляет статистику
+ * Обновляет статистику и заголовок
  */
 function updateCollectionStats() {
   let deckCards;
@@ -434,7 +416,38 @@ function updateCollectionStats() {
   const uniqueCards = Object.keys(deckCards).length;
   const deckRating = calculateDeckRatingInternal();
   
+  // Обновляем статистику
   document.getElementById('stat-total-cards').textContent = totalCards;
   document.getElementById('stat-unique-cards').textContent = uniqueCards;
   document.getElementById('stat-deck-rating').textContent = Math.round(deckRating);
+  
+  // Обновляем заголовок коллекции
+  updateCollectionHeader(deckRating);
+}
+
+/**
+ * Обновляет заголовок с максимальным рейтингом
+ */
+function updateCollectionHeader(rating) {
+  let headerDiv = document.getElementById('collection-header-container');
+  
+  if (!headerDiv) {
+    const grid = document.getElementById('cards-grid');
+    if (grid) {
+      headerDiv = document.createElement('div');
+      headerDiv.id = 'collection-header-container';
+      grid.parentElement.insertBefore(headerDiv, grid);
+    }
+  }
+  
+  if (headerDiv) {
+    headerDiv.className = 'collection-header';
+    headerDiv.innerHTML = `
+      <div class="collection-title">📚 Коллекция</div>
+      <div class="collection-rating">
+        <div class="collection-rating-label">🏆 Максимальный рейтинг:</div>
+        <div class="collection-rating-value">${Math.round(rating)}</div>
+      </div>
+    `;
+  }
 }
