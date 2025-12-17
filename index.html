@@ -23,7 +23,7 @@
           <div class="coins-display"><span>💰</span> <span id="coins-display">0</span></div>
           <div class="user-info">
             <div class="user-name" id="user-name">-</div>
-            <div class="user-rank" id="user-rank">📑 Common</div>
+            <div class="user-rank" id="user-rank">🗑 Common</div>
           </div>
           <button class="logout-btn" id="logout-btn">Выход</button>
         </div>
@@ -48,13 +48,13 @@
                 <div style="display: flex; gap: 12px; align-items: center;">
                   <select id="rarity-filter" style="padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
                     <option value="">Все</option>
-                    <option value="common">📑 Обычная</option>
+                    <option value="common">🗑 Обычная</option>
                     <option value="uncommon">🎯 Необычная</option>
                     <option value="rare">🏆 Редкая</option>
                     <option value="mythical">💎 Мифическая</option>
                     <option value="legendary">⭐ Легендарная</option>
                     <option value="ancient">🔥 Древняя</option>
-                    <option value="exceedingly_rare">✨ Исключительно редкая</option>
+                    <option value="exceedingly_rare">✨ Осколбительно редкая</option>
                     <option value="immortal">⚠ Бессмертная</option>
                   </select>
                   <div class="collection-rating">
@@ -213,10 +213,10 @@
 
   <!-- МОДАЛИ -->
   <div id="card-detail-modal" class="modal">
-    <div class="modal-content" style="max-width: 450px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h2 id="modal-card-title" style="margin: 0;">-</h2>
-        <button class="modal-close" style="padding: 0; width: 32px; height: 32px;">✕</button>
+    <div class="modal-content" style="max-width: 500px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <h2 id="modal-card-title" style="margin: 0; flex: 1;">-</h2>
+        <button class="modal-close" style="padding: 0; width: 32px; height: 32px; flex-shrink: 0;">✗</button>
       </div>
       <div style="aspect-ratio: 155/268; background: var(--bg-tertiary); border-radius: 12px; overflow: hidden; margin-bottom: 12px;">
         <img id="modal-card-image" src="" style="width: 100%; height: 100%; object-fit: cover;">
@@ -225,9 +225,8 @@
       <div id="modal-card-year" style="color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">-</div>
       <div id="modal-card-rarity" style="display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; margin-bottom: 12px;">-</div>
       <div id="modal-params-table" class="modal-params-table" style="margin-bottom: 12px;"></div>
-      <div id="modal-card-description" style="color: var(--text); line-height: 1.5; margin-bottom: 12px; font-size: 14px; max-height: 150px; overflow-y: auto;">-</div>
-      <button id="add-to-deck-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;" data-card-id="">Add to Deck</button>
-      <div id="modal-card-count" style="color: var(--text-secondary); font-size: 12px; text-align: center;">-</div>
+      <div id="modal-card-description" style="color: var(--text); line-height: 1.5; margin-bottom: 12px; font-size: 14px; max-height: 100px; overflow-y: auto;">-</div>
+      <div id="modal-card-count" style="color: var(--text-secondary); font-size: 12px; text-align: center; margin-bottom: 12px; padding: 8px; background: var(--bg-tertiary); border-radius: 6px;">-</div>
     </div>
   </div>
 
