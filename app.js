@@ -25,6 +25,34 @@ const TAB_TITLES = {
   collection: '📚 Коллекция', profile: '👤 Профиль', leaderboard: '🏆 Рейтинг', packs: '📋 Паки', admin: '⚙ Админ'
 };
 
+/**
+ * 3D Tilted эффект для карт
+ */
+function initTiltEffect() {
+  const cards = document.querySelectorAll('[data-tilt]');
+  const maxRotate = 10;
+
+  cards.forEach(card => {
+    card.addEventListener('mousemove', (event) => {
+      const rect = card.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = ((y - centerY) / centerY) * maxRotate;
+      const rotateY = ((centerX - x) / centerX) * maxRotate;
+      card.style.setProperty('--glare-x', `${(x / rect.width) * 100}%`);
+      card.style.setProperty('--glare-y', `${(y / rect.height) * 100}%`);
+      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      card.classList.add('tilt-active');
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'rotateX(0deg) rotateY(0deg)';
+      card.classList.remove('tilt-active');
+    });
+  });
+}
+
 async function checkDailyRewards() {
   try {
     const u = firebase.auth().currentUser;
@@ -126,7 +154,11 @@ export function switchTab(tabName) {
   document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.getElementById('page-title').textContent = TAB_TITLES[tabName] || 'Art Deck';
   switch (tabName) {
-    case 'collection': cardMod.renderCollection(); decks.renderDecks(); break;
+    case 'collection': 
+      cardMod.renderCollection();
+      decks.renderDecks();
+      setTimeout(() => initTiltEffect(), 100);
+      break;
     case 'profile': user.renderProfile(); break;
     case 'leaderboard': leaderboard.renderLeaderboard(); break;
     case 'packs': packs.renderShop(); break;
