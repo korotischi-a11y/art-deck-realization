@@ -49,11 +49,11 @@ export function renderCollection() {
 
   let userCardIds;
   let title = 'Вся коллекция';
+  const viewingDeck = decks.activeDeckId && state.currentUser?.decks?.[decks.activeDeckId];
   
-  if (decks.activeDeckId && state.currentUser?.decks?.[decks.activeDeckId]) {
-    const activeDeck = state.currentUser.decks[decks.activeDeckId];
-    userCardIds = Object.keys(activeDeck.cards || {});
-    title = `🎴 ${activeDeck.name}`;
+  if (viewingDeck) {
+    userCardIds = Object.keys(viewingDeck.cards || {});
+    title = `🎴 ${viewingDeck.name}`;
   } else {
     userCardIds = Object.keys(state.currentUser?.cards || {});
   }
@@ -78,13 +78,9 @@ export function renderCollection() {
   }
 
   cards.forEach(card => {
-    let count;
-    if (decks.activeDeckId && state.currentUser?.decks?.[decks.activeDeckId]) {
-      count = state.currentUser.decks[decks.activeDeckId].cards[card.id] || 0;
-    } else {
-      count = state.currentUser?.cards[card.id] || 0;
-    }
-    const el = createCardElement(card, count);
+    // Взэм кол-во МиНИМУМ из ОБШЕЙ коллекции
+    const totalCount = state.currentUser?.cards[card.id] || 0;
+    const el = createCardElement(card, totalCount);
     grid.appendChild(el);
   });
 
@@ -106,7 +102,6 @@ function createCardElement(card, count) {
   const rarity = ui.getRarityBadge(card.rarity);
   const params = `💓${card.power?.resonance || 0} 🎯${card.power?.virtuosity || 0} 🧠${card.power?.profundity || 0} ⚖${card.power?.harmony || 0}`;
   
-  // НАОБОРОТ - Центрированное изображение + кол-во вверху
   div.innerHTML = `
     <div class="card-image" style="position:relative; overflow:hidden;">
       <!-- Параметры верху -->
@@ -118,9 +113,9 @@ function createCardElement(card, count) {
       <!-- Центрированное изображение -->
       ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" style="width:100%; height:100%; object-fit:cover; object-position:center;" />` : '🎨'}
     </div>
-    <div class="card-body">
+    <div class="card-body" style="display:flex; flex-direction:column;">
       <!-- Титул -->
-      <div class="card-title">${ui.sanitizeHTML(card.title)}</div>
+      <div class="card-title" style="flex:1;">${ui.sanitizeHTML(card.title)}</div>
       
       <!-- Артист слева и год справа -->
       <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary); margin-bottom:6px;">
@@ -128,8 +123,8 @@ function createCardElement(card, count) {
         <span>${card.year}</span>
       </div>
       
-      <!-- Редкость -->
-      <div class="card-rarity" style="background:${rarity.color}15; border-color:${rarity.color}; color:${rarity.color};">
+      <!-- Редкость - ОДНО строка, ЦЕНТРИРОВАННАя -->
+      <div class="card-rarity" style="background:${rarity.color}15; border-color:${rarity.color}; color:${rarity.color}; white-space:nowrap; text-align:center;">
         ${rarity.emoji} ${rarity.name}
       </div>
     </div>
@@ -137,14 +132,13 @@ function createCardElement(card, count) {
   
   div.style.borderColor = rarity.color;
   
-  // Клик НЕ ремовинг
   div.addEventListener('click', () => showCardDetail(card, count));
   
   return div;
 }
 
 /**
- * Инициализирует 3D Tilt без ремовинг
+ * Инициализирует 3D Tilt
  */
 function initTiltEffect() {
   const cards = document.querySelectorAll('[data-tilt="true"]');
@@ -236,7 +230,7 @@ function showCardDetail(card, count) {
 }
 
 /**
- * Рендерит селектор колод в модали
+ * Рендерит селектор колод
  */
 function renderDeckSelector(cardId) {
   let container = document.getElementById('deck-selector-container');
@@ -288,7 +282,7 @@ function renderDeckSelector(cardId) {
 }
 
 /**
- * Рендерит кнопку удаления из активной колоды
+ * Рендерит кнопку удаления
  */
 function renderRemoveFromDeckButton(cardId) {
   let removeBtn = document.getElementById('remove-from-deck-btn');
@@ -321,7 +315,7 @@ function renderRemoveFromDeckButton(cardId) {
 }
 
 /**
- * Открывает картинку на полный экран
+ * Открывает расширенную картинку
  */
 function openFullscreenImage(imageUrl) {
   if (!imageUrl) return;
@@ -358,7 +352,7 @@ function updateStats() {
 }
 
 /**
- * Рассчитывает максимальный рейтинг
+ * Определяет максрейтинг
  */
 function calculateMaxRating() {
   const decksObj = state.currentUser?.decks || {};
