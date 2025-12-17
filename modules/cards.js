@@ -39,14 +39,32 @@ function getCard(cardId) {
 }
 
 /**
- * Правильные счётчики для коллекции
+ * ПРАВИЛЬНЫЕ счётчики
+ * ВСЕГО = сумма карт ВО ВСЕХ КОЛОДАХ (с повторами)
+ * УНИКАЛЬНЫЕ = все разные cardId ВО ВСЕХ КОЛОДАХ
  */
 function calculateStats() {
-  const userCardIds = Object.keys(state.currentUser?.cards || {});
-  const total = Object.values(state.currentUser?.cards || {}).reduce((a, b) => a + b, 0);
-  const unique = userCardIds.length;
+  const decksObj = state.currentUser?.decks || {};
   
-  return { total, unique };
+  // ВСЕГО КАРТ = сумма карт ВО ВСЕХ КОЛОДАХ (с повторами)
+  let totalInAllDecks = 0;
+  
+  // УНИКАЛЬНЫЕ = все разные cardId которые есть ВО ВСЕХ КОЛОДАХ
+  const uniqueCardIds = new Set();
+  
+  for (const deck of Object.values(decksObj)) {
+    if (deck.isDiscardDeck) continue;  // НЕ считаем сброс
+    
+    for (const [cardId, count] of Object.entries(deck.cards || {})) {
+      totalInAllDecks += count;
+      uniqueCardIds.add(cardId);
+    }
+  }
+  
+  return { 
+    total: totalInAllDecks,      // ВСЕГО с повторами
+    unique: uniqueCardIds.size   // УНИКАЛЬНЫЕ разные карты
+  };
 }
 
 /**
@@ -98,7 +116,7 @@ export function renderCollection() {
     userCardIds = Object.keys(viewingDeck.cards || {});
     title = `🗑 Карты без колод`;
   } else {
-    // ВЕСЬ ГЛАВНЫЙ ЭКРАН: ВЕСЮ коллекцию
+    // ВЕсЬ ГЛАВНЫЙ ЭКРАН: ВЕСЮ коллекцию
     userCardIds = Object.keys(state.currentUser?.cards || {});
   }
   
