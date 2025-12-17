@@ -23,7 +23,7 @@
   --profundity: #95E1D3;    /* 🧠 Глубина */
   --harmony: #FFD93D;       /* ⚖️ Гармония */
   
-  /* === РЕДКОСТИ (ВЫРАЗИТЕЛЬНАЯ ВЕРСИЯ) === */
+  /* === РЕДКОСТИ === */
   --rarity-common: #6b7280;
   --rarity-uncommon: #3b82f6;
   --rarity-rare: #8b5cf6;
@@ -32,15 +32,6 @@
   --rarity-ancient: #f97316;
   --rarity-exceedingly-rare: #eab308;
   --rarity-immortal: #fbbf24;
-  
-  /* === ТИРЫ === */
-  --tier-common: #e0e0e0;
-  --tier-uncommon: #4facf6;
-  --tier-rare: #5d4cc0;
-  --tier-epic: #a832d0;
-  --tier-ancient: #ff6b6b;
-  --tier-legendary: #d946ef;
-  --tier-immortal: #b89968;
   
   /* === РАЗМЕРЫ === */
   --radius-sm: 4px;
@@ -246,103 +237,73 @@ body {
 /* === СЕТКА КАРТ === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: var(--spacing-lg);
   margin-top: var(--spacing-lg);
 }
 
-/* === TILTED CARD ЭФФЕКТ === */
+/* === КАРТОЧКА (БЕЗ TILTED) === */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
-  transition: all 120ms ease-out;
+  transition: all var(--transition-normal);
   display: flex;
   flex-direction: column;
-  
-  /* 3D перспектива */
-  transform-style: preserve-3d;
-  will-change: transform;
 }
 
 .card-item:hover {
+  transform: translateY(-4px);
   border-color: var(--wood-medium);
+  box-shadow: var(--shadow-md);
 }
 
-.card-item.tilt-active {
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45),
-              0 0 0 1px rgba(255, 255, 255, 0.02);
-}
-
-/* Мягкий глянцевый блик на картах */
-.card-item::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 0%),
-    rgba(255, 255, 255, 0.18),
-    transparent 55%);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 150ms ease-out;
-  z-index: 5;
-}
-
-.card-item.tilt-active::before {
-  opacity: 1;
-}
-
-/* === ГРАДИЕНТНЫЕ БОРДЕРЫ ДЛЯ РЕДКИХ КАРТ === */
+/* === РЕДКИЕ КАРТЫ СВЕТЯТСЯ === */
 @keyframes glow-immortal {
-  0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4), inset 0 0 20px rgba(251, 191, 36, 0.15); }
-  50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.6), inset 0 0 30px rgba(251, 191, 36, 0.25); }
+  0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
+  50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.6); }
 }
 
 @keyframes glow-exceedingly-rare {
-  0%, 100% { box-shadow: 0 0 18px rgba(234, 179, 8, 0.35), inset 0 0 18px rgba(234, 179, 8, 0.12); }
-  50% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.5), inset 0 0 25px rgba(234, 179, 8, 0.2); }
+  0%, 100% { box-shadow: 0 0 18px rgba(234, 179, 8, 0.35); }
+  50% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.5); }
 }
 
 @keyframes glow-ancient {
-  0%, 100% { box-shadow: 0 0 16px rgba(249, 115, 22, 0.3), inset 0 0 16px rgba(249, 115, 22, 0.1); }
-  50% { box-shadow: 0 0 22px rgba(249, 115, 22, 0.45), inset 0 0 22px rgba(249, 115, 22, 0.15); }
+  0%, 100% { box-shadow: 0 0 16px rgba(249, 115, 22, 0.3); }
+  50% { box-shadow: 0 0 22px rgba(249, 115, 22, 0.45); }
 }
 
 @keyframes glow-legendary {
-  0%, 100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.25), inset 0 0 15px rgba(236, 72, 153, 0.08); }
-  50% { box-shadow: 0 0 20px rgba(236, 72, 153, 0.4), inset 0 0 20px rgba(236, 72, 153, 0.15); }
+  0%, 100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.25); }
+  50% { box-shadow: 0 0 20px rgba(236, 72, 153, 0.4); }
 }
 
 .card-item[data-rarity="immortal"] {
-  border: 2px solid;
-  border-image: linear-gradient(135deg, #fbbf24, #f59e0b, #fbbf24) 1;
+  border: 2px solid #fbbf24;
   animation: glow-immortal 2.5s ease-in-out infinite;
 }
 
 .card-item[data-rarity="exceedingly_rare"] {
-  border: 2px solid;
-  border-image: linear-gradient(135deg, #eab308, #facc15, #eab308) 1;
+  border: 2px solid #eab308;
   animation: glow-exceedingly-rare 2.5s ease-in-out infinite;
 }
 
 .card-item[data-rarity="ancient"] {
-  border: 2px solid;
-  border-image: linear-gradient(135deg, #f97316, #fb923c, #f97316) 1;
+  border: 2px solid #f97316;
   animation: glow-ancient 2.5s ease-in-out infinite;
 }
 
 .card-item[data-rarity="legendary"] {
-  border: 2px solid;
-  border-image: linear-gradient(135deg, #ec4899, #f472b6, #ec4899) 1;
+  border: 2px solid #ec4899;
   animation: glow-legendary 2.5s ease-in-out infinite;
 }
 
 .card-image {
   width: 100%;
-  height: 180px;
+  height: 160px;
   background: linear-gradient(135deg, var(--bg-tertiary), var(--wood-darker));
   display: flex;
   align-items: center;
@@ -398,30 +359,32 @@ body {
   font-weight: 600;
 }
 
-.card-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-xs);
-  margin-top: var(--spacing-sm);
+/* === ПАРАМЕТРЫ ВСТРОЕНЫ В ТЕКСТ === */
+.card-params {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-top: auto;
   padding-top: var(--spacing-sm);
   border-top: 1px solid var(--border-color);
 }
 
-.card-stat {
+.card-param-line {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: var(--spacing-xs);
-  font-size: var(--font-size-xs);
 }
 
 .card-count {
   background-color: var(--bg-tertiary);
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-md);
-  margin-top: auto;
+  margin-top: var(--spacing-sm);
   text-align: center;
   font-weight: 600;
   color: var(--wood-light);
+  font-size: var(--font-size-xs);
 }
 
 /* === МОДАЛЬНОЕ ОКНО === */
@@ -642,65 +605,6 @@ body {
   width: 100%;
 }
 
-/* === СЛАЙДЕР === */
-.slider-group {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-}
-
-.slider-label {
-  min-width: 80px;
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-input[type="range"] {
-  flex: 1;
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(to right, var(--wood-medium), var(--wood-light));
-  outline: none;
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--wood-light);
-  cursor: pointer;
-  box-shadow: var(--shadow-md);
-  transition: all var(--transition-fast);
-}
-
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: var(--shadow-lg);
-}
-
-input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--wood-light);
-  cursor: pointer;
-  border: none;
-  box-shadow: var(--shadow-md);
-  transition: all var(--transition-fast);
-}
-
-.slider-value {
-  min-width: 40px;
-  text-align: right;
-  font-weight: 600;
-  color: var(--wood-light);
-}
-
 /* === ТАБЛИЦА РЕЙТИНГА === */
 .leaderboard-table {
   width: 100%;
@@ -738,16 +642,6 @@ input[type="range"]::-moz-range-thumb {
 .leaderboard-rank {
   font-weight: 600;
   color: var(--wood-light);
-}
-
-.leaderboard-tier {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
 }
 
 /* === ПРОФИЛЬ === */
@@ -851,7 +745,7 @@ input[type="range"]::-moz-range-thumb {
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
   
   .modal-content {
