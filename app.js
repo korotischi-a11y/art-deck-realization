@@ -17,28 +17,6 @@ const TAB_TITLES = {
   collection: '📚 Коллекция', profile: '👤 Профиль', leaderboard: '🏆 Рейтинг', packs: '📋 Паки', admin: '⚙ Админ'
 };
 
-/**
- * 3D Tilt эффект
- */
-function initTiltEffect() {
-  const cards = document.querySelectorAll('[data-tilt="true"]');
-  cards.forEach(card => {
-    card.addEventListener('mousemove', (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const cx = rect.width / 2;
-      const cy = rect.height / 2;
-      const rotX = ((y - cy) / cy) * 10;
-      const rotY = ((cx - x) / cx) * 10;
-      card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-    });
-    card.addEventListener('mouseleave', () => {
-      card.style.transform = 'rotateX(0deg) rotateY(0deg)';
-    });
-  });
-}
-
 async function checkDailyRewards() {
   try {
     const u = firebase.auth().currentUser;
@@ -106,7 +84,6 @@ export function switchTab(tabName) {
     case 'collection':
       cardMod.renderCollection();
       decks.renderDecks();
-      setTimeout(() => initTiltEffect(), 50);
       break;
     case 'profile': user.renderProfile(); break;
     case 'leaderboard': leaderboard.renderLeaderboard(); break;
@@ -129,7 +106,7 @@ function setupAuthListeners() {
   document.getElementById('toggle-password')?.addEventListener('click', (e) => {
     e.preventDefault();
     const inp = document.getElementById('auth-password');
-    if (inp.type === 'password') { inp.type = 'text'; e.target.textContent = '🙈'; }
+    if (inp.type === 'password') { inp.type = 'text'; e.target.textContent = '😨'; }
     else { inp.type = 'password'; e.target.textContent = '👁'; }
   });
   
@@ -158,7 +135,9 @@ function setupEventListeners() {
     m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); });
     m.querySelector('.modal-close')?.addEventListener('click', () => m.classList.remove('active'));
   });
-  document.getElementById('rarity-filter')?.addEventListener('change', () => cardMod.renderCollection());
+  document.getElementById('rarity-filter')?.addEventListener('change', () => {
+    cardMod.renderCollection();
+  });
 }
 export { updateUserInterface };
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initApp); } else { initApp(); }

@@ -64,6 +64,8 @@ export function renderCollection() {
   });
 
   updateStats();
+  // 🔥 ВАЖНО: переинициализируем tilt ПОСЛЕ рендера
+  setTimeout(() => initTiltEffect(), 30);
 }
 
 /**
@@ -80,7 +82,7 @@ function createCardElement(card, count) {
   
   div.innerHTML = `
     <div class="card-image">
-      ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" />` : '🎫'}
+      ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" />` : '🎨'}
     </div>
     <div class="card-body">
       <div class="card-title">${ui.sanitizeHTML(card.title)}</div>
@@ -100,7 +102,40 @@ function createCardElement(card, count) {
 }
 
 /**
- * Показывает модаль карты
+ * Инициализирует 3D Tilt эффект (вызывается и при фильтре!)
+ */
+function initTiltEffect() {
+  const cards = document.querySelectorAll('[data-tilt="true"]');
+  console.log(`🎪 Init tilt for ${cards.length} cards`);
+  
+  cards.forEach(card => {
+    // Удаляем старые слушатели (чтобы не было дублей)
+    const newCard = card.cloneNode(true);
+    card.replaceWith(newCard);
+    
+    newCard.addEventListener('mousemove', (e) => {
+      const rect = newCard.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const rotX = ((y - cy) / cy) * 8;
+      const rotY = ((cx - x) / cx) * 8;
+      newCard.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+      newCard.classList.add('tilt-active');
+      newCard.style.setProperty('--glare-x', `${(x / rect.width) * 100}%`);
+      newCard.style.setProperty('--glare-y', `${(y / rect.height) * 100}%`);
+    });
+    
+    newCard.addEventListener('mouseleave', () => {
+      newCard.style.transform = 'rotateX(0deg) rotateY(0deg)';
+      newCard.classList.remove('tilt-active');
+    });
+  });
+}
+
+/**
+ * Показывает модальное окно карты
  */
 function showCardDetail(card, count) {
   const modal = document.getElementById('card-detail-modal');
@@ -243,7 +278,7 @@ function updateStats() {
 }
 
 /**
- * Расчитывает максимальный рейтинг ИЗ ВСЕХ колод
+ * Рассчитывает максимальный рейтинг ИЗ ВСЕХ колод
  */
 function calculateMaxRating() {
   const decksObj = state.currentUser?.decks || {};
@@ -254,3 +289,6 @@ function calculateMaxRating() {
   });
   return Math.max(...ratings, 0);
 }
+
+// Экспортируем для app.js
+export { initTiltEffect };

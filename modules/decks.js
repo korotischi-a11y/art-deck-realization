@@ -36,29 +36,54 @@ export function renderDecks() {
   const panel = document.getElementById('decks-panel');
   if (!panel) return;
 
-  const { decks = {} } = state.currentUser || {};
-  const deckList = Object.values(decks);
+  const { decks: decksObj = {} } = state.currentUser || {};
+  const deckList = Object.values(decksObj);
 
   if (deckList.length === 0) {
-    panel.innerHTML = '<div style="padding:16px; color:var(--text-secondary); text-align:center;">📭 Нет колод</div>';
+    panel.innerHTML = '<div style="padding:16px; color:var(--text-secondary); text-align:center;">🎴 Нет колод</div>';
     return;
   }
 
-  panel.innerHTML = '<div style="padding:16px; border-bottom:1px solid var(--border);"><h3 style="margin:0 0 12px; font-size:14px; color:var(--text-accent);">📦 Мои колоды</h3></div>' + 
-    deckList.map(deck => {
-      const cardCount = Object.values(deck.cards || {}).reduce((a, b) => a + b, 0);
-      const deckRating = calculateDeckRating(deck.cards || {});
-      return `
-        <div style="padding:12px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition: all 0.2s;" 
-             onmouseover="this.style.background='var(--bg-tertiary)'" 
-             onmouseout="this.style.background='transparent'">
-          <div style="font-weight:600; color:var(--text-accent); font-size:13px;">${deck.name}</div>
-          <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">
-            🂠 ${cardCount} карт | ⭐ ${Math.round(deckRating)}
-          </div>
-        </div>
-      `;
-    }).join('');
+  panel.innerHTML = '<div style="padding:16px; border-bottom:1px solid var(--border);"><h3 style="margin:0 0 12px; font-size:14px; color:var(--text-accent);">🎴 Мои колоды</h3></div>';
+  
+  const decksList = document.createElement('div');
+  decksList.id = 'decks-list';
+  decksList.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
+  
+  deckList.forEach(deck => {
+    const cardCount = Object.values(deck.cards || {}).reduce((a, b) => a + b, 0);
+    const deckRating = calculateDeckRating(deck.cards || {});
+    
+    const deckEl = document.createElement('div');
+    deckEl.className = 'deck-item';
+    deckEl.style.cssText = `
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+    `;
+    deckEl.innerHTML = `
+      <div style="font-weight:600; color:var(--text-accent); font-size:13px; word-break: break-word;">${deck.name}</div>
+      <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">
+        🂠 ${cardCount} карт | ⭐ ${Math.round(deckRating)}
+      </div>
+    `;
+    
+    deckEl.addEventListener('mouseover', () => {
+      deckEl.style.background = 'var(--bg-tertiary)';
+    });
+    deckEl.addEventListener('mouseout', () => {
+      deckEl.style.background = 'transparent';
+    });
+    deckEl.addEventListener('click', () => {
+      ui.showToast(`📂 Выбрана: ${deck.name}`, 'success');
+    });
+    
+    decksList.appendChild(deckEl);
+  });
+  
+  panel.appendChild(decksList);
 }
 
 /**
