@@ -1,271 +1,197 @@
 /**
- * modules/packs.js
- * Магазин паков и система открытия
+ * modules/packs.js - Паки и магазин
  */
 
-import { state, openModal, closeModal } from '../app.js';
+import { state, closeModal, openModal } from '../app.js';
 import * as ui from './ui.js';
-import * as app from '../app.js';
+import * as user from './user.js';
+import * as cardMod from './cards.js';
 
 const db = firebase.firestore();
 
-const DEFAULT_PACKS = [
-  { id: 'starter',  name: '🌟 Starter Pack', description: '5 cards for beginners',                  price: 100,  cards: 5 },
-  { id: 'standard', name: '🎯 Standard Pack',  description: '10 cards, one rare',                  price: 250,  cards: 10 },
-  { id: 'premium',  name: '💎 Premium Pack',     description: '15 cards, all rarities',        price: 500,  cards: 15 },
-  { id: 'ultimate', name: '👑 Ultimate Pack',    description: '20 cards, guaranteed legend',      price: 1000, cards: 20 }
-];
-
+/**
+ * Загрузить все паки
+ */
 export async function loadPacks() {
-  state.packs = DEFAULT_PACKS;
+  try {
+    const snap = await db.collection('packs').orderBy('price').get();
+    state.packs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log('✅ Packs loaded:', state.packs.length);
+  } catch (e) {
+    console.error('Error loading packs:', e);
+  }
 }
 
+/**
+ * Рендерить магазин паков с прокруткой колесом мыши
+ */
 export function renderShop() {
   const list = document.getElementById('packs-list');
   if (!list) return;
-  
   list.innerHTML = '';
-  list.style.cssText = `
-    display: flex;
-    gap: 20px;
-    overflow-x: auto;
-    padding-bottom: 10px;
-    scroll-behavior: smooth;
-  `;
   
-  // Прикрепляем wheel scroll
+  if (!state.packs.length) {
+    list.innerHTML = '<div style="color:var(--text-secondary);">No packs</div>';
+    return;
+  }
+  
+  state.packs.forEach(pack => {
+    const div = document.createElement('div');
+    div.style.cssText = `
+      min-width: 200px;
+      background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    `;
+    div.innerHTML = `
+      <div style="font-size:24px; text-align:center;">${pack.emoji || '📦'}</div>
+      <div style="font-weight:600; font-size:16px; color:var(--text-accent); text-align:center;">${pack.name}</div>
+      <div style="font-size:12px; color:var(--text-secondary); text-align:center;">${pack.cardCount} cards</div>
+      <div style="margin-top:auto; text-align:center; font-size:14px; color:var(--wood-light); font-weight:600;">${pack.price} 💎</div>
+      <button class="btn btn-primary" style="width:100%; margin-top:8px;">Open</button>
+    `;
+    
+    div.addEventListener('mouseenter', () => {
+      div.style.transform = 'translateY(-8px)';
+      div.style.boxShadow = 'var(--shadow-lg)';
+    });
+    div.addEventListener('mouseleave', () => {
+      div.style.transform = 'translateY(0)';
+      div.style.boxShadow = 'none';
+    });
+    
+    div.querySelector('button').addEventListener('click', (e) => {
+      e.stopPropagation();
+      openPack(pack);
+    });
+    
+    list.appendChild(div);
+  });
+  
+  // 🔥 ПРОКРУТКА КОЛЕСОМ МЫШИ
   list.addEventListener('wheel', (e) => {
     e.preventDefault();
     list.scrollLeft += e.deltaY;
   });
-
-  list.appendChild(createFreeOpenElement());
-
-  state.packs.forEach(pack => {
-    const canAfford = (state.currentUser?.currency || 0) >= pack.price;
-    list.appendChild(createPackCard(pack, canAfford));
-  });
 }
 
-function createFreeOpenElement() {
-  const div = document.createElement('div');
-  div.style.cssText = `
-    min-width: 260px;
-    max-width: 260px;
-    border-radius: 16px;
-    padding: 16px;
-    background: linear-gradient(135deg, var(--rarity-legendary), var(--rarity-immortal));
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    color: var(--bg-primary);
-    box-shadow: var(--shadow-md);
-    flex-shrink: 0;
-  `;
-
-  const dailyFreeOpens = state.currentUser?.dailyFreeOpens || 0;
-  const canUseToday = dailyFreeOpens > 0;
-
-  div.innerHTML = `
-    <div style="font-size: 52px; text-align:center;">🎉</div>
-    <div style="font-weight: 700; font-size: 18px; text-align:center;">FREE OPEN!</div>
-    <div style="font-size: 13px; text-align:center;">Get 5 random cards. Once per day.</div>
-    <div style="font-size: 12px; text-align:center; opacity:.9;">Available today: <b>${dailyFreeOpens}</b></div>
-    <button class="btn btn-primary btn-full" ${canUseToday ? '' : 'disabled'}>
-      ${canUseToday ? '🎁 Open Free' : '⏳ Used'}
-    </button>
-  `;
-
-  const btn = div.querySelector('button');
-  btn.addEventListener('click', () => {
-    if (!canUseToday) return;
-    openDailyFreePack();
-  });
-
-  return div;
-}
-
-function createPackCard(pack, canAfford) {
-  const div = document.createElement('div');
-  div.style.cssText = `
-    min-width: 260px;
-    max-width: 260px;
-    border-radius: 16px;
-    padding: 16px;
-    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    color: var(--text-primary);
-    border: 1px solid var(--border-light);
-    box-shadow: var(--shadow-sm);
-    flex-shrink: 0;
-  `;
-
-  div.innerHTML = `
-    <div style="font-size: 52px; text-align:center;">🎁</div>
-    <div style="font-weight: 700; font-size: 16px; text-align:center;">${pack.name}</div>
-    <div style="font-size: 13px; text-align:center; color: var(--text-secondary);">${pack.description}</div>
-    <div style="font-size: 13px; text-align:center;">
-      💰 <b>${pack.price}</b> · 🂠 <b>${pack.cards}</b> cards
-    </div>
-    <button class="btn btn-primary btn-full" ${canAfford ? '' : 'disabled'}>
-      ${canAfford ? 'Open' : '❌ Not enough'}
-    </button>
-  `;
-
-  const btn = div.querySelector('button');
-  btn.addEventListener('click', () => {
-    if (!canAfford) return;
-    buyPack(pack);
-  });
-
-  return div;
-}
-
-async function openDailyFreePack() {
+/**
+ * Открыть пак
+ */
+async function openPack(pack) {
   const u = state.currentUser;
-  if (!u || (u.dailyFreeOpens || 0) <= 0) {
-    ui.showError('No free opens available');
+  if (!u) return;
+  
+  if ((u.currency || 0) < pack.price) {
+    ui.showError('Not enough coins!');
     return;
   }
-
+  
   try {
-    const selected = selectRandomCards(5);
-    if (!selected.length) {
-      ui.showError('No cards to open');
+    const rarityPool = buildRarityPool(pack.rarityWeights);
+    const drawnCards = [];
+    
+    for (let i = 0; i < pack.cardCount; i++) {
+      const rarity = pickWeightedRarity(rarityPool);
+      const card = pickRandomCardByRarity(rarity);
+      if (card) drawnCards.push(card);
+    }
+    
+    if (drawnCards.length === 0) {
+      ui.showError('Error opening pack');
       return;
     }
-
-    const newDaily = (u.dailyFreeOpens || 1) - 1;
-    u.dailyFreeOpens = newDaily;
-
-    selected.forEach(cardId => {
-      u.cards[cardId] = (u.cards[cardId] || 0) + 1;
-    });
-
+    
+    // Списать монеты
     await db.collection('users').doc(u.uid).update({
-      cards: u.cards,
-      dailyFreeOpens: newDaily
+      currency: firebase.firestore.FieldValue.increment(-pack.price)
     });
-
-    app.updateUserInterface();
-    showPackOpeningAnimation(selected, { name: 'FREE OPEN' });
+    u.currency -= pack.price;
+    
+    // Добавить карты в коллекцию
+    const updates = {};
+    drawnCards.forEach(c => {
+      const key = `cards.${c.id}`;
+      updates[key] = firebase.firestore.FieldValue.increment(1);
+    });
+    await db.collection('users').doc(u.uid).update(updates);
+    
+    // Обновить локально
+    drawnCards.forEach(c => {
+      u.cards = u.cards || {};
+      u.cards[c.id] = (u.cards[c.id] || 0) + 1;
+    });
+    
+    showPackOpeningModal(drawnCards);
+    
+    document.getElementById('coins-display').textContent = u.currency;
+    cardMod.renderCollection();
   } catch (e) {
-    console.error('Daily pack error:', e);
+    console.error('Error opening pack:', e);
     ui.showError('Error opening pack');
   }
 }
 
-async function buyPack(pack) {
-  const u = state.currentUser;
-  if (!u) return;
-
-  if ((u.currency || 0) < pack.price) {
-    ui.showError('Not enough coins');
-    return;
+function buildRarityPool(weights) {
+  const pool = [];
+  for (const [rarity, weight] of Object.entries(weights)) {
+    for (let i = 0; i < weight; i++) pool.push(rarity);
   }
-
-  try {
-    const selected = selectRandomCards(pack.cards);
-    if (!selected.length) {
-      ui.showError('No cards to open');
-      return;
-    }
-
-    let reward = 0;
-    selected.forEach(cardId => {
-      const isNew = !u.cards[cardId];
-      if (isNew) reward += 10;
-      u.cards[cardId] = (u.cards[cardId] || 0) + 1;
-    });
-
-    u.currency = (u.currency || 0) - pack.price + reward;
-
-    await db.collection('users').doc(u.uid).update({
-      currency: u.currency,
-      cards: u.cards,
-      packsOpened: (u.packsOpened || 0) + 1
-    });
-
-    app.updateUserInterface();
-    showPackOpeningAnimation(selected, pack, reward);
-  } catch (e) {
-    console.error('Buy pack error:', e);
-    ui.showError('Error buying pack');
-  }
+  return pool;
 }
 
-function selectRandomCards(count) {
-  const res = [];
-  const pool = state.cards || [];
-  if (!pool.length) return res;
-  for (let i = 0; i < count; i++) {
-    const card = pool[Math.floor(Math.random() * pool.length)];
-    if (card) res.push(card.id);
-  }
-  return res;
+function pickWeightedRarity(pool) {
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function showPackOpeningAnimation(selectedCardIds, pack, reward = 0) {
+function pickRandomCardByRarity(rarity) {
+  const cards = state.cards.filter(c => c.rarity === rarity);
+  return cards.length ? cards[Math.floor(Math.random() * cards.length)] : null;
+}
+
+function showPackOpeningModal(cards) {
+  const modal = document.getElementById('pack-opening-modal');
   const container = document.getElementById('pack-animation-container');
-  const confirmBtn = document.getElementById('pack-confirm-btn');
+  if (!modal || !container) return;
+  
   container.innerHTML = '';
-
-  const header = document.createElement('div');
-  header.style.marginBottom = '12px';
-  header.innerHTML = `
-    <div style="font-size: 20px; font-weight: 700; color: var(--wood-light);">${pack.name}</div>
-    ${reward > 0 ? `<div style="font-size:12px; color: var(--rarity-legendary);">Bonus: +${reward} 💎 for new cards</div>` : ''}
-  `;
-  container.appendChild(header);
-
-  const strip = document.createElement('div');
-  strip.style.cssText = `
-    display: flex;
-    gap: 16px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-  `;
-
-  selectedCardIds.forEach(cardId => {
-    const card = state.cards.find(c => c.id === cardId);
-    if (!card) return;
-
-    const cardDiv = document.createElement('div');
-    cardDiv.style.cssText = `
-      min-width: 250px;
-      aspect-ratio: 155 / 268;
-      border-radius: 16px;
-      overflow: hidden;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-light);
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-    `;
-
-    cardDiv.innerHTML = `
-      <div style="flex:1; background: var(--bg-tertiary);">
-        <img src="${card.imageUrl}" style="width:100%; height:100%; object-fit:cover;" />
-      </div>
-      <div style="padding:8px 10px; font-size:11px;">
-        <div style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${card.title}</div>
-        <div style="color:var(--text-secondary);">${card.artist}</div>
-      </div>
-    `;
-
-    strip.appendChild(cardDiv);
+  
+  cards.forEach((card, idx) => {
+    setTimeout(() => {
+      const cardDiv = document.createElement('div');
+      cardDiv.style.cssText = `
+        min-width: 180px;
+        background: var(--bg-secondary);
+        border: 2px solid ${ui.getRarityBadge(card.rarity).color};
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        animation: cardReveal 0.5s ease-out;
+      `;
+      const rarity = ui.getRarityBadge(card.rarity);
+      cardDiv.innerHTML = `
+        <div style="width:100%; aspect-ratio:155/268; background:var(--bg-tertiary); border-radius:8px; overflow:hidden; margin-bottom:8px;">
+          ${card.imageUrl ? `<img src="${card.imageUrl}" style="width:100%; height:100%; object-fit:cover;" />` : '🎨'}
+        </div>
+        <div style="font-weight:600; font-size:14px; color:var(--text-accent); text-align:center;">${card.title}</div>
+        <div style="font-size:11px; color:var(--text-secondary); text-align:center;">${card.artist}</div>
+        <div style="margin-top:4px; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:600;" style="background:${rarity.color}15; color:${rarity.color};">${rarity.emoji} ${rarity.name}</div>
+      `;
+      container.appendChild(cardDiv);
+    }, idx * 200);
   });
-
-  container.appendChild(strip);
-
-  confirmBtn.style.display = 'block';
-  confirmBtn.onclick = () => {
-    closeModal('pack-opening-modal');
-    ui.showToast('🎁 Pack opened', 'success');
-    renderShop();
-  };
-
+  
   openModal('pack-opening-modal');
+  
+  const confirmBtn = document.getElementById('pack-confirm-btn');
+  confirmBtn.style.display = 'block';
+  confirmBtn.onclick = () => closeModal('pack-opening-modal');
 }

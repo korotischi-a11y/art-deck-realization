@@ -39,20 +39,7 @@ function getCard(cardId) {
 }
 
 /**
- * Глобальная переменная: текущая выбранная колода
- */
-let selectedDeckId = null;
-
-export function getSelectedDeckId() {
-  return selectedDeckId;
-}
-
-export function setSelectedDeckId(deckId) {
-  selectedDeckId = deckId;
-}
-
-/**
- * Рендерит коллекцию карт
+ * Рендерит коллекцию карт (всю или активную колоду)
  */
 export function renderCollection() {
   const grid = document.getElementById('cards-grid');
@@ -60,34 +47,44 @@ export function renderCollection() {
   
   grid.innerHTML = '';
 
-  // Если выбрана колода - показываем карты ГОЛЬКО из неё
-  let cards = [];
-  if (selectedDeckId) {
-    const deck = state.currentUser?.decks?.[selectedDeckId];
-    if (deck) {
-      const cardIds = Object.keys(deck.cards || {});
-      cards = cardIds.map(id => getCard(id)).filter(c => c);
-    }
+  let userCardIds;
+  let title = 'Вся коллекция';
+  
+  // Если есть активная колода → показываем её
+  if (decks.activeDeckId && state.currentUser?.decks?.[decks.activeDeckId]) {
+    const activeDeck = state.currentUser.decks[decks.activeDeckId];
+    userCardIds = Object.keys(activeDeck.cards || {});
+    title = `🎴 ${activeDeck.name}`;
   } else {
-    // Если нет выбора - вся коллекция
-    const userCardIds = Object.keys(state.currentUser?.cards || {});
-    cards = userCardIds.map(id => getCard(id)).filter(c => c);
+    userCardIds = Object.keys(state.currentUser?.cards || {});
   }
+  
+  // Обновляем заголовок над сеткой
+  let headerEl = document.getElementById('collection-deck-title');
+  if (!headerEl) {
+    headerEl = document.createElement('div');
+    headerEl.id = 'collection-deck-title';
+    headerEl.style.cssText = 'font-size:16px; font-weight:700; color:var(--text-accent); margin-bottom:12px;';
+    grid.parentElement.insertBefore(headerEl, grid);
+  }
+  headerEl.textContent = title;
+  
+  let cards = userCardIds.map(id => getCard(id)).filter(c => c);
   
   if (filter) cards = cards.filter(c => c.rarity === filter);
 
   if (!cards.length) {
     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-secondary); padding:40px;">🤷 No cards found</div>';
+    updateStats();
     return;
   }
 
   cards.forEach(card => {
     let count;
-    if (selectedDeckId) {
-      const deck = state.currentUser?.decks?.[selectedDeckId];
-      count = deck?.cards?.[card.id] || 0;
+    if (decks.activeDeckId && state.currentUser?.decks?.[decks.activeDeckId]) {
+      count = state.currentUser.decks[decks.activeDeckId].cards[card.id] || 0;
     } else {
-      count = state.currentUser?.cards?.[card.id] || 0;
+      count = state.currentUser?.cards[card.id] || 0;
     }
     const el = createCardElement(card, count);
     grid.appendChild(el);
@@ -214,11 +211,14 @@ function showCardDetail(card, count) {
   
   renderDeckSelector(card.id);
   
+  // Кнопка удаления из активной колоды
+  renderRemoveFromDeckButton(card.id);
+  
   openModal('card-detail-modal');
 }
 
 /**
- * Рендерит селектор колод
+ * Рендерит селектор колод в модали
  */
 function renderDeckSelector(cardId) {
   let container = document.getElementById('deck-selector-container');
@@ -268,6 +268,39 @@ function renderDeckSelector(cardId) {
 }
 
 /**
+ * Рендерит кнопку удаления из активной колоды (если она открыта)
+ */
+function renderRemoveFromDeckButton(cardId) {
+  let removeBtn = document.getElementById('remove-from-deck-btn');
+  if (removeBtn) removeBtn.remove();
+  
+  if (!decks.activeDeckId) return;
+  
+  const modal = document.querySelector('.modal-content');
+  const addBtn = document.getElementById('add-to-deck-btn');
+  if (!modal || !addBtn) return;
+  
+  removeBtn = document.createElement('button');
+  removeBtn.id = 'remove-from-deck-btn';
+  removeBtn.className = 'btn btn-danger';
+  removeBtn.style.cssText = 'width:100%; margin-top:8px;';
+  removeBtn.textContent = '🗑 Удалить из колоды';
+  removeBtn.onclick = async () => {
+    const success = await decks.removeCardFromActiveDeck(cardId);
+    if (success) {
+      ui.showToast('✅ Удалено из колоды', 'success');
+      closeModal('card-detail-modal');
+      decks.renderDecks();
+      renderCollection();
+    } else {
+      ui.showError('Ошибка удаления');
+    }
+  };
+  
+  modal.insertBefore(removeBtn, addBtn.nextSibling);
+}
+
+/**
  * Открывает картинку на полный экран
  */
 function openFullscreenImage(imageUrl) {
@@ -304,7 +337,7 @@ function updateStats() {
 }
 
 /**
- * Рассчитывает максимальный рейтинг
+ * Рассчитывает максимальный рейтинг ИЗ ВСЕХ колод
  */
 function calculateMaxRating() {
   const decksObj = state.currentUser?.decks || {};

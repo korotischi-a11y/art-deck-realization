@@ -1,15 +1,15 @@
 :root {
   /* === ЦВЕТА === */
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #242424;
-  --bg-tertiary: #2e2e2e;
+  --bg-primary: #1a1410;
+  --bg-secondary: #211a15;
+  --bg-tertiary: #2e2520;
   
   --text-primary: #e0e0e0;
   --text-secondary: #a0a0a0;
   --text-accent: #ffffff;
   
-  --border-color: #3a3a3a;
-  --border-light: #4a4a4a;
+  --border-color: #3a3020;
+  --border-light: #4a3a2a;
   
   /* === ДРЕВЕСНАЯ ПАЛИТРА === */
   --wood-light: #d4a574;
@@ -80,7 +80,7 @@ html, body {
 
 body {
   font-family: var(--font-family);
-  background-color: var(--bg-primary);
+  background: linear-gradient(135deg, #1a1410 0%, #2e2520 100%);
   color: var(--text-primary);
   font-size: var(--font-size-base);
   line-height: 1.6;
@@ -91,7 +91,7 @@ body {
   display: grid;
   grid-template-columns: 80px 1fr;
   height: 100vh;
-  background-color: var(--bg-primary);
+  background: transparent;
 }
 
 /* === БОКОВАЯ ПАНЕЛЬ === */
@@ -136,7 +136,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--bg-primary);
+  background: transparent;
 }
 
 /* === ЗАГОЛОВОК === */
@@ -234,6 +234,17 @@ body {
   }
 }
 
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.8) rotateY(90deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotateY(0deg);
+  }
+}
+
 /* === КОЛЛЕКЦИОННЫЙ ЗАГОЛОВОК === */
 .collection-header {
   display: flex;
@@ -296,7 +307,6 @@ body {
   transition: transform 0.12s linear, box-shadow 0.12s linear, border-color 0.12s linear;
 }
 
-/* Для родительской сетки включаем perspective */
 #cards-grid {
   perspective: 900px;
 }
