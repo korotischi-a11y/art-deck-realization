@@ -11,17 +11,17 @@
   --border-color: #3a3a3a;
   --border-light: #4a4a4a;
   
-  /* === ДРЕВЕСНАЙА ПАЛИТРА === */
+  /* === ДРЕВЕСНАЯ ПАЛИТРА === */
   --wood-light: #d4a574;
   --wood-medium: #c4956b;
   --wood-dark: #8b6f47;
   --wood-darker: #5a4a2a;
   
   /* === ПАРАМЕТРЫ КАРТ === */
-  --resonance: #FF6B6B;     /* 💓 Резонанс */
-  --virtuosity: #4ECDC4;    /* 🎯 Виртуозность */
-  --profundity: #95E1D3;    /* 🧠 Глубина */
-  --harmony: #FFD93D;       /* ⚖️ Гармония */
+  --resonance: #FF6B6B;
+  --virtuosity: #4ECDC4;
+  --profundity: #95E1D3;
+  --harmony: #FFD93D;
   
   /* === РЕДКОСТИ === */
   --rarity-common: #6b7280;
@@ -131,7 +131,7 @@ body {
   color: var(--bg-primary);
 }
 
-/* === ГЛАВНЫЙ КОНТЕНТ === */
+/* === ГЛАВНЫЙ КОНТЕНт === */
 .main-content {
   display: flex;
   flex-direction: column;
@@ -234,7 +234,7 @@ body {
   }
 }
 
-/* === ЗАГОЛОВОК КОЛЛЕКЦИИ С МАКСИМАЛЬНЫМ РЕЙТИНГОМ === */
+/* === КОЛЛЕКЦИОННЫЙ ЗАГОЛОВОК === */
 .collection-header {
   display: flex;
   justify-content: space-between;
@@ -273,14 +273,14 @@ body {
   font-weight: 700;
 }
 
-/* === СЕТКА КАРТ === */
+/* === СЕТКА КАРТ TAROT (1.72:1) === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: var(--spacing-lg);
 }
 
-/* === КАРТОЧКА (TILTED) === */
+/* === КАРТОЧКА === */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -292,6 +292,7 @@ body {
   flex-direction: column;
   perspective: 1000px;
   position: relative;
+  aspect-ratio: 155 / 268;
 }
 
 .card-item[data-tilt] {
@@ -317,7 +318,7 @@ body {
   box-shadow: var(--shadow-md);
 }
 
-/* === РЕДКИЕ КАРТЫ СВЕТЯТСЯ === */
+/* === РЕДКИЕ КАРТЫ СВЕтЯтся === */
 @keyframes glow-immortal {
   0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
   50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.6); }
@@ -360,7 +361,7 @@ body {
 
 .card-image {
   width: 100%;
-  height: 160px;
+  flex: 1.4;
   background: linear-gradient(135deg, var(--bg-tertiary), var(--wood-darker));
   display: flex;
   align-items: center;
@@ -387,22 +388,25 @@ body {
   padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
-  flex: 1;
+  gap: var(--spacing-xs);
+  flex: 0.6;
+  overflow: hidden;
 }
 
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
-  font-size: var(--font-size-base);
+  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin: 0;
 }
 
 .card-artist {
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   color: var(--text-secondary);
+  margin: 0;
 }
 
 .card-rarity {
@@ -410,18 +414,19 @@ body {
   align-items: center;
   gap: var(--spacing-xs);
   width: fit-content;
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: 2px 6px;
   border-radius: var(--radius-md);
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   font-weight: 600;
+  margin: 0;
 }
 
 .card-params {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.2;
   margin-top: auto;
-  padding-top: var(--spacing-sm);
+  padding-top: 4px;
   border-top: 1px solid var(--border-color);
 }
 
@@ -429,18 +434,19 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: 2px;
 }
 
 .card-count {
   background-color: var(--bg-tertiary);
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: 4px 8px;
   border-radius: var(--radius-md);
-  margin-top: var(--spacing-sm);
+  margin-top: 4px;
   text-align: center;
   font-weight: 600;
   color: var(--wood-light);
-  font-size: var(--font-size-xs);
+  font-size: 10px;
+  margin: 0;
 }
 
 /* === МОДАЛЬНОЕ ОКНО === */
@@ -846,7 +852,7 @@ body {
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   }
   
   .modal-content {
