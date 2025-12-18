@@ -1,8 +1,6 @@
 /**
- * config.js
- * Конфигурация Firebase для проекта Art Deck
- * 
- * ВАЖНО: Эти credentials на production должны быть защищены окружением
+ * config.js - Firebase Configuration
+ * Инициализация Firebase для Art Deck
  */
 
 const firebaseConfig = {
@@ -16,11 +14,21 @@ const firebaseConfig = {
 
 /**
  * Инициализация Firebase
- * Используем обычный SDK (не compat)
+ * Используем compat версию (firebase-compat) которую загружаем из HTML
  */
-if (typeof firebase !== 'undefined') {
+window.addEventListener('DOMContentLoaded', () => {
+  if (typeof firebase !== 'undefined') {
+    console.log('[CONFIG] Initializing Firebase...');
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+      console.log('[CONFIG] ✅ Firebase initialized');
+    }
+  }
+});
+
+// Альтернатива: если скрипты загружены до этого
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-// Экспортируем для использования в других модулях
 export { firebaseConfig };
