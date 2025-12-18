@@ -169,7 +169,7 @@ function createDeckElement(deck, uniqueCount, isActive, deckRating, isLocked) {
       🎰 ${uniqueCount} уник. | ⭐ ${Math.round(deckRating)}
     </div>
     ${!deck.isDiscardDeck ? `<div class="deck-actions" style="position:absolute; top:8px; right:8px; display:none; gap:4px;">
-      <button class="deck-edit-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:var(--wood-medium); border:none; border-radius:4px; color:var(--bg-primary); font-size:10px; cursor:pointer;">✏️</button>
+      <button class="deck-edit-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:var(--wood-medium); border:none; border-radius:4px; color:var(--bg-primary); font-size:10px; cursor:pointer;">✍️</button>
       <button class="deck-delete-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:var(--resonance); border:none; border-radius:4px; color:white; font-size:10px; cursor:pointer;">🗑</button>
     </div>` : ''}
   `;
@@ -277,7 +277,7 @@ export async function removeCardFromActiveDeck(cardId) {
 
 /**
  * 🔥 УНИВЕРСАЛЬНАЯ ФУНКЦИЯ: ПЕРЕМЕЩАТЬ КАРТУ МЕЖДУ КОЛОДАМИ
- * МИНУС из исходной, ПЛЮС в целевую
+ * МИНУС из исходной, ПЛЮС в целевою
  * БЕЗ дублирования!
  */
 export async function moveCardBetweenDecks(cardId, fromDeckId, toDeckId, count = 1) {
@@ -318,6 +318,9 @@ export async function moveCardBetweenDecks(cardId, fromDeckId, toDeckId, count =
   }
 }
 
+/**
+ * 🖤 УДАЛИТЬ КАРТУ ИЗ ВСЕХ КОЛОД (ВСЕ)
+ */
 export async function deleteCardFromCollection(cardId) {
   try {
     const u = state.currentUser;
@@ -334,6 +337,53 @@ export async function deleteCardFromCollection(cardId) {
     return true;
   } catch (e) {
     console.error('Error deleting card:', e);
+    return false;
+  }
+}
+
+/**
+ * 🖤 УДАЛИТЬ НОВАЯ: КАРТУ КОЛИЧЕСТВО ШТУК ИЗ ВСЕХ КОЛОД
+ * Пример: удалить 2 копии весьма карты из всех колод
+ */
+export async function deleteCardFromCollectionQuantity(cardId, quantity) {
+  try {
+    const u = state.currentUser;
+    if (!u) return false;
+
+    const decksObj = u.decks || {};
+    let remainingToDelete = quantity;
+
+    // Появляем в каждой колоде
+    for (const [deckId, deck] of Object.entries(decksObj)) {
+      if (remainingToDelete <= 0) break;
+
+      if (deck.cards && deck.cards[cardId] && deck.cards[cardId] > 0) {
+        const countInDeck = deck.cards[cardId];
+        const deleteCount = Math.min(countInDeck, remainingToDelete);
+
+        deck.cards[cardId] -= deleteCount;
+        remainingToDelete -= deleteCount;
+
+        if (deck.cards[cardId] <= 0) {
+          delete deck.cards[cardId];
+        }
+
+        await db.collection('users').doc(u.uid)
+          .collection('decks').doc(deckId)
+          .update({ cards: deck.cards });
+      }
+    }
+
+    // Проверяем удалось ли достаточно
+    if (remainingToDelete > 0) {
+      console.warn(`⚠ Не все карты удалены. Осталось: ${remainingToDelete}`);
+      return false;
+    }
+
+    await loadDecks();
+    return true;
+  } catch (e) {
+    console.error('Error deleting card quantity:', e);
     return false;
   }
 }
@@ -357,7 +407,7 @@ function openCreateDeckModal() {
   modal.innerHTML = `
     <div class="modal-content" style="max-width:400px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h2 style="margin:0;">📮 Новая колода</h2>
+        <h2 style="margin:0;">💮 Новая колода</h2>
         <button class="modal-close" style="padding:0; width:32px; height:32px;">✗</button>
       </div>
       <input type="text" id="new-deck-name" placeholder="Название колоды" style="width:100%; padding:10px; background:var(--bg-tertiary); border:1px solid var(--border); color:var(--text); border-radius:8px; margin-bottom:16px;" />
@@ -403,7 +453,7 @@ function openEditDeckModal(deckId) {
   modal.innerHTML = `
     <div class="modal-content" style="max-width:400px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h2 style="margin:0;">✏️ Редактировать</h2>
+        <h2 style="margin:0;">✍️ Редактировать</h2>
         <button class="modal-close" style="padding:0; width:32px; height:32px;">✗</button>
       </div>
       <input type="text" id="edit-deck-name" value="${deck.name}" style="width:100%; padding:10px; background:var(--bg-tertiary); border:1px solid var(--border); color:var(--text); border-radius:8px; margin-bottom:16px;" />
