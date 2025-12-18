@@ -308,16 +308,18 @@ function showCardDetail(card, count) {
     }
   }
   
-  renderDeckSelector(card.id, buttonContainer);
+  renderDeckSelector(card.id, count, buttonContainer);
   renderCardActionButtons(card.id, count, buttonContainer);
   
   openModal('card-detail-modal');
 }
 
 /**
- * Рендерит селектор колод для добавления карты
+ * 🔥 НОВОЕ: Рендерит селектор колод + выбор кол-во для ПЕРЕНОСА
+ * Логика: перемещает N копий ИЗ активной колоды В выбранную
+ * Без копирования — чистый перенос!
  */
-function renderDeckSelector(cardId, container) {
+function renderDeckSelector(cardId, countInActive, container) {
   const decksList = decks.getDecksForDropdown();
   
   if (!decksList.length) {
@@ -327,9 +329,24 @@ function renderDeckSelector(cardId, container) {
     container.appendChild(emptyDiv);
     return;
   }
+
+  // Если активная колода это Сброс — позволяем перенести
+  const isFromDiscard = decks.activeDeckId && state.currentUser?.decks?.[decks.activeDeckId]?.isDiscardDeck;
+  
+  if (!isFromDiscard && countInActive === 0) {
+    const emptyDiv = document.createElement('div');
+    emptyDiv.style.cssText = 'color:var(--text-secondary); font-size:12px; padding:8px;';
+    emptyDiv.textContent = '⚠ Карты нет в активной колоде';
+    container.appendChild(emptyDiv);
+    return;
+  }
   
   const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'display: flex; gap: 8px; align-items: center;';
+  wrapper.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
+  
+  // Селектор колод
+  const selectWrapper = document.createElement('div');
+  selectWrapper.style.cssText = 'display: flex; gap: 8px; align-items: center;';
   
   const select = document.createElement('select');
   select.id = 'deck-choice';
@@ -342,35 +359,74 @@ function renderDeckSelector(cardId, container) {
     select.appendChild(option);
   });
   
-  const addBtn = document.createElement('button');
-  addBtn.type = 'button';
-  addBtn.className = 'btn btn-primary';
-  addBtn.style.cssText = 'padding:8px 12px; font-size:13px; white-space:nowrap;';
-  addBtn.textContent = '➡ Добавить';
-  addBtn.onclick = async () => {
-    const deckId = select.value;
-    if (!deckId) {
-      ui.showError('Выберите колоду');
+  selectWrapper.appendChild(select);
+  wrapper.appendChild(selectWrapper);
+  
+  // Инпут для выбора кол-во
+  const quantityWrapper = document.createElement('div');
+  quantityWrapper.style.cssText = 'display: flex; gap: 8px; align-items: center;';
+  
+  const quantityLabel = document.createElement('label');
+  quantityLabel.textContent = '📦 Кол-во:';
+  quantityLabel.style.cssText = 'font-size:13px; font-weight:600; min-width:80px;';
+  
+  const quantityInput = document.createElement('input');
+  quantityInput.type = 'number';
+  quantityInput.id = 'move-quantity-input';
+  quantityInput.value = '1';
+  quantityInput.min = '1';
+  quantityInput.max = countInActive;
+  quantityInput.style.cssText = 'flex:1; padding:8px; background:var(--bg-tertiary); border:1px solid var(--border-light); color:var(--text); border-radius:6px; font-size:13px;';
+  
+  quantityWrapper.appendChild(quantityLabel);
+  quantityWrapper.appendChild(quantityInput);
+  wrapper.appendChild(quantityWrapper);
+  
+  // Кнопка переноса
+  const moveBtn = document.createElement('button');
+  moveBtn.type = 'button';
+  moveBtn.className = 'btn btn-primary';
+  moveBtn.style.cssText = 'width:100%; padding:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; border-radius:6px;';
+  moveBtn.textContent = '🔄 Перенести в колоду';
+  
+  moveBtn.onclick = async () => {
+    const targetDeckId = select.value;
+    const quantity = parseInt(quantityInput.value, 10);
+    
+    if (!targetDeckId) {
+      ui.showError('Выберите целевую колоду');
       return;
     }
     
-    // Получаем ID сброса и переносим карту
-    const discardDeckId = await decks.getOrCreateDiscardDeck();
-    const success = await decks.moveCardBetweenDecks(cardId, discardDeckId, deckId, 1);
+    if (isNaN(quantity) || quantity < 1 || quantity > countInActive) {
+      ui.showError(`Количество должно быть от 1 до ${countInActive}`);
+      return;
+    }
+    
+    // Уточнение: из какой колоды в какую?
+    let sourceDecId = decks.activeDeckId;
+    
+    if (!sourceDecId) {
+      ui.showError('❌ Активная колода не выбрана');
+      return;
+    }
+    
+    // Переносим карту: из активной В выбранную
+    const success = await decks.moveCardBetweenDecks(cardId, sourceDecId, targetDeckId, quantity);
     
     if (success) {
-      ui.showToast(`✅ Перенесено в ${select.options[select.selectedIndex].text}!`, 'success');
+      const targetDeckName = select.options[select.selectedIndex].text;
+      ui.showToast(`✅ Перенесено ${quantity} копия/копий в "${targetDeckName}"!`, 'success');
       closeModal('card-detail-modal');
       await decks.loadDecks();
       decks.renderDecks();
       renderCollection();
     } else {
-      ui.showError('❌ Ошибка: нет карты в сбросе или колода не найдена');
+      ui.showError('❌ Ошибка: нет карты в активной колоде или целевая колода не найдена');
     }
   };
   
-  wrapper.appendChild(select);
-  wrapper.appendChild(addBtn);
+  wrapper.appendChild(moveBtn);
   container.appendChild(wrapper);
 }
 
