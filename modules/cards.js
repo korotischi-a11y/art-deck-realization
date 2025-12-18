@@ -23,6 +23,43 @@ const TEAR_PRICES = {
 };
 
 /**
+ * 🔥 НОВОЕ: Получить бейдж для theme (стиля)
+ */
+function getThemeLabel(theme) {
+  const themes = {
+    impressionism: { emoji: '🌻', name: 'Impressionism', color: '#ffb347' },
+    renaissance: { emoji: '🏰', name: 'Renaissance', color: '#daa520' },
+    surrealism: { emoji: '🌙', name: 'Surrealism', color: '#9b59b6' },
+    abstract: { emoji: '🎨', name: 'Abstract', color: '#e74c3c' },
+    realism: { emoji: '🖼️', name: 'Realism', color: '#8b4513' },
+    modernism: { emoji: '✨', name: 'Modernism', color: '#3498db' },
+    baroque: { emoji: '👑', name: 'Baroque', color: '#ffd700' },
+    romanticism: { emoji: '🌹', name: 'Romanticism', color: '#e91e63' },
+    cubism: { emoji: '🔶', name: 'Cubism', color: '#f39c12' },
+    expressionism: { emoji: '🔥', name: 'Expressionism', color: '#ff5722' },
+    contemporary: { emoji: '🔮', name: 'Contemporary', color: '#00bcd4' }
+  };
+  return themes[theme] || { emoji: '❓', name: theme || 'Unknown', color: '#999' };
+}
+
+/**
+ * 🔥 НОВОЕ: Получить бейдж для genre (жанра)
+ */
+function getGenreLabel(genre) {
+  const genres = {
+    portrait: { emoji: '👤', name: 'Portrait', role: 'Hero', color: '#3b82f6' },
+    landscape: { emoji: '🌄', name: 'Landscape', role: 'Dream', color: '#10b981' },
+    still_life: { emoji: '🍎', name: 'Still Life', role: 'Heal', color: '#84cc16' },
+    religious: { emoji: '⛪', name: 'Religious', role: 'Divine', color: '#fbbf24' },
+    mythological: { emoji: '🐉', name: 'Mythological', role: 'Epic', color: '#a855f7' },
+    abstract: { emoji: '🎨', name: 'Abstract', role: 'Chaos', color: '#ef4444' },
+    urban: { emoji: '🏙️', name: 'Urban', role: 'Stability', color: '#6366f1' },
+    nude: { emoji: '💃', name: 'Nude', role: 'Beauty', color: '#ec4899' }
+  };
+  return genres[genre] || { emoji: '❓', name: genre || 'Unknown', role: '?', color: '#999' };
+}
+
+/**
  * 💎 Вычисляет цену за порванную карту
  */
 function calculateTearPrice(card) {
@@ -169,6 +206,10 @@ function createCardElement(card, count) {
 
   const rarity = ui.getRarityBadge(card.rarity);
   const params = `💓${card.power?.resonance || 0} 🎯${card.power?.virtuosity || 0} 🧠${card.power?.profundity || 0} ⚖${card.power?.harmony || 0}`;
+  
+  // 🔥 НОВОЕ: Бейджи theme и genre
+  const themeLabel = getThemeLabel(card.theme);
+  const genreLabel = getGenreLabel(card.genre);
 
   div.innerHTML = `
     <div class="card-image" style="position:relative; overflow:hidden;">
@@ -182,6 +223,13 @@ function createCardElement(card, count) {
         <span style="overflow:hidden; text-overflow:ellipsis;">${ui.sanitizeHTML(card.artist)}</span>
         <span>${card.year}</span>
       </div>
+      
+      <!-- 🔥 НОВОЕ: Бейджи theme & genre -->
+      <div style="display:flex; gap:4px; margin-bottom:6px; font-size:9px;">
+        <span style="background:${themeLabel.color}20; color:${themeLabel.color}; padding:2px 6px; border-radius:4px; border:1px solid ${themeLabel.color}40; white-space:nowrap;">${themeLabel.emoji}</span>
+        <span style="background:${genreLabel.color}20; color:${genreLabel.color}; padding:2px 6px; border-radius:4px; border:1px solid ${genreLabel.color}40; white-space:nowrap;">${genreLabel.emoji}</span>
+      </div>
+      
       <div class="card-rarity" style="background:${rarity.color}15; border-color:${rarity.color}; color:${rarity.color}; white-space:nowrap; text-align:center; font-size:10px;">
         ${rarity.emoji} ${rarity.name}
       </div>
@@ -231,6 +279,10 @@ function showCardDetail(card, count) {
 
   const rarity = ui.getRarityBadge(card.rarity);
   const cardStats = getCardStatsInDecks(card.id);
+  
+  // 🔥 НОВОЕ: Бейджи theme & genre
+  const themeLabel = getThemeLabel(card.theme);
+  const genreLabel = getGenreLabel(card.genre);
 
   const titleEl = document.getElementById('modal-card-title');
   const artistEl = document.getElementById('modal-card-artist');
@@ -267,6 +319,21 @@ function showCardDetail(card, count) {
   countEl.innerHTML = countHTML;
 
   paramsTable.innerHTML = '';
+  
+  // 🔥 НОВОЕ: Добавляем theme & genre НАД таблицей
+  const themeGenreDiv = document.createElement('div');
+  themeGenreDiv.style.cssText = 'display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;';
+  themeGenreDiv.innerHTML = `
+    <div style="flex:1; background:${themeLabel.color}15; border:1px solid ${themeLabel.color}; color:${themeLabel.color}; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:600; text-align:center;">
+      ${themeLabel.emoji} ${themeLabel.name}
+    </div>
+    <div style="flex:1; background:${genreLabel.color}15; border:1px solid ${genreLabel.color}; color:${genreLabel.color}; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:600; text-align:center;">
+      ${genreLabel.emoji} ${genreLabel.name}<br/>
+      <span style="font-size:10px; opacity:0.8;">${genreLabel.role}</span>
+    </div>
+  `;
+  paramsTable.appendChild(themeGenreDiv);
+  
   const params = [
     { name: '💓 Resonance', value: card.power?.resonance || 0, color: 'var(--resonance)' },
     { name: '🎯 Virtuosity', value: card.power?.virtuosity || 0, color: 'var(--virtuosity)' },
