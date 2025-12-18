@@ -34,13 +34,19 @@ async function handleSubmit(event) {
   const description = form.querySelector('#card-description').value.trim();
   const imageUrl = form.querySelector('#card-image-url').value.trim();
   const rarity = form.querySelector('#card-rarity').value;
+  
+  // 🔥 НОВОЕ: Получаем theme и genre
+  const theme = form.querySelector('#card-theme')?.value || '';
+  const genre = form.querySelector('#card-genre')?.value || '';
+  
   const resonance = parseInt(form.querySelector('#card-resonance').value, 10);
   const virtuosity = parseInt(form.querySelector('#card-virtuosity').value, 10);
   const profundity = parseInt(form.querySelector('#card-profundity').value, 10);
   const harmony = parseInt(form.querySelector('#card-harmony').value, 10);
   
-  if (!title || !artist || !description || !rarity) {
-    ui.showError('Fill all fields');
+  // 🔥 ВАЛИДАЦИЯ
+  if (!title || !artist || !description || !rarity || !theme || !genre) {
+    ui.showError('Fill all fields (including theme & genre)');
     return;
   }
   if (year < 1000 || year > 2100) {
@@ -53,11 +59,24 @@ async function handleSubmit(event) {
   
   try {
     const cardId = form.dataset.editingId;
+    
+    // 🔥 ОБЪЕКТ КАРТЫ С THEME И GENRE
+    const cardData = {
+      title, 
+      artist, 
+      year, 
+      description, 
+      imageUrl, 
+      rarity,
+      theme,    // ⬅️ НОВОЕ
+      genre,    // ⬅️ НОВОЕ
+      power: { resonance, virtuosity, profundity, harmony }
+    };
+    
     if (cardId) {
       // Редактирование
       await db.collection('masterCards').doc(cardId).update({
-        title, artist, year, description, imageUrl, rarity,
-        power: { resonance, virtuosity, profundity, harmony },
+        ...cardData,
         updatedAt: firebase.firestore.Timestamp.now()
       });
       ui.showSuccess('Card updated');
@@ -66,8 +85,7 @@ async function handleSubmit(event) {
     } else {
       // Новая карта
       await db.collection('masterCards').add({
-        title, artist, year, description, imageUrl, rarity,
-        power: { resonance, virtuosity, profundity, harmony },
+        ...cardData,
         createdAt: firebase.firestore.Timestamp.now(),
         totalOwners: 0
       });
@@ -92,10 +110,18 @@ async function renderCardsList() {
       const card = { id: doc.id, ...doc.data() };
       const div = document.createElement('div');
       div.style.cssText = 'padding: 12px; border: 1px solid var(--border); margin: 8px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;';
+      
+      // 🔥 ПОКАЗЫВАЕМ THEME И GENRE
+      const themeLabel = card.theme ? `<span style="background:#3b82f620; color:#3b82f6; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:4px;">🎨 ${card.theme}</span>` : '';
+      const genreLabel = card.genre ? `<span style="background:#10b98120; color:#10b981; padding:2px 6px; border-radius:4px; font-size:10px;">🎭 ${card.genre}</span>` : '';
+      
       div.innerHTML = `
         <div>
           <strong>${card.title}</strong> by ${card.artist} (${card.year})
-          <div style="font-size: 12px; color: var(--text-secondary);">Rarity: ${card.rarity}</div>
+          <div style="font-size: 12px; color: var(--text-secondary); margin-top:4px;">
+            Rarity: ${card.rarity}
+            <div style="margin-top:4px;">${themeLabel}${genreLabel}</div>
+          </div>
         </div>
         <div style="display: flex; gap: 8px;">
           <button data-id="${card.id}" class="edit-btn" style="padding: 4px 8px; background: #3a8d8e; color: white; border: none; border-radius: 4px; cursor: pointer;">✎ Edit</button>
@@ -126,6 +152,13 @@ async function loadCardForEdit(cardId) {
     form.querySelector('#card-description').value = card.description;
     form.querySelector('#card-image-url').value = card.imageUrl || '';
     form.querySelector('#card-rarity').value = card.rarity;
+    
+    // 🔥 ЗАГРУЖАЕМ THEME И GENRE
+    const themeSelect = form.querySelector('#card-theme');
+    const genreSelect = form.querySelector('#card-genre');
+    if (themeSelect) themeSelect.value = card.theme || '';
+    if (genreSelect) genreSelect.value = card.genre || '';
+    
     form.querySelector('#card-resonance').value = card.power?.resonance || 0;
     form.querySelector('#card-virtuosity').value = card.power?.virtuosity || 0;
     form.querySelector('#card-profundity').value = card.power?.profundity || 0;
