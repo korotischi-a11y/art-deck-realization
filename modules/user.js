@@ -19,7 +19,6 @@ export function renderProfile() {
   // Основная информация
   document.getElementById('profile-username').textContent = currentUser.username || currentUser.email?.split('@')[0] || '-';
   document.getElementById('profile-email').textContent = currentUser.email || '-';
-  document.getElementById('profile-rating').textContent = Math.round(currentUser.currency || 0);
   
   // Количество карт
   const cards_obj = currentUser.cards || {};
@@ -34,14 +33,25 @@ export function renderProfile() {
   if (uniqueEl) uniqueEl.textContent = uniqueCards;
   if (coinsEl) coinsEl.textContent = currentUser.currency || 0;
   
-  // Рейтинг распределения (алтернативные данные)
+  // Рейтинг распределения (максимальный рейтинг всех колод)
   const decksObj = currentUser.decks || {};
-  const maxDeckRating = Object.values(decksObj).map(d => {
-    const total = Object.values(d.cards || {}).reduce((a, b) => a + b, 0);
-    const unique = Object.keys(d.cards || {}).length;
-    return (unique / total) * 100 + unique * 10;
-  }).reduce((a, b) => Math.max(a, b), 0);
+  let maxDeckRating = 0;  // ✅ ИСПРАВЛЕНИЕ: инициализируем 0 вместо reduce без начального значения
   
+  Object.values(decksObj).forEach(d => {
+    if (!d.cards || Object.keys(d.cards).length === 0) return;  // Пропускаем пустые колоды
+    const total = Object.values(d.cards).reduce((a, b) => a + b, 0);
+    const unique = Object.keys(d.cards).length;
+    if (total > 0) {  // ✅ Проверяем деление на ноль
+      const rating = (unique / total) * 100 + unique * 10;
+      maxDeckRating = Math.max(maxDeckRating, rating);
+    }
+  });
+  
+  // ✅ Гарантируем, что rating всегда число (не NaN)
+  maxDeckRating = isNaN(maxDeckRating) || !isFinite(maxDeckRating) ? 0 : maxDeckRating;
+  document.getElementById('profile-rating').textContent = Math.round(maxDeckRating);
+  
+  // Рейтинг распределения (альтернативные данные)
   const breakdownDiv = document.getElementById('rating-breakdown');
   if (breakdownDiv) {
     breakdownDiv.innerHTML = `
