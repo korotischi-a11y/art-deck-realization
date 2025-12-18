@@ -284,10 +284,10 @@ body {
   font-weight: 700;
 }
 
-/* === СЕТКА КАРТ === */
+/* === СЕТКА КАРТ (УВЕЛИЧЕНА НА 10%: 143px → 157px) === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(143px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(157px, 1fr));
   gap: var(--spacing-lg);
 }
 
@@ -918,7 +918,7 @@ body {
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
   }
   
   .modal-content {
