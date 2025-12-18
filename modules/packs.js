@@ -37,7 +37,7 @@ async function initDefaultPacks() {
         name: 'Начало', 
         price: 25, 
         cardCount: 2, 
-        emoji: '🌢', 
+        emoji: '🍢', 
         color: '#3b82f6',
         borderColor: '#1e40af',
         rarityWeights: { common: 10 } 
@@ -147,53 +147,25 @@ function calculateGuarantees(rarityWeights, cardCount) {
 }
 
 /**
- * 🔥 НОВОЕ: Рендерит гарантии редкостей
- */
-function renderGuarantees(pack) {
-  const guarantees = calculateGuarantees(pack.rarityWeights, pack.cardCount);
-  
-  return `
-    <div style="font-size:11px; color:var(--text-secondary); margin-top:8px; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px;">
-      <div style="font-weight:600; color:var(--text); margin-bottom:6px;">📊 Гарантии:</div>
-      ${guarantees.map(g => `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
-          <span>${g.emoji} ${g.name}</span>
-          <span style="color:var(--text-accent); font-weight:600;">${g.percentage}%</span>
-        </div>
-      `).join('')}
-    </div>
-  `;
-}
-
-/**
- * 🔥 НОВОЕ: Вычисляет время до следующего бесплатного пака
+ * 🔥 ИСПРАВЛЕНО: Вычисляет время до следующего бесплатного пака (24 часа от открытия)
  */
 function calculateTimeUntilFreepack() {
   const u = state.currentUser;
-  if (!u) return null;
+  if (!u || !u.lastDailyPackDate) return null; // Первый раз - доступен
   
-  const lastDaily = u.lastDailyPackDate;
-  if (!lastDaily) return null; // Первый раз - доступен
-  
-  // lastDaily = "Thu Dec 18 2025" (toDateString format)
-  const lastDate = new Date(lastDaily);
+  // 🔥 Преобразуем Timestamp в Date
+  const lastDate = u.lastDailyPackDate.toDate ? u.lastDailyPackDate.toDate() : new Date(u.lastDailyPackDate);
   const now = new Date();
   
-  // Устанавливаем оба на начало дня для корректного сравнения
-  lastDate.setHours(0, 0, 0, 0);
-  now.setHours(0, 0, 0, 0);
+  // 🔥 Разница во времени
+  const diff = now - lastDate;
+  const hours24 = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
   
-  const diffTime = now - lastDate;
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  // 🔥 Если прошло 24+ часа - доступен!
+  if (diff >= hours24) return null;
   
-  if (diffDays >= 1) return null; // Доступен!
-  
-  // Вычисляем когда будет доступен (завтра в 00:00)
-  const nextDay = new Date();
-  nextDay.setDate(nextDay.getDate() + 1);
-  nextDay.setHours(0, 0, 0, 0);
-  
-  const timeUntil = nextDay - new Date();
+  // 🔥 Вычисляем оставшееся время
+  const timeUntil = hours24 - diff;
   const hours = Math.floor(timeUntil / (1000 * 60 * 60));
   const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((timeUntil % (1000 * 60)) / 1000);
@@ -202,7 +174,7 @@ function calculateTimeUntilFreepack() {
 }
 
 /**
- * 🔥 НОВОЕ: Обновляет таймер каждую секунду
+ * 🔥 ОБНОВЛЕНО: Обновляет таймер каждую секунду
  */
 let timerInterval = null;
 
@@ -226,6 +198,7 @@ function startFreePkTimer() {
       button.disabled = false;
       button.style.opacity = '1';
       button.style.cursor = 'pointer';
+      button.textContent = 'ПОЛУЧИТЬ';
       clearInterval(timerInterval);
     } else {
       // Недоступен, показываем таймер
@@ -234,6 +207,7 @@ function startFreePkTimer() {
       button.disabled = true;
       button.style.opacity = '0.5';
       button.style.cursor = 'not-allowed';
+      button.textContent = '🔒 ЗАКРЫТО';
     }
   }, 1000);
 }
@@ -272,7 +246,6 @@ export function renderShop() {
     opacity: ${timeData ? '0.6' : '1'};
   `;
   
-  // Анимация фона
   const gradientBg = document.createElement('div');
   gradientBg.style.cssText = `
     position: absolute;
@@ -288,7 +261,7 @@ export function renderShop() {
     <div style="position:absolute; top:0; right:0; background:#fbbf24; color:#7c2d12; padding:6px 12px; border-radius:0 16px 0 12px; font-size:11px; font-weight:700; z-index:10;">БЕСПЛАТНО</div>
     <div style="font-size:48px; text-align:center; margin-top:8px; position:relative; z-index:5;">🎁</div>
     <div style="font-weight:700; font-size:18px; color:#fff; text-align:center; position:relative; z-index:5;">Ежедневный Пак</div>
-    <div style="font-size:13px; color:rgba(255,255,255,0.95); text-align:center; position:relative; z-index:5;">3 карты | Каждый день</div>
+    <div style="font-size:13px; color:rgba(255,255,255,0.95); text-align:center; position:relative; z-index:5;">3 карты | Каждые 24 часа</div>
     
     <!-- 🔥 ТАЙМЕР -->
     <div id="free-pack-timer" style="text-align:center; font-size:18px; font-weight:700; color:#10b981; font-family:monospace; position:relative; z-index:5;">
@@ -317,7 +290,7 @@ export function renderShop() {
   // Начнём обновлять таймер
   startFreePkTimer();
   
-  // ОБЫЧНЫЕ ПАКЫ с КАЖДЫМ своим цветом
+  // ОБЫЧНЫЕ ПАКИ с КАЖДЫМ своим цветом
   state.packs.forEach((pack, idx) => {
     const packColor = pack.color || '#6366f1';
     const packBorderColor = pack.borderColor || packColor;
@@ -345,7 +318,6 @@ export function renderShop() {
       filter: ${canAfford ? 'none' : 'grayscale(80%)'};
     `;
     
-    // Внутренний глянец
     const gloss = document.createElement('div');
     gloss.style.cssText = `
       position: absolute;
@@ -358,10 +330,9 @@ export function renderShop() {
     
     div.appendChild(gloss);
     
-    // Вычисляем гарантии
     const guarantees = calculateGuarantees(pack.rarityWeights, pack.cardCount);
     const guaranteeHtml = guarantees
-      .slice(0, 3) // Показываем только топ-3
+      .slice(0, 3)
       .map(g => `<div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>${g.emoji}</span><span>${g.percentage}%</span></div>`)
       .join('');
     
@@ -401,7 +372,6 @@ export function renderShop() {
     list.appendChild(div);
   });
   
-  // Прокрутка колесом
   list.addEventListener('wheel', (e) => {
     e.preventDefault();
     list.scrollLeft += e.deltaY;
@@ -409,17 +379,16 @@ export function renderShop() {
 }
 
 /**
- * Открыть бесплатный пак на день
+ * 🔥 ИСПРАВЛЕНО: Открыть бесплатный пак (24 часа)
  */
 async function openDailyPack() {
   const u = state.currentUser;
   if (!u) return;
   
-  const today = new Date().toDateString();
-  const lastDaily = u.lastDailyPackDate || '';
-  
-  if (lastDaily === today) {
-    ui.showError('🔄 Пак уже открыт сегодня! Закрывается через: ' + calculateTimeUntilFreepack());
+  // 🔥 Проверяем доступность
+  const timeData = calculateTimeUntilFreepack();
+  if (timeData) {
+    ui.showError(`🕒 Пак будет доступен через: ${String(timeData.hours).padStart(2, '0')}:${String(timeData.minutes).padStart(2, '0')}:${String(timeData.seconds).padStart(2, '0')}`);
     return;
   }
   
@@ -439,11 +408,11 @@ async function openDailyPack() {
       return;
     }
     
-    // ОБНОВЛЯЕМ ONLY lastDailyPackDate
+    // 🔥 СОХРАНЯЕМ TIMESTAMP (текущее время)
     await db.collection('users').doc(u.uid).update({
-      lastDailyPackDate: today
+      lastDailyPackDate: firebase.firestore.Timestamp.now()
     });
-    u.lastDailyPackDate = today;
+    u.lastDailyPackDate = firebase.firestore.Timestamp.now();
     
     // ДОБАВЛЯЕМ КАРТЫ В КОЛОДУ СБРОСА
     for (const card of drawnCards) {
@@ -487,13 +456,11 @@ async function openPack(pack) {
       return;
     }
     
-    // Вычитаем монеты
     await db.collection('users').doc(u.uid).update({
       currency: firebase.firestore.FieldValue.increment(-pack.price)
     });
     u.currency -= pack.price;
     
-    // ДОБАВЛЯЕМ КАРТЫ В КОЛОДУ СБРОСА
     for (const card of drawnCards) {
       await decks.addCardToDiscardDeck(card.id);
     }
