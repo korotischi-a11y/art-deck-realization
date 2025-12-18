@@ -33,26 +33,26 @@
   --rarity-exceedingly-rare: #eab308;
   --rarity-immortal: #fbbf24;
   
-  /* === РАЗМЕРЫ (×1.5) === */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
+  /* === РАЗМЕРЫ === */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
   
-  --spacing-xs: 6px;
-  --spacing-sm: 12px;
-  --spacing-md: 24px;
-  --spacing-lg: 36px;
-  --spacing-xl: 48px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
   
-  /* === ТИПОГРАФИЯ (×1.5) === */
+  /* === ТИПОГРАФИЯ === */
   --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  --font-size-xs: 18px;
-  --font-size-sm: 21px;
-  --font-size-base: 24px;
-  --font-size-lg: 27px;
-  --font-size-xl: 36px;
-  --font-size-2xl: 48px;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
   
   /* === ТЕНИ === */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -89,7 +89,7 @@ body {
 /* === ОСНОВНОЙ КОНТЕЙНЕР === */
 #app {
   display: grid;
-  grid-template-columns: 120px 1fr;
+  grid-template-columns: 80px 1fr;
   height: 100vh;
   background: transparent;
 }
@@ -107,8 +107,8 @@ body {
 }
 
 .sidebar-btn {
-  width: 84px;
-  height: 84px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-lg);
   border: none;
   background-color: var(--bg-tertiary);
@@ -148,7 +148,7 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: var(--spacing-md);
-  height: 105px;
+  height: 70px;
 }
 
 .header-title {
@@ -284,10 +284,10 @@ body {
   font-weight: 700;
 }
 
-/* === СЕТКА КАРТ (×1.5: 157px → 236px) === */
+/* === СЕТКА КАРТ (×2: 157px → 314px) === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(314px, 1fr));
   gap: var(--spacing-lg);
 }
 
@@ -449,16 +449,16 @@ body {
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
-  font-size: 19px;
+  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin: 0 0 3px 0;
+  margin: 0 0 2px 0;
   line-height: 1.2;
 }
 
 .card-artist {
-  font-size: 15px;
+  font-size: 10px;
   color: var(--text-secondary);
   margin: 0;
 }
@@ -469,20 +469,20 @@ body {
   justify-content: center;
   gap: var(--spacing-xs);
   width: 100%;
-  padding: 3px 9px;
+  padding: 2px 6px;
   border-radius: var(--radius-md);
-  font-size: 15px;
+  font-size: 10px;
   font-weight: 600;
-  margin: 3px 0 0 0;
+  margin: 2px 0 0 0;
   white-space: nowrap;
 }
 
 .card-params {
-  font-size: 15px;
+  font-size: 10px;
   color: var(--text-secondary);
   line-height: 1.2;
   margin-top: auto;
-  padding-top: 6px;
+  padding-top: 4px;
   border-top: 1px solid var(--border-color);
 }
 
@@ -490,18 +490,18 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
 }
 
 .card-count {
   background-color: var(--bg-tertiary);
-  padding: 6px 12px;
+  padding: 4px 8px;
   border-radius: var(--radius-md);
-  margin-top: 6px;
+  margin-top: 4px;
   text-align: center;
   font-weight: 600;
   color: var(--wood-light);
-  font-size: 15px;
+  font-size: 10px;
   margin: 0;
 }
 
@@ -527,7 +527,7 @@ body {
   background-color: var(--bg-secondary);
   border-radius: var(--radius-xl);
   padding: var(--spacing-lg);
-  max-width: 900px;
+  max-width: 600px;
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: var(--shadow-xl);
@@ -568,8 +568,8 @@ body {
   cursor: pointer;
   transition: color var(--transition-fast);
   padding: 0;
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -611,7 +611,7 @@ body {
 }
 
 .modal-param-bar {
-  height: 9px;
+  height: 6px;
   background-color: var(--bg-secondary);
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -652,16 +652,16 @@ body {
 
 .modal-fullscreen-close {
   position: absolute;
-  top: 30px;
-  right: 30px;
+  top: 20px;
+  right: 20px;
   background: none;
   border: none;
   color: var(--text-accent);
   font-size: var(--font-size-2xl);
   cursor: pointer;
   z-index: 1002;
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -711,16 +711,16 @@ body {
 
 .form-textarea {
   resize: vertical;
-  min-height: 150px;
+  min-height: 100px;
 }
 
 #deck-choice {
   appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, #aaa 50%),
                     linear-gradient(135deg, #aaa 50%, transparent 50%);
-  background-position: calc(100% - 24px) calc(50% - 4.5px),
-                       calc(100% - 16.5px) calc(50% - 4.5px);
-  background-size: 9px 9px, 9px 9px;
+  background-position: calc(100% - 16px) calc(50% - 3px),
+                       calc(100% - 11px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
 }
 
@@ -829,7 +829,7 @@ body {
 
 .profile-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--spacing-lg);
   margin-top: var(--spacing-lg);
 }
@@ -874,7 +874,7 @@ body {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   animation: slideIn var(--transition-normal);
-  max-width: 450px;
+  max-width: 300px;
 }
 
 .toast.error {
@@ -907,7 +907,7 @@ body {
     border-right: none;
     border-bottom: 1px solid var(--border-color);
     padding: 0 var(--spacing-md);
-    height: 105px;
+    height: 70px;
     overflow-x: auto;
   }
   
@@ -918,7 +918,7 @@ body {
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(198px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(264px, 1fr));
   }
   
   .modal-content {
@@ -972,8 +972,8 @@ body {
   border: 3px solid var(--border-light);
   border-top-color: var(--wood-light);
   border-radius: 50%;
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   animation: spin 0.8s linear infinite;
   margin: var(--spacing-lg) auto;
 }
