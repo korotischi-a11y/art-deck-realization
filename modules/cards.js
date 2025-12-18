@@ -1,4 +1,67 @@
 /**
+ * cards.js - Управление картами
+ */
+
+import { state, openModal, closeModal } from '../app.js';
+import * as ui from './ui.js';
+import * as decks from './decks.js';
+
+// Функция загрузки карт
+export async function loadCards() {
+  try {
+    const u = state.currentUser;
+    if (!u) return;
+    
+    const db = firebase.firestore();
+    const cardsRef = db.collection('cards');
+    const snap = await cardsRef.get();
+    
+    state.cards = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    console.log('📚 Cards loaded:', state.cards.length);
+  } catch (e) {
+    console.error('Error loading cards:', e);
+  }
+}
+
+// Рендеринг коллекции
+export function renderCollection() {
+  const container = document.getElementById('cards-grid');
+  if (!container) return;
+  
+  const rarity = document.getElementById('rarity-filter')?.value || '';
+  const filtered = rarity ? state.cards.filter(c => c.rarity === rarity) : state.cards;
+  
+  container.innerHTML = filtered.map(card => `
+    <div class="card-item" data-card-id="${card.id}">
+      <img src="${card.imageUrl || 'placeholder.png'}" alt="${card.title}" style="width:100%; border-radius:8px; cursor:pointer;">
+      <div style="font-size:0.8em; margin-top:5px; color:#a0a0a0;">${card.title}</div>
+    </div>
+  `).join('');
+  
+  container.querySelectorAll('.card-item').forEach(el => {
+    el.addEventListener('click', () => showCardModal(el.dataset.cardId));
+  });
+}
+
+// Модальное окно карты
+function showCardModal(cardId) {
+  const card = state.cards.find(c => c.id === cardId);
+  if (!card) return;
+  
+  document.getElementById('modal-card-title').textContent = card.title || '-';
+  document.getElementById('modal-image').src = card.imageUrl || 'placeholder.png';
+  document.getElementById('modal-artist').textContent = card.artist || '-';
+  document.getElementById('modal-year').textContent = card.year || '-';
+  document.getElementById('modal-rarity').textContent = card.rarity || '-';
+  
+  const container = document.getElementById('card-actions');
+  container.innerHTML = '';
+  renderCardActionButtons(cardId, container);
+  
+  openModal('card-modal');
+}
+
+/**
  * Кнопки действия с картой
  */
 function renderCardActionButtons(cardId, container) {
@@ -125,3 +188,5 @@ async function deleteCardPartially(cardId, countToDelete) {
     return false;
   }
 }
+
+export { closeModal };
