@@ -245,7 +245,7 @@ body {
   }
 }
 
-/* === КОЛЛЕКЦОННЫЙ ЗАГОЛОВОК === */
+/* === КОЛЛЕКЦИОННЫЙ ЗАГОЛОВОК === */
 .collection-header {
   display: flex;
   justify-content: space-between;
@@ -447,11 +447,12 @@ body {
   transform: translateZ(10px);
 }
 
+/* ✨ НОВОЕ: Динамическое уменьшение шрифта для длинных названий */
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
-  font-size: 15px;
-  line-height: 1.4;
+  font-size: clamp(13px, 2.5vw, 15px);
+  line-height: 1.35;
   margin: 0;
   padding-bottom: 2px;
   overflow: hidden;
@@ -460,6 +461,7 @@ body {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   word-break: break-word;
+  text-wrap: balance;
 }
 
 .card-artist {
