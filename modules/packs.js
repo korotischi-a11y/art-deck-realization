@@ -100,6 +100,145 @@ async function initDefaultPacks() {
 }
 
 /**
+ * 🔥 НОВОЕ: Вычисляет гарантии редкостей на основе rarityWeights
+ */
+function calculateGuarantees(rarityWeights, cardCount) {
+  if (!rarityWeights || !cardCount) return [];
+  
+  const guarantees = [];
+  const total = Object.values(rarityWeights).reduce((a, b) => a + b, 0);
+  
+  const rarityEmojis = {
+    common: '🗑',
+    uncommon: '🎯',
+    rare: '🏆',
+    mythical: '💎',
+    legendary: '⭐',
+    ancient: '🔥',
+    exceedingly_rare: '✨',
+    immortal: '👑'
+  };
+  
+  const rarityNames = {
+    common: 'Обычная',
+    uncommon: 'Необычная',
+    rare: 'Редкая',
+    mythical: 'Мифическая',
+    legendary: 'Легендарная',
+    ancient: 'Древняя',
+    exceedingly_rare: 'Осколбительно редкая',
+    immortal: 'Бессмертная'
+  };
+  
+  for (const [rarity, weight] of Object.entries(rarityWeights)) {
+    const percentage = Math.round((weight / total) * 100);
+    const expectedCount = Math.round((weight / total) * cardCount * 10) / 10;
+    
+    guarantees.push({
+      rarity,
+      percentage,
+      expectedCount,
+      emoji: rarityEmojis[rarity] || '❓',
+      name: rarityNames[rarity] || rarity
+    });
+  }
+  
+  return guarantees.sort((a, b) => b.percentage - a.percentage);
+}
+
+/**
+ * 🔥 НОВОЕ: Рендерит гарантии редкостей
+ */
+function renderGuarantees(pack) {
+  const guarantees = calculateGuarantees(pack.rarityWeights, pack.cardCount);
+  
+  return `
+    <div style="font-size:11px; color:var(--text-secondary); margin-top:8px; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px;">
+      <div style="font-weight:600; color:var(--text); margin-bottom:6px;">📊 Гарантии:</div>
+      ${guarantees.map(g => `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+          <span>${g.emoji} ${g.name}</span>
+          <span style="color:var(--text-accent); font-weight:600;">${g.percentage}%</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+/**
+ * 🔥 НОВОЕ: Вычисляет время до следующего бесплатного пака
+ */
+function calculateTimeUntilFreepack() {
+  const u = state.currentUser;
+  if (!u) return null;
+  
+  const lastDaily = u.lastDailyPackDate;
+  if (!lastDaily) return null; // Первый раз - доступен
+  
+  // lastDaily = "Thu Dec 18 2025" (toDateString format)
+  const lastDate = new Date(lastDaily);
+  const now = new Date();
+  
+  // Устанавливаем оба на начало дня для корректного сравнения
+  lastDate.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+  
+  const diffTime = now - lastDate;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays >= 1) return null; // Доступен!
+  
+  // Вычисляем когда будет доступен (завтра в 00:00)
+  const nextDay = new Date();
+  nextDay.setDate(nextDay.getDate() + 1);
+  nextDay.setHours(0, 0, 0, 0);
+  
+  const timeUntil = nextDay - new Date();
+  const hours = Math.floor(timeUntil / (1000 * 60 * 60));
+  const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((timeUntil % (1000 * 60)) / 1000);
+  
+  return { hours, minutes, seconds, timeMs: timeUntil };
+}
+
+/**
+ * 🔥 НОВОЕ: Обновляет таймер каждую секунду
+ */
+let timerInterval = null;
+
+function startFreePkTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  
+  timerInterval = setInterval(() => {
+    const timeData = calculateTimeUntilFreepack();
+    const timerEl = document.getElementById('free-pack-timer');
+    const button = document.getElementById('free-pack-button');
+    
+    if (!timerEl || !button) {
+      clearInterval(timerInterval);
+      return;
+    }
+    
+    if (!timeData) {
+      // Доступен!
+      timerEl.innerHTML = '✨ ДОСТУПЕН СЕЙЧАС';
+      timerEl.style.color = '#10b981';
+      button.disabled = false;
+      button.style.opacity = '1';
+      button.style.cursor = 'pointer';
+      clearInterval(timerInterval);
+    } else {
+      // Недоступен, показываем таймер
+      timerEl.textContent = `${String(timeData.hours).padStart(2, '0')}:${String(timeData.minutes).padStart(2, '0')}:${String(timeData.seconds).padStart(2, '0')}`;
+      timerEl.style.color = '#ef4444';
+      button.disabled = true;
+      button.style.opacity = '0.5';
+      button.style.cursor = 'not-allowed';
+    }
+  }, 1000);
+}
+
+/**
  * Рендерит магазин паков
  */
 export function renderShop() {
@@ -113,6 +252,7 @@ export function renderShop() {
   }
   
   // БЕСПЛАТНЫЙ ПАК В НАЧАЛЕ
+  const timeData = calculateTimeUntilFreepack();
   const dailyPack = document.createElement('div');
   dailyPack.style.cssText = `
     min-width: 220px;
@@ -120,7 +260,7 @@ export function renderShop() {
     border: 3px solid #6ee7b7;
     border-radius: 16px;
     padding: 20px;
-    cursor: pointer;
+    cursor: ${timeData ? 'not-allowed' : 'pointer'};
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
@@ -129,6 +269,7 @@ export function renderShop() {
     overflow: hidden;
     box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3);
     flex-shrink: 0;
+    opacity: ${timeData ? '0.6' : '1'};
   `;
   
   // Анимация фона
@@ -144,36 +285,45 @@ export function renderShop() {
   `;
   
   dailyPack.innerHTML = `
-    <div style="position:absolute; top:0; right:0; background:#fbbf24; color:#7c2d12; padding:6px 12px; border-radius:0 16px 0 12px; font-size:11px; font-weight:700; z-index:10;">ОБЕСПЛАТНО</div>
+    <div style="position:absolute; top:0; right:0; background:#fbbf24; color:#7c2d12; padding:6px 12px; border-radius:0 16px 0 12px; font-size:11px; font-weight:700; z-index:10;">БЕСПЛАТНО</div>
     <div style="font-size:48px; text-align:center; margin-top:8px; position:relative; z-index:5;">🎁</div>
     <div style="font-weight:700; font-size:18px; color:#fff; text-align:center; position:relative; z-index:5;">Ежедневный Пак</div>
     <div style="font-size:13px; color:rgba(255,255,255,0.95); text-align:center; position:relative; z-index:5;">3 карты | Каждый день</div>
-    <div style="margin-top:auto; text-align:center; font-size:16px; color:#fff; font-weight:700; position:relative; z-index:5;">✨ ОТКРЫТЬ</div>
-    <button class="btn" style="width:100%; margin-top:12px; background:#fff; color:#047857; border:none; cursor:pointer; font-weight:700; font-size:14px; padding:10px; border-radius:10px; transition:all 0.3s; position:relative; z-index:5;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">ПОЛУЧИТЬ</button>
+    
+    <!-- 🔥 ТАЙМЕР -->
+    <div id="free-pack-timer" style="text-align:center; font-size:18px; font-weight:700; color:#10b981; font-family:monospace; position:relative; z-index:5;">
+      ${timeData ? `${String(timeData.hours).padStart(2, '0')}:${String(timeData.minutes).padStart(2, '0')}:${String(timeData.seconds).padStart(2, '0')}` : '✨ ДОСТУПЕН'}
+    </div>
+    
+    <!-- 🔥 ГАРАНТИИ -->
+    <div style="font-size:11px; color:rgba(255,255,255,0.9); margin-top:8px; padding:8px; background:rgba(0,0,0,0.3); border-radius:8px;">
+      <div style="font-weight:600; margin-bottom:4px;">📊 Гарантии:</div>
+      <div>🗑 Обычная: 66%</div>
+      <div>🎯 Необычная: 33%</div>
+    </div>
+    
+    <button id="free-pack-button" class="btn" style="width:100%; margin-top:12px; background:#fff; color:#047857; border:none; cursor:${timeData ? 'not-allowed' : 'pointer'}; font-weight:700; font-size:14px; padding:10px; border-radius:10px; transition:all 0.3s; position:relative; z-index:5; opacity:${timeData ? '0.6' : '1'};" onmouseover="!this.disabled && (this.style.transform='scale(1.05)')" onmouseout="!this.disabled && (this.style.transform='scale(1)')">${timeData ? '🔒 ЗАКРЫТО' : 'ПОЛУЧИТЬ'}</button>
   `;
   
   dailyPack.appendChild(gradientBg);
   
-  dailyPack.addEventListener('mouseenter', () => {
-    dailyPack.style.transform = 'translateY(-12px) scale(1.03)';
-    dailyPack.style.boxShadow = '0 25px 35px -5px rgba(16, 185, 129, 0.5)';
-  });
-  dailyPack.addEventListener('mouseleave', () => {
-    dailyPack.style.transform = 'translateY(0) scale(1)';
-    dailyPack.style.boxShadow = '0 10px 25px -5px rgba(16, 185, 129, 0.3)';
-  });
-  
   dailyPack.querySelector('button').addEventListener('click', async (e) => {
     e.stopPropagation();
-    await openDailyPack();
+    if (!timeData) await openDailyPack();
   });
   
   list.appendChild(dailyPack);
+  
+  // Начнём обновлять таймер
+  startFreePkTimer();
   
   // ОБЫЧНЫЕ ПАКЫ с КАЖДЫМ своим цветом
   state.packs.forEach((pack, idx) => {
     const packColor = pack.color || '#6366f1';
     const packBorderColor = pack.borderColor || packColor;
+    const userCoins = state.currentUser?.currency || 0;
+    const canAfford = userCoins >= pack.price;
+    
     const div = document.createElement('div');
     div.style.cssText = `
       min-width: 220px;
@@ -181,7 +331,7 @@ export function renderShop() {
       border: 3px solid ${packBorderColor};
       border-radius: 16px;
       padding: 20px;
-      cursor: pointer;
+      cursor: ${canAfford ? 'pointer' : 'not-allowed'};
       transition: all 0.3s ease;
       display: flex;
       flex-direction: column;
@@ -191,6 +341,8 @@ export function renderShop() {
       box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1);
       flex-shrink: 0;
       background-clip: padding-box;
+      opacity: ${canAfford ? '1' : '0.4'};
+      filter: ${canAfford ? 'none' : 'grayscale(80%)'};
     `;
     
     // Внутренний глянец
@@ -206,28 +358,44 @@ export function renderShop() {
     
     div.appendChild(gloss);
     
+    // Вычисляем гарантии
+    const guarantees = calculateGuarantees(pack.rarityWeights, pack.cardCount);
+    const guaranteeHtml = guarantees
+      .slice(0, 3) // Показываем только топ-3
+      .map(g => `<div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>${g.emoji}</span><span>${g.percentage}%</span></div>`)
+      .join('');
+    
     div.innerHTML += `
       <div style="font-size:40px; text-align:center; position:relative; z-index:2;">${pack.emoji || '📅'}</div>
       <div style="font-weight:700; font-size:18px; color:${packBorderColor}; text-align:center; position:relative; z-index:2;">${pack.name}</div>
       <div style="font-size:13px; color:var(--text-secondary); text-align:center; position:relative; z-index:2;">${pack.cardCount} карт</div>
       <div style="margin-top:auto; text-align:center; font-size:16px; color:${packBorderColor}; font-weight:700; position:relative; z-index:2;">${pack.price} 💰</div>
-      <button class="btn btn-primary" style="width:100%; margin-top:12px; background:linear-gradient(135deg, ${packColor}, ${packBorderColor}); border:none; color:white; font-weight:700; font-size:14px; padding:10px; border-radius:10px; transition:all 0.3s; cursor:pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">ОТКРЫТЬ</button>
+      
+      <!-- 🔥 ГАРАНТИИ -->
+      <div style="font-size:11px; color:var(--text-secondary); margin-top:8px; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; position:relative; z-index:2;">
+        <div style="font-weight:600; color:var(--text); margin-bottom:4px;">📊 Гарантии:</div>
+        ${guaranteeHtml}
+      </div>
+      
+      <button class="btn btn-primary" style="width:100%; margin-top:12px; background:linear-gradient(135deg, ${packColor}, ${packBorderColor}); border:none; color:white; font-weight:700; font-size:14px; padding:10px; border-radius:10px; transition:all 0.3s; cursor:${canAfford ? 'pointer' : 'not-allowed'};" onmouseover="this.style.transform='${canAfford ? 'scale(1.05)' : 'scale(1)'}' " onmouseout="this.style.transform='scale(1)'" ${!canAfford ? 'disabled' : ''}>${canAfford ? 'ОТКРЫТЬ' : '💰 Недостаточно'}</button>
     `;
     
-    div.addEventListener('mouseenter', () => {
-      div.style.transform = 'translateY(-12px) scale(1.02)';
-      div.style.boxShadow = `0 25px 35px -5px rgba(99, 102, 241, 0.25)`;
-      div.style.background = `linear-gradient(135deg, ${packColor}30 0%, ${packColor}15 100%)`;
-    });
-    div.addEventListener('mouseleave', () => {
-      div.style.transform = 'translateY(0) scale(1)';
-      div.style.boxShadow = '0 10px 25px -5px rgba(99, 102, 241, 0.1)';
-      div.style.background = `linear-gradient(135deg, ${packColor}20 0%, ${packColor}08 100%)`;
-    });
+    if (canAfford) {
+      div.addEventListener('mouseenter', () => {
+        div.style.transform = 'translateY(-12px) scale(1.02)';
+        div.style.boxShadow = `0 25px 35px -5px rgba(99, 102, 241, 0.25)`;
+        div.style.background = `linear-gradient(135deg, ${packColor}30 0%, ${packColor}15 100%)`;
+      });
+      div.addEventListener('mouseleave', () => {
+        div.style.transform = 'translateY(0) scale(1)';
+        div.style.boxShadow = '0 10px 25px -5px rgba(99, 102, 241, 0.1)';
+        div.style.background = `linear-gradient(135deg, ${packColor}20 0%, ${packColor}08 100%)`;
+      });
+    }
     
     div.querySelector('button').addEventListener('click', (e) => {
       e.stopPropagation();
-      openPack(pack);
+      if (canAfford) openPack(pack);
     });
     
     list.appendChild(div);
@@ -251,7 +419,7 @@ async function openDailyPack() {
   const lastDaily = u.lastDailyPackDate || '';
   
   if (lastDaily === today) {
-    ui.showError('🔄 Пак уже открыт сегодня! Осталось ' + (24 - new Date().getHours()) + ' часов');
+    ui.showError('🔄 Пак уже открыт сегодня! Закрывается через: ' + calculateTimeUntilFreepack());
     return;
   }
   
@@ -271,7 +439,7 @@ async function openDailyPack() {
       return;
     }
     
-    // ОНО: ОБНОВЛЯЕМ ONLY lastDailyPackDate, БЕЗ state.currentUser.cards
+    // ОБНОВЛЯЕМ ONLY lastDailyPackDate
     await db.collection('users').doc(u.uid).update({
       lastDailyPackDate: today
     });
@@ -285,6 +453,7 @@ async function openDailyPack() {
     showPackOpeningModal(drawnCards);
     cardMod.renderCollection();
     decks.renderDecks();
+    renderShop(); // Обновляем магазин (таймер)
   } catch (e) {
     console.error('Error opening daily pack:', e);
     ui.showError('Ошибка');
@@ -318,8 +487,7 @@ async function openPack(pack) {
       return;
     }
     
-    // ОНО: НУ НЕ трогаем state.currentUser.cards
-    // ТОЛЬКО вычитаем currency и перемещаем карты
+    // Вычитаем монеты
     await db.collection('users').doc(u.uid).update({
       currency: firebase.firestore.FieldValue.increment(-pack.price)
     });
