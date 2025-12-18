@@ -9,7 +9,7 @@ import * as decks from './decks.js';
 const db = firebase.firestore();
 
 /**
- * 💎 ЦЕНЫ ЗА ПОРВАННЫЕ КАРТЫ (калиброванные под градацию 30%→80%)
+ * 💎 ЦЕНЫ ЗА ПОРВАННЫЕ КАРТЫ
  */
 const TEAR_PRICES = {
   common:           { base: 1,   ratingMultiplier: 0.20 },
@@ -23,7 +23,7 @@ const TEAR_PRICES = {
 };
 
 /**
- * 🔥 НОВОЕ: Получить бейдж для theme (стиля)
+ * 🎨 Получить бейдж для theme
  */
 function getThemeLabel(theme) {
   const themes = {
@@ -43,7 +43,7 @@ function getThemeLabel(theme) {
 }
 
 /**
- * 🔥 НОВОЕ: Получить бейдж для genre (жанра)
+ * 🎭 Получить бейдж для genre
  */
 function getGenreLabel(genre) {
   const genres = {
@@ -59,9 +59,6 @@ function getGenreLabel(genre) {
   return genres[genre] || { emoji: '❓', name: genre || 'Unknown', role: '?', color: '#999' };
 }
 
-/**
- * 💎 Вычисляет цену за порванную карту
- */
 function calculateTearPrice(card) {
   if (!card || !card.rarity) return 0;
   const priceData = TEAR_PRICES[card.rarity];
@@ -71,18 +68,12 @@ function calculateTearPrice(card) {
   return Math.round(price);
 }
 
-/**
- * Вычисляет рейтинг карты (0-100)
- */
 function calculateCardRating(card) {
   if (!card.power) return 0;
   const { resonance = 0, virtuosity = 0, profundity = 0, harmony = 0 } = card.power;
   return Math.round((resonance + virtuosity + profundity + harmony) / 4 * 10);
 }
 
-/**
- * Загружает карты из мастер-коллекции
- */
 export async function loadCards() {
   console.log('🎠 Loading cards...');
   try {
@@ -130,9 +121,6 @@ function getCardStatsInDecks(cardId) {
   return { inDecks, inDecksTotal: totalInAllDecks };
 }
 
-/**
- * Рендерит коллекцию карт по ПРОСМАТРИВАЕМОЙ колоде
- */
 export function renderCollection() {
   const grid = document.getElementById('cards-grid');
   const filter = document.getElementById('rarity-filter')?.value || '';
@@ -207,7 +195,6 @@ function createCardElement(card, count) {
   const rarity = ui.getRarityBadge(card.rarity);
   const params = `💓${card.power?.resonance || 0} 🎯${card.power?.virtuosity || 0} 🧠${card.power?.profundity || 0} ⚖${card.power?.harmony || 0}`;
   
-  // 🔥 НОВОЕ: Бейджи theme и genre
   const themeLabel = getThemeLabel(card.theme);
   const genreLabel = getGenreLabel(card.genre);
 
@@ -217,20 +204,20 @@ function createCardElement(card, count) {
       <div style="position:absolute; top:4px; right:4px; z-index:11; background:rgba(30,30,30,0.8); padding:3px 6px; border-radius:4px; font-size:11px; font-weight:600; color:${rarity.color}; border:1px solid ${rarity.color};">${count}</div>
       ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" style="width:100%; height:100%; object-fit:cover; object-position:center;" />` : '🎨'}
     </div>
-    <div class="card-body" style="display:flex; flex-direction:column; min-height:0;">
-      <div class="card-title" style="flex:1; overflow:hidden; display:flex; align-items:center; font-size:clamp(6px, 2.8vw, 11px); word-break:break-word; line-height:1.2;">${ui.sanitizeHTML(card.title)}</div>
-      <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-secondary); margin-bottom:6px; min-height:14px;">
+    <div class="card-body" style="display:flex; flex-direction:column; gap:6px;">
+      <div class="card-title">${ui.sanitizeHTML(card.title)}</div>
+      <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary);">
         <span style="overflow:hidden; text-overflow:ellipsis;">${ui.sanitizeHTML(card.artist)}</span>
         <span>${card.year}</span>
       </div>
       
-      <!-- 🔥 НОВОЕ: Бейджи theme & genre -->
-      <div style="display:flex; gap:4px; margin-bottom:6px; font-size:9px;">
+      <!-- 🔥 Theme & Genre -->
+      <div style="display:flex; gap:4px; font-size:9px;">
         <span style="background:${themeLabel.color}20; color:${themeLabel.color}; padding:2px 6px; border-radius:4px; border:1px solid ${themeLabel.color}40; white-space:nowrap;">${themeLabel.emoji}</span>
         <span style="background:${genreLabel.color}20; color:${genreLabel.color}; padding:2px 6px; border-radius:4px; border:1px solid ${genreLabel.color}40; white-space:nowrap;">${genreLabel.emoji}</span>
       </div>
       
-      <div class="card-rarity" style="background:${rarity.color}15; border-color:${rarity.color}; color:${rarity.color}; white-space:nowrap; text-align:center; font-size:10px;">
+      <div class="card-rarity" style="background:${rarity.color}15; border-color:${rarity.color}; color:${rarity.color}; padding:4px 8px; border-radius:8px; text-align:center; font-size:11px; border:1px solid ${rarity.color};">
         ${rarity.emoji} ${rarity.name}
       </div>
     </div>
@@ -280,7 +267,6 @@ function showCardDetail(card, count) {
   const rarity = ui.getRarityBadge(card.rarity);
   const cardStats = getCardStatsInDecks(card.id);
   
-  // 🔥 НОВОЕ: Бейджи theme & genre
   const themeLabel = getThemeLabel(card.theme);
   const genreLabel = getGenreLabel(card.genre);
 
@@ -320,9 +306,9 @@ function showCardDetail(card, count) {
 
   paramsTable.innerHTML = '';
   
-  // 🔥 НОВОЕ: Добавляем theme & genre НАД таблицей
+  // 🔥 1. ОТДЕЛЬНАЯ СТРОКА: THEME & GENRE
   const themeGenreDiv = document.createElement('div');
-  themeGenreDiv.style.cssText = 'display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;';
+  themeGenreDiv.style.cssText = 'display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; grid-column: 1 / -1;';
   themeGenreDiv.innerHTML = `
     <div style="flex:1; background:${themeLabel.color}15; border:1px solid ${themeLabel.color}; color:${themeLabel.color}; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:600; text-align:center;">
       ${themeLabel.emoji} ${themeLabel.name}
@@ -334,6 +320,7 @@ function showCardDetail(card, count) {
   `;
   paramsTable.appendChild(themeGenreDiv);
   
+  // 🔥 2. ТАБЛИЦА СПОСОБНОСТЕЙ (2x2)
   const params = [
     { name: '💓 Resonance', value: card.power?.resonance || 0, color: 'var(--resonance)' },
     { name: '🎯 Virtuosity', value: card.power?.virtuosity || 0, color: 'var(--virtuosity)' },
