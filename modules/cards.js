@@ -607,11 +607,26 @@ function openFullscreenImage(imageUrl) {
 }
 
 /**
- * Обновляет статистику
+ * 🔥 ОБНОВЛЕНО: Обновляет статистику
+ * Теперь показывает рейтинг ПРОСМАТРИВАЕМОЙ колоды, а не максимальный
  */
 function updateStats() {
   const { total, unique } = calculateStats();
-  const maxRating = calculateMaxRating();
+  
+  // 🔥 НОВОЕ: Рейтинг просматриваемой колоды
+  let currentRating = 0;
+  const viewingDeck = decks.activeDeckId && state.currentUser?.decks?.[decks.activeDeckId];
+  
+  if (viewingDeck) {
+    // Если просматриваем конкретную колоду
+    currentRating = decks.calculateDeckRating(viewingDeck.cards || {});
+  } else {
+    // Если просматриваем всю коллекцию - показываем рейтинг активной колоды
+    const activeDeck = Object.values(state.currentUser?.decks || {}).find(d => d.isActive);
+    if (activeDeck) {
+      currentRating = decks.calculateDeckRating(activeDeck.cards || {});
+    }
+  }
   
   const totalEl = document.getElementById('stat-total-cards');
   const uniqueEl = document.getElementById('stat-unique-cards');
@@ -619,21 +634,7 @@ function updateStats() {
   
   if (totalEl) totalEl.textContent = total;
   if (uniqueEl) uniqueEl.textContent = unique;
-  if (ratingEl) ratingEl.textContent = Math.round(maxRating);
-}
-
-/**
- * Определяет макс рейтинг
- */
-function calculateMaxRating() {
-  const decksObj = state.currentUser?.decks || {};
-  const ratings = Object.values(decksObj).map(d => {
-    const total = Object.values(d.cards || {}).reduce((a, b) => a + b, 0);
-    const unique = Object.keys(d.cards || {}).length;
-    if (total === 0) return 0;
-    return (unique / total) * 100 + unique * 10;
-  });
-  return Math.max(...ratings, 0);
+  if (ratingEl) ratingEl.textContent = Math.round(currentRating);
 }
 
 export { initTiltEffect };
