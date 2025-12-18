@@ -436,13 +436,14 @@ body {
   transform: scale(1.05);
 }
 
+/* 🐛 FIX: Убран overflow:hidden, добавлен min-height */
 .card-body {
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   flex: 0.6;
-  overflow: hidden;
+  min-height: 120px;
   transform: translateZ(10px);
 }
 
@@ -457,6 +458,7 @@ body {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  word-break: break-word;
 }
 
 .card-artist {
