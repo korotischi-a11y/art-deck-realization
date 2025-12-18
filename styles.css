@@ -287,7 +287,7 @@ body {
 /* === СЕТКА КАРТ === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(143px, 1fr));
   gap: var(--spacing-lg);
 }
 
@@ -342,18 +342,45 @@ body {
 }
 
 @keyframes glow-exceedingly-rare {
-  0%, 100% { box-shadow: 0 0 18px rgba(234, 179, 8, 0.35); }
-  50% { box-shadow: 0 0 26px rgba(234, 179, 8, 0.6); }
+  0%, 100% { 
+    box-shadow: 0 0 18px rgba(234, 179, 8, 0.35),
+                inset 0 0 18px rgba(234, 179, 8, 0.15);
+    border: 2px solid #eab308;
+  }
+  50% { 
+    box-shadow: 0 0 26px rgba(234, 179, 8, 0.6),
+                inset 0 0 26px rgba(234, 179, 8, 0.25);
+    border: 2px solid #f5d547;
+  }
+  100% { 
+    box-shadow: 0 0 18px rgba(234, 179, 8, 0.35),
+                inset 0 0 18px rgba(234, 179, 8, 0.15);
+    border: 2px solid #eab308;
+  }
 }
 
 @keyframes glow-ancient {
-  0%, 100% { box-shadow: 0 0 16px rgba(249, 115, 22, 0.3); }
-  50% { box-shadow: 0 0 24px rgba(249, 115, 22, 0.55); }
+  0%, 100% { 
+    box-shadow: 0 0 16px rgba(249, 115, 22, 0.3),
+                0 0 8px rgba(249, 115, 22, 0.5);
+  }
+  25% { 
+    box-shadow: 0 0 24px rgba(249, 115, 22, 0.55),
+                0 0 12px rgba(249, 115, 22, 0.7);
+  }
+  50% { 
+    box-shadow: 0 0 16px rgba(249, 115, 22, 0.3),
+                0 0 8px rgba(249, 115, 22, 0.5);
+  }
+  75% { 
+    box-shadow: 0 0 28px rgba(249, 115, 22, 0.6),
+                0 0 14px rgba(249, 115, 22, 0.75);
+  }
 }
 
-@keyframes glow-legendary {
-  0%, 100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.25); }
-  50% { box-shadow: 0 0 22px rgba(236, 72, 153, 0.5); }
+@keyframes rotate-border {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .card-item[data-rarity="immortal"] {
@@ -363,17 +390,24 @@ body {
 
 .card-item[data-rarity="exceedingly_rare"] {
   border: 2px solid #eab308;
-  animation: glow-exceedingly-rare 2.4s ease-in-out infinite;
+  animation: glow-exceedingly-rare 3s ease-in-out infinite;
+  position: relative;
+}
+
+.card-item[data-rarity="exceedingly_rare"]::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid #eab308;
+  border-radius: var(--radius-lg);
+  animation: rotate-border 8s linear infinite;
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .card-item[data-rarity="ancient"] {
   border: 2px solid #f97316;
-  animation: glow-ancient 2.4s ease-in-out infinite;
-}
-
-.card-item[data-rarity="legendary"] {
-  border: 2px solid #ec4899;
-  animation: glow-legendary 2.4s ease-in-out infinite;
+  animation: glow-ancient 2s ease-in-out infinite;
 }
 
 .card-image {
@@ -884,7 +918,7 @@ body {
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
   
   .modal-content {
