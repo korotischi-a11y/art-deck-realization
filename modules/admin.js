@@ -46,11 +46,11 @@ async function handleSubmit(event) {
   
   // 🔥 ВАЛИДАЦИЯ
   if (!title || !artist || !description || !rarity || !theme || !genre) {
-    ui.showError('Fill all fields (including theme & genre)');
+    ui.showError('Заполни все поля (включая theme & genre)');
     return;
   }
   if (year < 1000 || year > 2100) {
-    ui.showError('Year 1000-2100');
+    ui.showError('Год 1000-2100');
     return;
   }
   
@@ -79,7 +79,7 @@ async function handleSubmit(event) {
         ...cardData,
         updatedAt: firebase.firestore.Timestamp.now()
       });
-      ui.showSuccess('Card updated');
+      ui.showSuccess('Карта обновлена');
       form.dataset.editingId = '';
       form.querySelector('button[type="submit"]').textContent = '➕ Add Card';
     } else {
@@ -89,12 +89,13 @@ async function handleSubmit(event) {
         createdAt: firebase.firestore.Timestamp.now(),
         totalOwners: 0
       });
-      ui.showSuccess('Card added');
+      ui.showSuccess('Карта добавлена');
     }
     form.reset();
     renderCardsList();
   } catch (error) {
     console.error('Ош:', error);
+    ui.showError('Ошибка: ' + error.message);
   } finally {
     submitBtn.disabled = false;
   }
