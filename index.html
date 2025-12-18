@@ -10,6 +10,7 @@
   <div id="app">
     <aside class="sidebar">
       <button class="sidebar-btn active" data-tab="collection" title="Коллекция">🎫</button>
+      <button class="sidebar-btn" data-tab="raids" title="Походы">⚔️</button>
       <button class="sidebar-btn" data-tab="profile" title="Профиль">👤</button>
       <button class="sidebar-btn" data-tab="leaderboard" title="Рейтинг">🏆</button>
       <button class="sidebar-btn" data-tab="packs" title="Паки">📋</button>
@@ -67,6 +68,52 @@
             </div>
             <!-- ПАНЕЛЬ КОЛОД -->
             <div id="decks-panel" style="border: 1px solid var(--border); border-radius: 12px; background: var(--bg-secondary); overflow-y: auto; max-height: calc(100vh - 120px);"></div>
+          </div>
+        </div>
+
+        <!-- ПОХОДЫ -->
+        <div class="tab-content" id="raids-tab">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; height: calc(100vh - 120px);">
+            <!-- ЛЕВАЯ ПАНЕЛЬ: ВЫБОР ОТРЯДА -->
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <h2 style="margin: 0;">⚔️ Ваш отряд</h2>
+              <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+                <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 14px;">Выберите 4 карты для похода:</p>
+                <div id="squad-slots" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                  <!-- Слоты генерируются в JS -->
+                </div>
+                <button id="start-raid-btn" class="btn btn-primary" style="width: 100%; margin-top: 16px;" disabled>
+                  🚀 Начать поход
+                </button>
+              </div>
+              
+              <!-- ИНФОРМАЦИЯ О ЖАНРАХ -->
+              <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 16px; overflow-y: auto;">
+                <h3 style="margin: 0 0 12px 0; font-size: 16px;">📖 Жанры и их роли:</h3>
+                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--text-secondary);">
+                  <div><strong>👤 Портрет:</strong> Дуэлянт, сильный 1 на 1</div>
+                  <div><strong>🌄 Пейзаж:</strong> Массовая атака, стаки</div>
+                  <div><strong>🍎 Натюрморт:</strong> Поддержка, баффы</div>
+                  <div><strong>⛪ Религия:</strong> Лечение, защита</div>
+                  <div><strong>🐉 Мифология:</strong> Высокий урон, криты</div>
+                  <div><strong>🎨 Абстракция:</strong> Хаос, RNG</div>
+                  <div><strong>🏙️ Городской:</strong> Оборона, дальний бой</div>
+                  <div><strong>💃 Ню:</strong> Очарование, дебаффы</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- ПРАВАЯ ПАНЕЛЬ: ВЫБОР ГАЛЕРЕИ -->
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <h2 style="margin: 0;">🏛️ Выбор галереи</h2>
+              <div id="galleries-list" style="display: flex; flex-direction: column; gap: 12px; overflow-y: auto;">
+                <!-- Галереи генерируются в JS -->
+                <div style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; color: var(--text-secondary);">
+                  <p>🏗️ Система галерей в разработке</p>
+                  <p style="font-size: 12px; margin-top: 8px;">Скоро вы сможете создавать свои галереи и атаковать галереи других игроков!</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
