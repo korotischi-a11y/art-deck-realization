@@ -230,6 +230,32 @@
     </div>
   </div>
 
+  <!-- МОДАЛЬ: ВЫБРАТЬ КОЛ-ВО ПОРВАТЬ КАРТУ -->
+  <div id="tear-card-modal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 id="tear-modal-title" style="margin: 0; color: var(--text-accent);">Сколько копий порвать?</h3>
+        <button class="modal-close" style="padding: 0; width: 32px; height: 32px; flex-shrink: 0;">✗</button>
+      </div>
+      <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+        <p id="tear-modal-available" style="color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">Доступно копий: <strong id="tear-available-count">0</strong></p>
+        <label style="display: block; color: var(--text-secondary); font-size: 12px; margin-bottom: 6px;">Количество:</label>
+        <input 
+          type="number" 
+          id="tear-quantity-input" 
+          min="1" 
+          max="10" 
+          value="1" 
+          style="width: 100%; padding: 8px; background: var(--bg-secondary); border: 1px solid var(--border-light); color: var(--text); border-radius: 6px; font-size: 14px; box-sizing: border-box;"
+        >
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button type="button" id="tear-cancel-btn" class="btn btn-secondary" style="flex: 1;">Отмена</button>
+        <button type="button" id="tear-confirm-btn" class="btn btn-danger" style="flex: 1;">Порвать</button>
+      </div>
+    </div>
+  </div>
+
   <div id="pack-opening-modal" class="modal">
     <div class="modal-content" style="max-width: 90vw; width: 90vw; max-height: 90vh; display: flex; flex-direction: column;">
       <h2 style="margin: 0 0 16px 0;">🎁 Opening Pack</h2>
