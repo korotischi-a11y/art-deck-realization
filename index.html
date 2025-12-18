@@ -142,6 +142,7 @@
                 <input type="number" id="card-year" placeholder="Year" class="form-control" min="1000" max="2100" required>
                 <textarea id="card-description" placeholder="Description" class="form-control" required></textarea>
                 <input type="url" id="card-image-url" placeholder="Image URL" class="form-control" required>
+                
                 <select id="card-rarity" class="form-control" required>
                   <option value="">Rarity</option>
                   <option value="common">Common</option>
@@ -153,6 +154,36 @@
                   <option value="exceedingly_rare">Exceedingly Rare</option>
                   <option value="immortal">Immortal</option>
                 </select>
+                
+                <!-- 🔥 НОВОЕ: СТИЛЬ (THEME) -->
+                <select id="card-theme" class="form-control" required>
+                  <option value="">🎨 Theme (Style)</option>
+                  <option value="impressionism">Impressionism</option>
+                  <option value="renaissance">Renaissance</option>
+                  <option value="surrealism">Surrealism</option>
+                  <option value="abstract">Abstract</option>
+                  <option value="realism">Realism</option>
+                  <option value="modernism">Modernism</option>
+                  <option value="baroque">Baroque</option>
+                  <option value="romanticism">Romanticism</option>
+                  <option value="cubism">Cubism</option>
+                  <option value="expressionism">Expressionism</option>
+                  <option value="contemporary">Contemporary</option>
+                </select>
+                
+                <!-- 🔥 НОВОЕ: ЖАНР (GENRE) -->
+                <select id="card-genre" class="form-control" required>
+                  <option value="">🖼️ Genre (Type)</option>
+                  <option value="portrait">👤 Portrait (Hero)</option>
+                  <option value="landscape">🌄 Landscape (Dream)</option>
+                  <option value="still_life">🍎 Still Life (Heal)</option>
+                  <option value="religious">⛪ Religious (Divine)</option>
+                  <option value="mythological">🐉 Mythological (Epic)</option>
+                  <option value="abstract">🎨 Abstract (Chaos)</option>
+                  <option value="urban">🏙️ Urban (Stability)</option>
+                  <option value="nude">💃 Nude (Beauty)</option>
+                </select>
+                
                 <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px;">
                   <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 12px;">💓 Resonance</label>
                   <input type="range" id="card-resonance" min="0" max="10" value="5" class="power-slider" style="width: 100%;">
