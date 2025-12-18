@@ -12,7 +12,7 @@ const db = firebase.firestore();
  * Загружает карты из мастер-коллекции
  */
 export async function loadCards() {
-  console.log('🎭 Loading cards...');
+  console.log('🎠 Loading cards...');
   try {
     const snap = await db.collection('masterCards')
       .orderBy('createdAt', 'desc')
@@ -39,7 +39,7 @@ function getCard(cardId) {
 }
 
 /**
- * ПРАВИЛЬНАЯ ЛОГИКА СЧЁТЧИКОВ
+ * ПРАВНЛЫЕ ЛОГИКА СЧЁТЧИКОВ
  * ВСЕГО = сумма карт ВО ВСЕХ КОЛОДАХ (включая сброс)
  * УНИКАЛЬНЫЕ = разные cardId ВО ВСЕХ КОЛОДАХ (включая сброс)
  */
@@ -156,7 +156,7 @@ export function renderCollection() {
 }
 
 /**
- * Создаёт элемент карты
+ * Создаят элемент карты
  */
 function createCardElement(card, count) {
   const div = document.createElement('div');
@@ -309,7 +309,7 @@ function showCardDetail(card, count) {
   }
   
   renderDeckSelector(card.id, buttonContainer);
-  renderCardActionButtons(card.id, buttonContainer);
+  renderCardActionButtons(card.id, count, buttonContainer);
   
   openModal('card-detail-modal');
 }
@@ -346,7 +346,7 @@ function renderDeckSelector(cardId, container) {
   addBtn.type = 'button';
   addBtn.className = 'btn btn-primary';
   addBtn.style.cssText = 'padding:8px 12px; font-size:13px; white-space:nowrap;';
-  addBtn.textContent = '➕ Добавить';
+  addBtn.textContent = '➡ Добавить';
   addBtn.onclick = async () => {
     const deckId = select.value;
     if (!deckId) {
@@ -354,7 +354,7 @@ function renderDeckSelector(cardId, container) {
       return;
     }
     
-    // Получаем ID сброса и перемещаем карту
+    // Получаем ID сброса и переносим карту
     const discardDeckId = await decks.getOrCreateDiscardDeck();
     const success = await decks.moveCardBetweenDecks(cardId, discardDeckId, deckId, 1);
     
@@ -377,7 +377,7 @@ function renderDeckSelector(cardId, container) {
 /**
  * Кнопки действия с картой
  */
-function renderCardActionButtons(cardId, container) {
+function renderCardActionButtons(cardId, currentCount, container) {
   if (decks.activeDeckId) {
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
@@ -402,26 +402,72 @@ function renderCardActionButtons(cardId, container) {
   deleteBtn.type = 'button';
   deleteBtn.className = 'btn';
   deleteBtn.style.cssText = 'width:100%; background:#ef4444; color:white; border:none; cursor:pointer; font-weight:600; padding:10px; border-radius:6px;';
-  deleteBtn.textContent = '⚠️ ПОРВАТЬ НАВСЕГДА';
-  deleteBtn.onclick = async () => {
-    const confirm1 = confirm('⚠️ Это ПОРВЕТ карту из ВСЕХ колод и коллекции!\n\nВы уверены?');
+  deleteBtn.textContent = '⚠️ ПОРВАТЬ';
+  deleteBtn.onclick = () => {
+    // Открываем модаль для выбора кол-ва
+    openTearCardModal(cardId, currentCount);
+  };
+  container.appendChild(deleteBtn);
+}
+
+/**
+ * Открывает модаль для выбора количества карт к удалению
+ */
+function openTearCardModal(cardId, maxCount) {
+  const modal = document.getElementById('tear-card-modal');
+  if (!modal) {
+    console.error('Модаль tear-card-modal не найдена!');
+    return;
+  }
+
+  // Устанавливаем макс количество
+  const availableEl = document.getElementById('tear-available-count');
+  const inputEl = document.getElementById('tear-quantity-input');
+  const confirmBtn = document.getElementById('tear-confirm-btn');
+  const cancelBtn = document.getElementById('tear-cancel-btn');
+
+  if (availableEl) availableEl.textContent = maxCount;
+  if (inputEl) {
+    inputEl.value = '1';
+    inputEl.max = maxCount;
+  }
+
+  // Обработчик для кнопки в ПОРВАТЬ
+  confirmBtn.onclick = async () => {
+    const quantity = parseInt(inputEl.value, 10);
+
+    if (isNaN(quantity) || quantity < 1 || quantity > maxCount) {
+      ui.showError(`Количество должно быть от 1 до ${maxCount}`);
+      return;
+    }
+
+    // Подтверждение
+    const confirm1 = confirm(`⚠️ Это ПОРВЕТ ${quantity} копию/копий карты из ВСЕХ колод и коллекции!\n\nВы уверены?`);
     if (!confirm1) return;
-    
-    const confirm2 = confirm('⚠️ ПОСЛЕДНЕЕ ПОПИНАНИЕ: так и ПОРВАТЬ?');
+
+    const confirm2 = confirm(`⚠️ ПОСЛЕДНЕЕ ПОПИНАНИЕ: реально ПОРВАТЬ ${quantity}?`);
     if (!confirm2) return;
-    
-    const success = await decks.deleteCardFromCollection(cardId);
+
+    // Удаляем карты
+    const success = await decks.deleteCardFromCollectionQuantity(cardId, quantity);
     if (success) {
-      ui.showToast('✅ Карта развались в клочья', 'success');
+      ui.showToast(`✅ Карта ${quantity} копия/копий разтерта в клочья!`, 'success');
+      closeModal('tear-card-modal');
       closeModal('card-detail-modal');
       await decks.loadDecks();
       decks.renderDecks();
       renderCollection();
     } else {
-      ui.showError('Ошибка');
+      ui.showError('Ошибка при удалении');
     }
   };
-  container.appendChild(deleteBtn);
+
+  cancelBtn.onclick = () => {
+    closeModal('tear-card-modal');
+  };
+
+  // Открываем модаль
+  openModal('tear-card-modal');
 }
 
 /**
@@ -434,7 +480,7 @@ function openFullscreenImage(imageUrl) {
     modal = document.createElement('div');
     modal.id = 'modal-fullscreen-image';
     modal.className = 'modal-fullscreen-image';
-    modal.innerHTML = '<button class="modal-fullscreen-close">✕</button><img src="" alt="fullscreen" />';
+    modal.innerHTML = '<button class="modal-fullscreen-close">✗</button><img src="" alt="fullscreen" />';
     modal.querySelector('.modal-fullscreen-close').onclick = () => modal.style.display = 'none';
     modal.onclick = (e) => e.target === modal && (modal.style.display = 'none');
     document.body.appendChild(modal);
