@@ -410,10 +410,10 @@ body {
   animation: glow-ancient 2s ease-in-out infinite;
 }
 
-/* 🐛 FIX: Уменьшена картинка для гарантии места под название */
+/* ✨ НОВОЕ: Увеличено пространство для изображения */
 .card-image {
   width: 100%;
-  flex: 1.25;
+  flex: 1.35;
   background: linear-gradient(135deg, var(--bg-tertiary), var(--wood-darker));
   display: flex;
   align-items: center;
@@ -437,13 +437,13 @@ body {
   transform: scale(1.05);
 }
 
-/* 🐛 FIX: Увеличено пространство для текста - НИКАКОЙ обрезки! */
+/* ✨ НОВОЕ: Flexbox с auto margin для выравнивания элементов */
 .card-body {
   padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  flex: 0.75;
+  gap: 6px;
+  flex: 0.65;
   min-height: 155px;
   transform: translateZ(10px);
 }
@@ -455,7 +455,7 @@ body {
   font-size: clamp(13px, 2.5vw, 15px);
   line-height: 1.35;
   margin: 0;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -465,10 +465,13 @@ body {
   text-wrap: balance;
 }
 
+/* ✨ КЛЮЧЕВОЕ: margin-top: auto прижимает автора вниз */
 .card-artist {
   font-size: 12px;
   color: var(--text-secondary);
   margin: 0;
+  margin-top: auto;
+  padding-top: 4px;
 }
 
 .card-rarity {
@@ -489,7 +492,7 @@ body {
   font-size: 11px;
   color: var(--text-secondary);
   line-height: 1.3;
-  margin-top: auto;
+  margin: 0;
   padding-top: 6px;
   border-top: 1px solid var(--border-color);
 }
