@@ -1,5 +1,10 @@
 /**
- * modules/decks.js - Управление колодами
+ * modules/decks.js - Гибридная система управления колодами
+ * 
+ * СТРУКТУРА:
+ * - Коллекция (весь инвентарь с копиями)
+ * - Колоды (много, создаются пользователем, макс 56 карт)
+ * - Активная колода (одна, считает рейтинг)
  */
 
 import { state, closeModal, openModal } from '../app.js';
@@ -8,11 +13,11 @@ import * as cardMod from './cards.js';
 
 const db = firebase.firestore();
 
-// Активная колода
+// 🔥 АКТИВНАЯ КОЛОДА (для рейтинга)
 export let activeDeckId = null;
 
 // КОНСТАНТА для колоды сброса
-const DISCARD_DECK_NAME = '🗑 Колода Сброса';
+const DISCARD_DECK_NAME = '🗑 Свободные карты';
 
 /**
  * Загружает колоды пользователя
@@ -34,11 +39,18 @@ export async function loadDecks() {
     
     await getOrCreateDiscardDeck();
     
+    // 🔥 Если нет активной колоды - выбираем первую не-сбросную
     if (!activeDeckId && Object.keys(u.decks).length > 0) {
-      const normalDeck = Object.values(u.decks).find(d => !d.isDiscardDeck);
+      const normalDeck = Object.values(u.decks).find(d => !d.isDiscardDeck && !d.isActive);
       if (normalDeck) {
         activeDeckId = normalDeck.id;
       }
+    }
+    
+    // 🔥 Проверяем если есть колода с флагом isActive
+    const activeFlaggedDeck = Object.values(u.decks).find(d => d.isActive && !d.isDiscardDeck);
+    if (activeFlaggedDeck) {
+      activeDeckId = activeFlaggedDeck.id;
     }
   } catch (e) {
     console.error('Error loading decks:', e);
@@ -46,7 +58,7 @@ export async function loadDecks() {
 }
 
 /**
- * Получить или создать колоду сброса
+ * Получить или создать колоду сброса (свободные карты)
  */
 export async function getOrCreateDiscardDeck() {
   try {
@@ -64,7 +76,7 @@ export async function getOrCreateDiscardDeck() {
       cards: {}, 
       createdAt: new Date(),
       isDiscardDeck: true,
-      isLocked: false
+      isActive: false
     });
 
     await loadDecks();
@@ -73,6 +85,86 @@ export async function getOrCreateDiscardDeck() {
     console.error('Error getting discard deck:', e);
     return null;
   }
+}
+
+/**
+ * 🔥 НОВОЕ: Устанавливает активную колоду (для рейтинга)
+ */
+export async function setActiveDeck(deckId) {
+  try {
+    const u = state.currentUser;
+    if (!u || !u.decks || !u.decks[deckId]) return false;
+    
+    const deck = u.decks[deckId];
+    if (deck.isDiscardDeck) {
+      ui.showError('❌ Колода сброса не может быть активной');
+      return false;
+    }
+    
+    // Снимаем флаг isActive со всех колод
+    for (const [id, d] of Object.entries(u.decks)) {
+      if (d.isActive && id !== deckId) {
+        d.isActive = false;
+        await db.collection('users').doc(u.uid)
+          .collection('decks').doc(id)
+          .update({ isActive: false });
+      }
+    }
+    
+    // Устанавливаем новую активную
+    deck.isActive = true;
+    await db.collection('users').doc(u.uid)
+      .collection('decks').doc(deckId)
+      .update({ isActive: true });
+    
+    activeDeckId = deckId;
+    
+    await loadDecks();
+    return true;
+  } catch (e) {
+    console.error('Error setting active deck:', e);
+    return false;
+  }
+}
+
+/**
+ * 🔥 НОВОЕ: Вычисляет рейтинг конкретной колоды
+ */
+export function calculateDeckRating(deckCards) {
+  if (!deckCards || Object.keys(deckCards).length === 0) return 0;
+  
+  let totalRating = 0;
+  
+  for (const [cardId, count] of Object.entries(deckCards)) {
+    const card = state.cards.find(c => c.id === cardId);
+    if (!card) continue;
+    
+    const cardRating = calculateCardRating(card);
+    totalRating += cardRating * count; // Каждая копия даёт рейтинг
+  }
+  
+  return Math.round(totalRating);
+}
+
+/**
+ * Вычисляет рейтинг карты (0-100)
+ */
+function calculateCardRating(card) {
+  if (!card.power) return 0;
+  const { resonance = 0, virtuosity = 0, profundity = 0, harmony = 0 } = card.power;
+  return Math.round((resonance + virtuosity + profundity + harmony) / 4 * 10);
+}
+
+/**
+ * 🔥 НОВОЕ: Получает рейтинг активной колоды (для лидерборда)
+ */
+export function getActiveRating() {
+  if (!activeDeckId || !state.currentUser?.decks) return 0;
+  
+  const activeDeck = state.currentUser.decks[activeDeckId];
+  if (!activeDeck || activeDeck.isDiscardDeck) return 0;
+  
+  return calculateDeckRating(activeDeck.cards || {});
 }
 
 /**
@@ -105,12 +197,12 @@ export function renderDecks() {
   decksList.style.cssText = 'display: flex; flex-direction: column; gap: 8px; padding: 8px;';
   
   normalDecks.forEach(deck => {
-    const cardCount = Object.values(deck.cards || {}).reduce((a, b) => a + b, 0);
     const uniqueCount = Object.keys(deck.cards || {}).length;
+    const totalCount = Object.values(deck.cards || {}).reduce((a, b) => a + b, 0);
     const deckRating = calculateDeckRating(deck.cards || {});
-    const isActive = activeDeckId === deck.id;
+    const isActive = deck.isActive || activeDeckId === deck.id;
     
-    const deckEl = createDeckElement(deck, uniqueCount, isActive, deckRating, false);
+    const deckEl = createDeckElement(deck, uniqueCount, totalCount, isActive, deckRating);
     decksList.appendChild(deckEl);
   });
   
@@ -120,9 +212,10 @@ export function renderDecks() {
     decksList.appendChild(separator);
     
     const uniqueCount = Object.keys(discardDeck.cards || {}).length;
+    const totalCount = Object.values(discardDeck.cards || {}).reduce((a, b) => a + b, 0);
     const deckRating = calculateDeckRating(discardDeck.cards || {});
     const isActive = activeDeckId === discardDeck.id;
-    const deckEl = createDeckElement(discardDeck, uniqueCount, isActive, deckRating, false);
+    const deckEl = createDeckElement(discardDeck, uniqueCount, totalCount, isActive, deckRating);
     decksList.appendChild(deckEl);
   }
   
@@ -138,8 +231,21 @@ export function renderDecks() {
   panel.querySelectorAll('.deck-delete-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      if (confirm('Удалить колоду?')) {
+      if (confirm('Удалить колоду? Карты вернутся в коллекцию.')) {
         await deleteDeck(btn.dataset.deckId);
+      }
+    });
+  });
+  
+  // 🔥 НОВОЕ: Кнопка "Сделать активной"
+  panel.querySelectorAll('.deck-activate-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const success = await setActiveDeck(btn.dataset.deckId);
+      if (success) {
+        ui.showToast('⭐ Колода активирована!', 'success');
+        renderDecks();
+        cardMod.renderCollection();
       }
     });
   });
@@ -147,7 +253,7 @@ export function renderDecks() {
   document.getElementById('create-deck-btn')?.addEventListener('click', openCreateDeckModal);
 }
 
-function createDeckElement(deck, uniqueCount, isActive, deckRating, isLocked) {
+function createDeckElement(deck, uniqueCount, totalCount, isActive, deckRating) {
   const deckEl = document.createElement('div');
   deckEl.className = 'deck-item';
   deckEl.style.cssText = `
@@ -160,15 +266,16 @@ function createDeckElement(deck, uniqueCount, isActive, deckRating, isLocked) {
     position: relative;
   `;
   
-  const label = deck.isDiscardDeck ? '🗑' : '🎴';
-  const noteExtra = deck.isDiscardDeck ? ' (Карты без колод)' : '';
+  const label = deck.isDiscardDeck ? '🗑' : (isActive ? '⭐' : '🎴');
+  const noteExtra = deck.isDiscardDeck ? ' (Без колод)' : '';
   
   deckEl.innerHTML = `
     <div style="font-weight:600; color:var(--text-accent); font-size:13px; word-break: break-word; margin-bottom:4px;">${label} ${deck.name}${noteExtra}</div>
     <div style="font-size:11px; color:var(--text-secondary);">
-      🎰 ${uniqueCount} уник. | ⭐ ${Math.round(deckRating)}
+      🎰 ${uniqueCount} уник. (${totalCount} всего) | ⭐ ${Math.round(deckRating)}
     </div>
     ${!deck.isDiscardDeck ? `<div class="deck-actions" style="position:absolute; top:8px; right:8px; display:none; gap:4px;">
+      ${!isActive ? `<button class="deck-activate-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:var(--wood-light); border:none; border-radius:4px; color:var(--bg-primary); font-size:10px; cursor:pointer;">⭐</button>` : ''}
       <button class="deck-edit-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:var(--wood-medium); border:none; border-radius:4px; color:var(--bg-primary); font-size:10px; cursor:pointer;">✍️</button>
       <button class="deck-delete-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:var(--resonance); border:none; border-radius:4px; color:white; font-size:10px; cursor:pointer;">🗑</button>
     </div>` : ''}
@@ -185,21 +292,16 @@ function createDeckElement(deck, uniqueCount, isActive, deckRating, isLocked) {
     if (actions) actions.style.display = 'none';
   });
   deckEl.addEventListener('click', (e) => {
-    if (e.target.classList.contains('deck-edit-btn') || e.target.classList.contains('deck-delete-btn')) return;
+    if (e.target.classList.contains('deck-edit-btn') || 
+        e.target.classList.contains('deck-delete-btn') ||
+        e.target.classList.contains('deck-activate-btn')) return;
     activeDeckId = deck.id;
     renderDecks();
     cardMod.renderCollection();
-    ui.showToast(`📂 Выбрана: ${deck.name}`, 'success');
+    ui.showToast(`📂 Просмотр: ${deck.name}`, 'success');
   });
   
   return deckEl;
-}
-
-function calculateDeckRating(cards) {
-  if (!cards || Object.keys(cards).length === 0) return 0;
-  const totalCards = Object.values(cards).reduce((a, b) => a + b, 0);
-  const uniqueCards = Object.keys(cards).length;
-  return (uniqueCards / totalCards) * 100 + uniqueCards * 10;
 }
 
 export function getDecksForDropdown() {
@@ -243,7 +345,7 @@ export async function removeCardFromActiveDeck(cardId) {
     if (!deck || !deck.cards || !deck.cards[cardId]) return false;
     
     if (deck.isDiscardDeck) {
-      ui.showToast('🗑 Карты без колод - только просмотр', 'info');
+      ui.showToast('🗑 Свободные карты - только просмотр', 'info');
       return false;
     }
     
@@ -276,9 +378,7 @@ export async function removeCardFromActiveDeck(cardId) {
 }
 
 /**
- * 🔥 УНИВЕРСАЛЬНАЯ ФУНКЦИЯ: ПЕРЕМЕЩАТЬ КАРТУ МЕЖДУ КОЛОДАМИ
- * МИНУС из исходной, ПЛЮС в целевою
- * БЕЗ дублирования!
+ * УНИВЕРСАЛЬНАЯ ФУНКЦИЯ: ПЕРЕМЕЩАТЬ КАРТУ МЕЖДУ КОЛОДАМИ
  */
 export async function moveCardBetweenDecks(cardId, fromDeckId, toDeckId, count = 1) {
   try {
@@ -319,7 +419,7 @@ export async function moveCardBetweenDecks(cardId, fromDeckId, toDeckId, count =
 }
 
 /**
- * 🖤 УДАЛИТЬ КАРТУ ИЗ ВСЕХ КОЛОД (ВСЕ)
+ * УДАЛИТЬ КАРТУ ИЗ ВСЕХ КОЛОД (ВСЕ КОПИИ)
  */
 export async function deleteCardFromCollection(cardId) {
   try {
@@ -342,8 +442,7 @@ export async function deleteCardFromCollection(cardId) {
 }
 
 /**
- * 🖤 УДАЛИТЬ НОВАЯ: КАРТУ КОЛИЧЕСТВО ШТУК ИЗ ВСЕХ КОЛОД
- * Пример: удалить 2 копии весьма карты из всех колод
+ * УДАЛИТЬ N КОПИЙ КАРТЫ ИЗ ВСЕХ КОЛОД
  */
 export async function deleteCardFromCollectionQuantity(cardId, quantity) {
   try {
@@ -353,7 +452,6 @@ export async function deleteCardFromCollectionQuantity(cardId, quantity) {
     const decksObj = u.decks || {};
     let remainingToDelete = quantity;
 
-    // Появляем в каждой колоде
     for (const [deckId, deck] of Object.entries(decksObj)) {
       if (remainingToDelete <= 0) break;
 
@@ -374,7 +472,6 @@ export async function deleteCardFromCollectionQuantity(cardId, quantity) {
       }
     }
 
-    // Проверяем удалось ли достаточно
     if (remainingToDelete > 0) {
       console.warn(`⚠ Не все карты удалены. Осталось: ${remainingToDelete}`);
       return false;
@@ -411,7 +508,7 @@ function openCreateDeckModal() {
         <button class="modal-close" style="padding:0; width:32px; height:32px;">✗</button>
       </div>
       <input type="text" id="new-deck-name" placeholder="Название колоды" style="width:100%; padding:10px; background:var(--bg-tertiary); border:1px solid var(--border); color:var(--text); border-radius:8px; margin-bottom:16px;" />
-      <button id="create-deck-confirm" class="btn btn-primary" style="width:100%;">Create</button>
+      <button id="create-deck-confirm" class="btn btn-primary" style="width:100%;">Создать</button>
     </div>
   `;
   document.body.appendChild(modal);
@@ -432,9 +529,24 @@ async function createDeck(name) {
   try {
     const u = state.currentUser;
     const ref = db.collection('users').doc(u.uid).collection('decks').doc();
-    await ref.set({ name, cards: {}, createdAt: new Date() });
+    
+    // 🔥 Если это первая колода - делаем её активной
+    const normalDecks = Object.values(u.decks || {}).filter(d => !d.isDiscardDeck);
+    const isFirstDeck = normalDecks.length === 0;
+    
+    await ref.set({ 
+      name, 
+      cards: {}, 
+      createdAt: new Date(),
+      isActive: isFirstDeck
+    });
     
     await loadDecks();
+    
+    if (isFirstDeck) {
+      activeDeckId = ref.id;
+    }
+    
     renderDecks();
     ui.showToast('✅ Колода создана', 'success');
   } catch (e) {
@@ -457,7 +569,7 @@ function openEditDeckModal(deckId) {
         <button class="modal-close" style="padding:0; width:32px; height:32px;">✗</button>
       </div>
       <input type="text" id="edit-deck-name" value="${deck.name}" style="width:100%; padding:10px; background:var(--bg-tertiary); border:1px solid var(--border); color:var(--text); border-radius:8px; margin-bottom:16px;" />
-      <button id="save-deck-name" class="btn btn-primary" style="width:100%;">Save</button>
+      <button id="save-deck-name" class="btn btn-primary" style="width:100%;">Сохранить</button>
     </div>
   `;
   document.body.appendChild(modal);
@@ -482,10 +594,24 @@ function openEditDeckModal(deckId) {
 
 async function deleteDeck(deckId) {
   try {
+    const deck = state.currentUser.decks[deckId];
+    
+    // Если удаляем активную колоду - сбрасываем флаг
+    if (deck.isActive || activeDeckId === deckId) {
+      activeDeckId = null;
+      
+      // Выбираем новую активную колоду (первую доступную)
+      const normalDecks = Object.values(state.currentUser.decks)
+        .filter(d => !d.isDiscardDeck && d.id !== deckId);
+      
+      if (normalDecks.length > 0) {
+        await setActiveDeck(normalDecks[0].id);
+      }
+    }
+    
     await db.collection('users').doc(state.currentUser.uid)
       .collection('decks').doc(deckId).delete();
     
-    if (activeDeckId === deckId) activeDeckId = null;
     await loadDecks();
     renderDecks();
     cardMod.renderCollection();
