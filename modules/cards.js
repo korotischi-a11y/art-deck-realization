@@ -9,6 +9,44 @@ import * as decks from './decks.js';
 const db = firebase.firestore();
 
 /**
+ * 💎 ЦЕНЫ ЗА ПОРВАННЫЕ КАРТЫ (калиброванные под градацию 30%→80%)
+ */
+const TEAR_PRICES = {
+  common:           { base: 1,   ratingMultiplier: 0.20 },
+  uncommon:         { base: 2,   ratingMultiplier: 0.50 },
+  rare:             { base: 3,   ratingMultiplier: 0.29 },
+  mythical:         { base: 7,   ratingMultiplier: 0.26 },
+  legendary:        { base: 12,  ratingMultiplier: 0.20 },
+  ancient:          { base: 20,  ratingMultiplier: 0.30 },
+  exceedingly_rare: { base: 45,  ratingMultiplier: 1.00 },
+  immortal:         { base: 100, ratingMultiplier: 1.30 }
+};
+
+/**
+ * 💎 Вычисляет цену за порванную карту
+ */
+function calculateTearPrice(card) {
+  if (!card || !card.rarity) return 0;
+  
+  const priceData = TEAR_PRICES[card.rarity];
+  if (!priceData) return 0;
+  
+  const cardRating = calculateCardRating(card);
+  const price = priceData.base + (cardRating * priceData.ratingMultiplier);
+  
+  return Math.round(price);
+}
+
+/**
+ * Вычисляет рейтинг карты (0-100)
+ */
+function calculateCardRating(card) {
+  if (!card.power) return 0;
+  const { resonance = 0, virtuosity = 0, profundity = 0, harmony = 0 } = card.power;
+  return Math.round((resonance + virtuosity + profundity + harmony) / 4 * 10);
+}
+
+/**
  * Загружает карты из мастер-коллекции
  */
 export async function loadCards() {
@@ -39,7 +77,7 @@ function getCard(cardId) {
 }
 
 /**
- * ПРАВНЛЫЕ ЛОГИКА СЧЁТЧИКОВ
+ * ПРАВИЛЬНАЯ ЛОГИКА СЧЁТЧИКОВ
  * ВСЕГО = сумма карт ВО ВСЕХ КОЛОДАХ (включая сброс)
  * УНИКАЛЬНЫЕ = разные cardId ВО ВСЕХ КОЛОДАХ (включая сброс)
  */
@@ -156,7 +194,7 @@ export function renderCollection() {
 }
 
 /**
- * Создаят элемент карты
+ * Создаёт элемент карты
  */
 function createCardElement(card, count) {
   const div = document.createElement('div');
@@ -309,15 +347,13 @@ function showCardDetail(card, count) {
   }
   
   renderDeckSelector(card.id, count, buttonContainer);
-  renderCardActionButtons(card.id, count, buttonContainer);
+  renderCardActionButtons(card, count, buttonContainer);
   
   openModal('card-detail-modal');
 }
 
 /**
- * 🔥 НОВОЕ: Рендерит селектор колод + выбор кол-во для ПЕРЕНОСА
- * Логика: перемещает N копий ИЗ активной колоды В выбранную
- * Без копирования — чистый перенос!
+ * Рендерит селектор колод + выбор кол-во для ПЕРЕНОСА
  */
 function renderDeckSelector(cardId, countInActive, container) {
   const decksList = decks.getDecksForDropdown();
@@ -330,7 +366,6 @@ function renderDeckSelector(cardId, countInActive, container) {
     return;
   }
 
-  // Если активная колода это Сброс — позволяем перенести
   const isFromDiscard = decks.activeDeckId && state.currentUser?.decks?.[decks.activeDeckId]?.isDiscardDeck;
   
   if (!isFromDiscard && countInActive === 0) {
@@ -344,7 +379,6 @@ function renderDeckSelector(cardId, countInActive, container) {
   const wrapper = document.createElement('div');
   wrapper.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
   
-  // Селектор колод
   const selectWrapper = document.createElement('div');
   selectWrapper.style.cssText = 'display: flex; gap: 8px; align-items: center;';
   
@@ -362,7 +396,6 @@ function renderDeckSelector(cardId, countInActive, container) {
   selectWrapper.appendChild(select);
   wrapper.appendChild(selectWrapper);
   
-  // Инпут для выбора кол-во
   const quantityWrapper = document.createElement('div');
   quantityWrapper.style.cssText = 'display: flex; gap: 8px; align-items: center;';
   
@@ -382,7 +415,6 @@ function renderDeckSelector(cardId, countInActive, container) {
   quantityWrapper.appendChild(quantityInput);
   wrapper.appendChild(quantityWrapper);
   
-  // Кнопка переноса
   const moveBtn = document.createElement('button');
   moveBtn.type = 'button';
   moveBtn.className = 'btn btn-primary';
@@ -403,7 +435,6 @@ function renderDeckSelector(cardId, countInActive, container) {
       return;
     }
     
-    // Уточнение: из какой колоды в какую?
     let sourceDecId = decks.activeDeckId;
     
     if (!sourceDecId) {
@@ -411,7 +442,6 @@ function renderDeckSelector(cardId, countInActive, container) {
       return;
     }
     
-    // Переносим карту: из активной В выбранную
     const success = await decks.moveCardBetweenDecks(cardId, sourceDecId, targetDeckId, quantity);
     
     if (success) {
@@ -433,7 +463,7 @@ function renderDeckSelector(cardId, countInActive, container) {
 /**
  * Кнопки действия с картой
  */
-function renderCardActionButtons(cardId, currentCount, container) {
+function renderCardActionButtons(card, currentCount, container) {
   if (decks.activeDeckId) {
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
@@ -441,7 +471,7 @@ function renderCardActionButtons(cardId, currentCount, container) {
     removeBtn.style.cssText = 'width:100%; background:#666; color:white; border:none; cursor:pointer; font-weight:600; padding:10px; border-radius:6px;';
     removeBtn.textContent = '🗑 Удалить из колоды';
     removeBtn.onclick = async () => {
-      const success = await decks.removeCardFromActiveDeck(cardId);
+      const success = await decks.removeCardFromActiveDeck(card.id);
       if (success) {
         ui.showToast('✅ Удалено из колоды', 'success');
         closeModal('card-detail-modal');
@@ -454,41 +484,46 @@ function renderCardActionButtons(cardId, currentCount, container) {
     container.appendChild(removeBtn);
   }
   
+  // 💎 КНОПКА ПОРВАТЬ (с ценой)
+  const tearPrice = calculateTearPrice(card);
   const deleteBtn = document.createElement('button');
   deleteBtn.type = 'button';
   deleteBtn.className = 'btn';
   deleteBtn.style.cssText = 'width:100%; background:#ef4444; color:white; border:none; cursor:pointer; font-weight:600; padding:10px; border-radius:6px;';
-  deleteBtn.textContent = '⚠️ ПОРВАТЬ';
+  deleteBtn.textContent = `💰 ПОРВАТЬ (${tearPrice} 💎 за шт)`;
   deleteBtn.onclick = () => {
-    // Открываем модаль для выбора кол-ва
-    openTearCardModal(cardId, currentCount);
+    openTearCardModal(card, currentCount, tearPrice);
   };
   container.appendChild(deleteBtn);
 }
 
 /**
- * Открывает модаль для выбора количества карт к удалению
+ * 💎 Открывает модаль для выбора количества карт к удалению
  */
-function openTearCardModal(cardId, maxCount) {
+function openTearCardModal(card, maxCount, tearPrice) {
   const modal = document.getElementById('tear-card-modal');
   if (!modal) {
     console.error('Модаль tear-card-modal не найдена!');
     return;
   }
 
-  // Устанавливаем макс количество
   const availableEl = document.getElementById('tear-available-count');
   const inputEl = document.getElementById('tear-quantity-input');
   const confirmBtn = document.getElementById('tear-confirm-btn');
   const cancelBtn = document.getElementById('tear-cancel-btn');
+  const titleEl = document.getElementById('tear-modal-title');
 
   if (availableEl) availableEl.textContent = maxCount;
   if (inputEl) {
     inputEl.value = '1';
     inputEl.max = maxCount;
   }
+  
+  // 💎 Обновляем заголовок с ценой
+  if (titleEl) {
+    titleEl.textContent = `Сколько копий порвать? (${tearPrice} 💎 за шт)`;
+  }
 
-  // Обработчик для кнопки в ПОРВАТЬ
   confirmBtn.onclick = async () => {
     const quantity = parseInt(inputEl.value, 10);
 
@@ -497,22 +532,23 @@ function openTearCardModal(cardId, maxCount) {
       return;
     }
 
-    // Подтверждение
-    const confirm1 = confirm(`⚠️ Это ПОРВЕТ ${quantity} копию/копий карты из ВСЕХ колод и коллекции!\n\nВы уверены?`);
+    const totalCoins = tearPrice * quantity;
+    const confirm1 = confirm(`⚠️ Это ПОРВЁТ ${quantity} копию/копий карты "${card.title}"!\n\nВы получите: ${totalCoins} 💎\n\nВы уверены?`);
     if (!confirm1) return;
 
-    const confirm2 = confirm(`⚠️ ПОСЛЕДНЕЕ ПОПИНАНИЕ: реально ПОРВАТЬ ${quantity}?`);
-    if (!confirm2) return;
-
-    // Удаляем карты
-    const success = await decks.deleteCardFromCollectionQuantity(cardId, quantity);
+    // 💎 Удаляем карты + начисляем монеты
+    const success = await tearCardWithReward(card.id, quantity, totalCoins);
+    
     if (success) {
-      ui.showToast(`✅ Карта ${quantity} копия/копий разтерта в клочья!`, 'success');
+      ui.showToast(`💰 Получено ${totalCoins} 💎 за ${quantity} карт!`, 'success');
       closeModal('tear-card-modal');
       closeModal('card-detail-modal');
       await decks.loadDecks();
       decks.renderDecks();
       renderCollection();
+      
+      // Обновляем отображение монет
+      document.getElementById('coins-display').textContent = state.currentUser.currency;
     } else {
       ui.showError('Ошибка при удалении');
     }
@@ -522,8 +558,33 @@ function openTearCardModal(cardId, maxCount) {
     closeModal('tear-card-modal');
   };
 
-  // Открываем модаль
   openModal('tear-card-modal');
+}
+
+/**
+ * 💎 Удаляет карты + начисляет награду
+ */
+async function tearCardWithReward(cardId, quantity, reward) {
+  try {
+    const u = state.currentUser;
+    if (!u) return false;
+
+    // Удаляем карты из колод
+    const success = await decks.deleteCardFromCollectionQuantity(cardId, quantity);
+    if (!success) return false;
+
+    // Начисляем монеты
+    const newCurrency = (u.currency || 0) + reward;
+    await db.collection('users').doc(u.uid).update({
+      currency: newCurrency
+    });
+    
+    u.currency = newCurrency;
+    return true;
+  } catch (e) {
+    console.error('Error tearing card:', e);
+    return false;
+  }
 }
 
 /**
