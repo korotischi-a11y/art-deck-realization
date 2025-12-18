@@ -421,7 +421,7 @@ function renderCardActionButtons(card, currentCount, container) {
   deleteBtn.type = 'button';
   deleteBtn.className = 'btn';
   deleteBtn.style.cssText = 'width:100%; background:#ef4444; color:white; border:none; cursor:pointer; font-weight:600; padding:10px; border-radius:6px;';
-  deleteBtn.textContent = `💰 ПОРВАТЬ (${tearPrice} 💎 за шт)`;
+  deleteBtn.textContent = `💰 ПРОДАТЬ (${tearPrice} 💎 за шт)`;
   deleteBtn.onclick = () => openTearCardModal(card, currentCount, tearPrice);
   container.appendChild(deleteBtn);
 }
@@ -446,7 +446,7 @@ function openTearCardModal(card, maxCount, tearPrice) {
       return ui.showError(`Количество должно быть от 1 до ${maxCount}`);
     }
     const totalCoins = tearPrice * quantity;
-    const ok = confirm(`⚠️ Это ПОРВЁТ ${quantity} копию/копий карты "${card.title}"!\n\nВы получите: ${totalCoins} 💎\n\nВы уверены?`);
+    const ok = confirm(`⚠️ Это ПРОДАСТ ${quantity} копию/копий карты "${card.title}"!\n\nВы получите: ${totalCoins} 💎\n\nВы уверены?`);
     if (!ok) return;
 
     const success = await tearCardWithReward(card.id, quantity, totalCoins);
