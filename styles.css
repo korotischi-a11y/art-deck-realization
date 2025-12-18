@@ -410,9 +410,10 @@ body {
   animation: glow-ancient 2s ease-in-out infinite;
 }
 
+/* 🐛 FIX: Уменьшена картинка для гарантии места под название */
 .card-image {
   width: 100%;
-  flex: 1.3;
+  flex: 1.25;
   background: linear-gradient(135deg, var(--bg-tertiary), var(--wood-darker));
   display: flex;
   align-items: center;
@@ -436,25 +437,25 @@ body {
   transform: scale(1.05);
 }
 
-/* 🐛 FIX: Увеличен flex и min-height для полной видимости названия */
+/* 🐛 FIX: Увеличено пространство для текста - НИКАКОЙ обрезки! */
 .card-body {
-  padding: 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex: 0.7;
-  min-height: 140px;
+  flex: 0.75;
+  min-height: 155px;
   transform: translateZ(10px);
 }
 
-/* ✨ НОВОЕ: Динамическое уменьшение шрифта для длинных названий */
+/* ✨ Динамическое уменьшение шрифта для длинных названий + гарантия видимости */
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
   font-size: clamp(13px, 2.5vw, 15px);
   line-height: 1.35;
   margin: 0;
-  padding-bottom: 2px;
+  margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
