@@ -15,9 +15,6 @@ function initializeFirebase() {
   return { auth, db, Firestore };
 }
 
-// Максимум колод сейчас
-const MAX_DECKS = 10;
-
 /**
  * Проверяет текущее состояние авторизации
  */
@@ -36,8 +33,8 @@ export async function checkAuthState() {
 }
 
 /**
- * Загружает данные пользователя из Firestore и при необходимости
- * делает мягкую миграцию в новую схему с колодами.
+ * Загружает данные пользователя из Firestore
+ * 🔥 ИСПРАВЛЕНО: используем ПОДКОЛЛЕКЦИЮ decks, а не поле в документе
  */
 async function loadUserData(uid) {
   try {
@@ -51,62 +48,30 @@ async function loadUserData(uid) {
 
     const userData = userDoc.data();
 
-    // --- МЯГКАЯ МИГРАЦИЯ В СХЕМУ С КОЛОДАМИ ---
-    let decks = userData.decks || {};
-    let activeDeckId = userData.activeDeckId || null;
-    const cards = userData.cards || {};
-
-    // Если ещё нет ни одной колоды, создаём первую из существующей коллекции
-    if (!Object.keys(decks).length) {
-      const deckId = `deck_${Date.now()}`;
-      decks = {
-        [deckId]: {
-          id: deckId,
-          name: 'Первая колода',
-          description: 'Создано автоматически из вашей коллекции',
-          cards: { ...cards }, // каждая карта доступна в стартовой колоде
-          rating: 0,
-          isActive: true,
-          color: '#3a8d8e',
-          createdAt: Firestore.Timestamp.now()
-        }
-      };
-      activeDeckId = deckId;
-
-      // Обновляем Firestore один раз, без удаления старых полей
-      await userRef.update({
-        decks,
-        activeDeckId
-      });
-    } else if (!activeDeckId) {
-      // Колоды есть, но activeDeckId не выставлен – выбираем первую
-      const firstId = Object.keys(decks)[0];
-      decks[firstId].isActive = true;
-      activeDeckId = firstId;
-      await userRef.update({ decks, activeDeckId });
-    }
-
-    // --- Обновляем state ---
+    // 🔥 ИСПРАВЛЕНО: НЕ загружаем decks из документа, т.к. они в подколлекции
     state.currentUser = {
       uid,
       email: userData.email,
       username: userData.username,
       currency: userData.currency || 100,
-      cards,
-      decks,
-      activeDeckId,
+      cards: userData.cards || {},  // Глобальная коллекция (старая схема, для совместимости)
+      decks: {},                     // 🔥 Загрузится через decks.loadDecks()
       isAdmin: userData.isAdmin || false,
-      createdAt: userData.createdAt
+      createdAt: userData.createdAt,
+      dailyFreeOpens: userData.dailyFreeOpens || 0,
+      lastDailyReward: userData.lastDailyReward
     };
     state.isAdmin = userData.isAdmin || false;
+    
+    console.log('✅ User data loaded:', uid);
   } catch (error) {
-    console.error('Ошибка загрузки/миграции пользователя:', error);
+    console.error('Ошибка загрузки пользователя:', error);
   }
 }
 
 /**
  * Регистрация нового пользователя
- * Сразу создаём первую пустую колоду.
+ * 🔥 ИСПРАВЛЕНО: создаём первую колоду в ПОДКОЛЛЕКЦИИ
  */
 export async function register(email, password) {
   if (!ui.validateEmail(email)) {
@@ -121,34 +86,32 @@ export async function register(email, password) {
     const uid = userCredential.user.uid;
     const username = email.split('@')[0];
 
-    const deckId = `deck_${Date.now()}`;
-    const decks = {
-      [deckId]: {
-        id: deckId,
-        name: 'Первая колода',
-        description: 'Стартовая колода',
-        cards: {},
-        rating: 0,
-        isActive: true,
-        color: '#3a8d8e',
-        createdAt: Firestore.Timestamp.now()
-      }
-    };
-
+    // 🔥 ИСПРАВЛЕНО: Создаём документ пользователя БЕЗ decks
     await db.collection('users').doc(uid).set({
       email,
       username,
       currency: 100,
-      cards: {},            // глобальная коллекция
-      decks,                // новые колоды
-      activeDeckId: deckId, // активная колода
+      cards: {},            // глобальная коллекция (старая схема)
       isAdmin: false,
       createdAt: Firestore.Timestamp.now(),
       totalCards: 0,
       totalPacks: 0,
       completedQuests: [],
-      dailyFreeOpens: 0
+      dailyFreeOpens: 1,
+      lastDailyReward: Firestore.Timestamp.now()
     });
+
+    // 🔥 ИСПРАВЛЕНО: Создаём первую колоду в ПОДКОЛЛЕКЦИИ
+    const decksRef = db.collection('users').doc(uid).collection('decks');
+    await decksRef.add({
+      name: '🎴 Первая колода',
+      cards: {},
+      createdAt: Firestore.Timestamp.now(),
+      isActive: true,
+      isDiscardDeck: false
+    });
+
+    console.log('✅ User created with first deck in subcollection');
 
     state.currentUser = {
       uid,
@@ -156,8 +119,7 @@ export async function register(email, password) {
       username,
       currency: 100,
       cards: {},
-      decks,
-      activeDeckId: deckId,
+      decks: {},  // Загрузится через loadDecks()
       isAdmin: false
     };
 
