@@ -48,15 +48,29 @@ export async function loadDecks() {
     if (activeFlaggedDeck) {
       activeDeckId = activeFlaggedDeck.id;
     } else if (!activeDeckId && Object.keys(u.decks).length > 0) {
-      // Если нет активной - выбираем первую не-сбросную
+      // 🔥 ФИКС: Если нет активной - выбираем первую не-сбросную И СОХРАНЯЕМ В FIREBASE
       const normalDeck = Object.values(u.decks).find(d => !d.isDiscardDeck);
       if (normalDeck) {
         activeDeckId = normalDeck.id;
+        
+        // 🔥 СОХРАНИТЬ флаг в Firebase
+        await db.collection('users').doc(u.uid)
+          .collection('decks').doc(normalDeck.id)
+          .update({ isActive: true });
+        
+        normalDeck.isActive = true;
+        console.log('🔥 Auto-activated first deck:', normalDeck.name);
       }
     }
     
     // 👀 Если нет просматриваемой - выбираем активную
     if (!viewingDeckId) {
+      viewingDeckId = activeDeckId;
+    }
+    
+    // 🔥 ФИКС: Проверяем что viewingDeckId существует
+    if (viewingDeckId && !u.decks[viewingDeckId]) {
+      console.warn('⚠️ viewingDeckId указывает на несуществующую колоду, сбрасываем');
       viewingDeckId = activeDeckId;
     }
   } catch (e) {
@@ -632,14 +646,15 @@ function openEditDeckModal(deckId) {
 
 async function deleteDeck(deckId) {
   try {
-    const deck = state.currentUser.decks[deckId];
+    const u = state.currentUser;
+    const deck = u.decks[deckId];
     
-    // Если удаляем активную колоду - сбрасываем флаг
+    // 🔥 ФИКС: Если удаляем активную колоду - выбираем новую
     if (deck.isActive || activeDeckId === deckId) {
       activeDeckId = null;
       
       // Выбираем новую активную колоду (первую доступную)
-      const normalDecks = Object.values(state.currentUser.decks)
+      const normalDecks = Object.values(u.decks)
         .filter(d => !d.isDiscardDeck && d.id !== deckId);
       
       if (normalDecks.length > 0) {
@@ -647,12 +662,22 @@ async function deleteDeck(deckId) {
       }
     }
     
-    // Если удаляем просматриваемую - переключаемся
+    // 🔥 ФИКС: Если удаляем просматриваемую - переключаемся на активную или первую доступную
     if (viewingDeckId === deckId) {
-      viewingDeckId = activeDeckId;
+      // Пытаемся переключиться на активную
+      if (activeDeckId && u.decks[activeDeckId]) {
+        viewingDeckId = activeDeckId;
+      } else {
+        // Если активной нет - берём первую доступную
+        const normalDecks = Object.values(u.decks)
+          .filter(d => !d.isDiscardDeck && d.id !== deckId);
+        viewingDeckId = normalDecks.length > 0 ? normalDecks[0].id : null;
+      }
+      console.log('👀 viewingDeckId обновлён после удаления:', viewingDeckId);
     }
     
-    await db.collection('users').doc(state.currentUser.uid)
+    // Удаляем колоду
+    await db.collection('users').doc(u.uid)
       .collection('decks').doc(deckId).delete();
     
     await loadDecks();
