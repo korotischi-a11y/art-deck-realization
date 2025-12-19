@@ -60,7 +60,10 @@ async function loadInitialData() {
     await leaderboard.loadLeaderboard();
     updateUserInterface();
     user.renderProfile();
-    switchTab('collection');
+    
+    // 🔥 ВОССТАНОВЛЕНИЕ ПОСЛЕДНЕЙ АКТИВНОЙ ВКЛАДКИ
+    const savedTab = localStorage.getItem('activeTab') || 'collection';
+    switchTab(savedTab);
   } catch (e) { console.error('Load error:', e); }
 }
 
@@ -79,6 +82,9 @@ export function switchTab(tabName) {
   document.getElementById(`${tabName}-tab`)?.classList.add('active');
   document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.getElementById('page-title').textContent = TAB_TITLES[tabName] || 'Art Deck';
+  
+  // 🔥 СОХРАНЕНИЕ АКТИВНОЙ ВКЛАДКИ В localStorage
+  localStorage.setItem('activeTab', tabName);
   
   switch (tabName) {
     case 'collection':
