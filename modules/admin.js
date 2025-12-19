@@ -272,7 +272,12 @@ function openCardDetailModal(card) {
       <div><strong>🎨 Стиль:</strong> ${card.theme || '—'}</div>
       <div><strong>🎭 Жанр:</strong> ${card.genre || '—'}</div>
     </div>
-    ${state.isAdmin ? `<button id="edit-card-btn" class="btn btn-primary" style="width: 100%;">✏️ Изменить карту</button>` : ''}
+    ${state.isAdmin ? `
+      <div style="display: flex; gap: 8px; flex-direction: column;">
+        <button id="edit-card-btn" class="btn btn-primary" style="width: 100%;">✏️ Изменить карту</button>
+        <button id="delete-card-btn" class="btn" style="width: 100%; background: #ef4444; color: white; font-weight: 600;">🗑️ Удалить карту</button>
+      </div>
+    ` : ''}
   `;
   
   // 🔥 КНОПКА РЕДАКТИРОВАНИЯ (только для админа)
@@ -288,6 +293,25 @@ function openCardDetailModal(card) {
         setTimeout(() => {
           document.getElementById('admin-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
+      });
+    }
+    
+    // 🔥 КНОПКА УДАЛЕНИЯ
+    const deleteBtn = countEl.querySelector('#delete-card-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', async () => {
+        const confirmed = confirm(`⚠️ УДАЛИТЬ карту "${card.title}" навсегда?\n\nЭто действие НЕЛЬЗЯ ОТМЕНИТЬ!`);
+        if (!confirmed) return;
+        
+        try {
+          await db.collection('masterCards').doc(card.id).delete();
+          ui.showSuccess(`✅ Карта "${card.title}" удалена`);
+          modal.classList.remove('active');
+          await loadAllCards();
+        } catch (error) {
+          console.error('Delete card error:', error);
+          ui.showError('❌ Ошибка при удалении');
+        }
       });
     }
   }
