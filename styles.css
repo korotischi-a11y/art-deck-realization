@@ -506,7 +506,7 @@ body {
   will-change: transform;
 }
 
-/* ✨ Динамическое уменьшение шрифта для длинных названий + гарантия видимости */
+/* ✨ ИСПРАВЛЕНО: card-title теперь с многострочностью, БЕЗ обрезания */
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
@@ -521,6 +521,7 @@ body {
   -webkit-box-orient: vertical;
   word-break: break-word;
   text-wrap: balance;
+  max-height: 2.8em;
 }
 
 /* ✨ КЛЮЧЕВОЕ: margin-top: auto прижимает автора вниз */
