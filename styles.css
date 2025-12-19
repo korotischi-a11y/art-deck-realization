@@ -437,15 +437,17 @@ body {
   transform: scale(1.05);
 }
 
-/* ✨ НОВОЕ: Flexbox с auto margin для выравнивания элементов */
+/* 🐛 ИСПРАВЛЕНО: Фиксированные отступы для предотвращения сдвига */
 .card-body {
   padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 0.65;
+  flex: 0 0 auto;
   min-height: 155px;
+  max-height: 155px;
   transform: translateZ(10px);
+  will-change: transform;
 }
 
 /* ✨ Динамическое уменьшение шрифта для длинных названий + гарантия видимости */
@@ -474,6 +476,7 @@ body {
   padding-top: 4px;
 }
 
+/* 🐛 ИСПРАВЛЕНО: Фиксированный margin для предотвращения сдвига */
 .card-rarity {
   display: inline-flex;
   align-items: center;
@@ -484,8 +487,9 @@ body {
   border-radius: var(--radius-md);
   font-size: 12px;
   font-weight: 600;
-  margin: 0;
+  margin: 4px 0;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .card-params {
@@ -495,6 +499,7 @@ body {
   margin: 0;
   padding-top: 6px;
   border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .card-param-line {
