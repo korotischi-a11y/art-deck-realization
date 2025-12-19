@@ -55,7 +55,7 @@
                     <option value="mythical">💎 Мифическая</option>
                     <option value="legendary">⭐ Легендарная</option>
                     <option value="ancient">🔥 Древняя</option>
-                    <option value="exceedingly_rare">✨ Осколбительно редкая</option>
+                    <option value="exceedingly_rare">✨ Ослепительно редкая</option>
                     <option value="immortal">⚠ Бессмертная</option>
                   </select>
                   <div class="collection-rating">
@@ -117,7 +117,7 @@
           </div>
         </div>
 
-        <!-- ПРОФОЛЬ -->
+        <!-- ПРОФИЛЬ -->
         <div class="tab-content" id="profile-tab">
           <h2>👤 Мой профиль</h2>
           <div class="profile-header">
@@ -179,19 +179,36 @@
         <!-- АДМИН -->
         <div class="tab-content" id="admin-tab">
           <h2>⚙ Admin Panel</h2>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <!-- ФОРМА НОВЫХ КАРТ -->
-            <form id="admin-form" style="border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: var(--bg-secondary);">
-              <h3 style="margin-bottom: 16px;">➕ Add Card</h3>
-              <div style="display: flex; flex-direction: column; gap: 12px;">
-                <input type="text" id="card-title" placeholder="Title" class="form-control" required>
-                <input type="text" id="card-artist" placeholder="Artist" class="form-control" required>
-                <input type="number" id="card-year" placeholder="Year" class="form-control" min="1000" max="2100" required>
-                <textarea id="card-description" placeholder="Description" class="form-control" required></textarea>
-                <input type="url" id="card-image-url" placeholder="Image URL" class="form-control" required>
+          
+          <!-- 🔥 СТАТИСТИКА -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px;">
+            <div class="stat-card">
+              <div class="stat-value" id="admin-total-cards">0</div>
+              <div class="stat-label">Всего карт</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="admin-common-cards">0</div>
+              <div class="stat-label">🗑 Common</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="admin-legendary-cards">0</div>
+              <div class="stat-label">⭐ Legendary+</div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 350px 1fr; gap: 20px; height: calc(100vh - 250px);">
+            <!-- 🔥 ФОРМА ДОБАВЛЕНИЯ КАРТЫ (СЛЕВА, КОМПАКТНО) -->
+            <div style="border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: var(--bg-secondary); overflow-y: auto;">
+              <h3 style="margin-bottom: 16px;">➕ Добавить карту</h3>
+              <form id="admin-form" style="display: flex; flex-direction: column; gap: 10px;">
+                <input type="text" id="card-title" placeholder="Название" class="form-control" required style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
+                <input type="text" id="card-artist" placeholder="Художник" class="form-control" required style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
+                <input type="number" id="card-year" placeholder="Год" class="form-control" min="1000" max="2100" required style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
+                <textarea id="card-description" placeholder="Описание" class="form-control" required style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px; min-height: 60px; resize: vertical;"></textarea>
+                <input type="url" id="card-image-url" placeholder="URL изображения" class="form-control" required style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
                 
-                <select id="card-rarity" class="form-control" required>
-                  <option value="">Rarity</option>
+                <select id="card-rarity" class="form-control" required style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
+                  <option value="">Редкость</option>
                   <option value="common">Common</option>
                   <option value="uncommon">Uncommon</option>
                   <option value="rare">Rare</option>
@@ -202,9 +219,8 @@
                   <option value="immortal">Immortal</option>
                 </select>
                 
-                <!-- 🔥 СТИЛЬ (THEME) -->
-                <select id="card-theme" class="form-control" required>
-                  <option value="">🎨 Theme (Style)</option>
+                <select id="card-theme" class="form-control" required style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
+                  <option value="">🎨 Стиль</option>
                   <option value="impressionism">Impressionism</option>
                   <option value="renaissance">Renaissance</option>
                   <option value="surrealism">Surrealism</option>
@@ -218,46 +234,74 @@
                   <option value="contemporary">Contemporary</option>
                 </select>
                 
-                <!-- 🔥 ЖАНР (GENRE) -->
-                <select id="card-genre" class="form-control" required>
-                  <option value="">🖼️ Genre (Type)</option>
-                  <option value="portrait">👤 Portrait (Hero)</option>
-                  <option value="landscape">🌄 Landscape (Dream)</option>
-                  <option value="still_life">🍎 Still Life (Heal)</option>
-                  <option value="religious">⛪ Religious (Divine)</option>
-                  <option value="mythological">🐉 Mythological (Epic)</option>
-                  <option value="abstract">🎨 Abstract (Chaos)</option>
-                  <option value="urban">🏙️ Urban (Cityscape & Street Art)</option>
-                  <option value="nude">💃 Nude (Beauty)</option>
+                <select id="card-genre" class="form-control" required style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
+                  <option value="">🖼️ Жанр</option>
+                  <option value="portrait">👤 Portrait</option>
+                  <option value="landscape">🌄 Landscape</option>
+                  <option value="still_life">🍎 Still Life</option>
+                  <option value="religious">⛪ Religious</option>
+                  <option value="mythological">🐉 Mythological</option>
+                  <option value="abstract">🎨 Abstract</option>
+                  <option value="urban">🏙️ Urban</option>
+                  <option value="nude">💃 Nude</option>
                 </select>
                 
-                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px;">
-                  <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 12px;">💓 Resonance</label>
-                  <input type="range" id="card-resonance" min="0" max="10" value="5" class="power-slider" style="width: 100%;">
-                  <span class="slider-value">5</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 8px;">
+                    <label style="display: block; font-size: 10px; color: var(--text-secondary);">💓 Resonance</label>
+                    <input type="range" id="card-resonance" min="0" max="10" value="5" class="power-slider" style="width: 100%;">
+                    <span class="slider-value" style="font-size: 12px;">5</span>
+                  </div>
+                  <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 8px;">
+                    <label style="display: block; font-size: 10px; color: var(--text-secondary);">🎯 Virtuosity</label>
+                    <input type="range" id="card-virtuosity" min="0" max="10" value="5" class="power-slider" style="width: 100%;">
+                    <span class="slider-value" style="font-size: 12px;">5</span>
+                  </div>
+                  <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 8px;">
+                    <label style="display: block; font-size: 10px; color: var(--text-secondary);">🧠 Profundity</label>
+                    <input type="range" id="card-profundity" min="0" max="10" value="5" class="power-slider" style="width: 100%;">
+                    <span class="slider-value" style="font-size: 12px;">5</span>
+                  </div>
+                  <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 8px;">
+                    <label style="display: block; font-size: 10px; color: var(--text-secondary);">⚖ Harmony</label>
+                    <input type="range" id="card-harmony" min="0" max="10" value="5" class="power-slider" style="width: 100%;">
+                    <span class="slider-value" style="font-size: 12px;">5</span>
+                  </div>
                 </div>
-                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px;">
-                  <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 12px;">🎯 Virtuosity</label>
-                  <input type="range" id="card-virtuosity" min="0" max="10" value="5" class="power-slider" style="width: 100%;">
-                  <span class="slider-value">5</span>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 10px;">Добавить</button>
+              </form>
+            </div>
+            
+            <!-- 🔥 ВИЗУАЛЬНАЯ СЕТКА ВСЕХ КАРТ (СПРАВА) -->
+            <div style="border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: var(--bg-secondary); overflow-y: auto;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="margin: 0;">🗃️ Все карты в базе</h3>
+                <div style="display: flex; gap: 8px;">
+                  <select id="admin-filter-rarity" style="padding: 6px 10px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 12px;">
+                    <option value="">Все редкости</option>
+                    <option value="common">Common</option>
+                    <option value="uncommon">Uncommon</option>
+                    <option value="rare">Rare</option>
+                    <option value="legendary">Legendary</option>
+                    <option value="ancient">Ancient</option>
+                  </select>
+                  <select id="admin-filter-genre" style="padding: 6px 10px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 12px;">
+                    <option value="">Все жанры</option>
+                    <option value="portrait">Portrait</option>
+                    <option value="landscape">Landscape</option>
+                    <option value="still_life">Still Life</option>
+                    <option value="religious">Religious</option>
+                    <option value="mythological">Mythological</option>
+                    <option value="abstract">Abstract</option>
+                    <option value="urban">Urban</option>
+                    <option value="nude">Nude</option>
+                  </select>
                 </div>
-                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px;">
-                  <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 12px;">🧠 Profundity</label>
-                  <input type="range" id="card-profundity" min="0" max="10" value="5" class="power-slider" style="width: 100%;">
-                  <span class="slider-value">5</span>
-                </div>
-                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px;">
-                  <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 12px;">⚖ Harmony</label>
-                  <input type="range" id="card-harmony" min="0" max="10" value="5" class="power-slider" style="width: 100%;">
-                  <span class="slider-value">5</span>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Add</button>
               </div>
-            </form>
-            <!-- СПИСОК ВСЕХ КАРТ -->
-            <div style="border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: var(--bg-secondary); overflow-y: auto; max-height: 600px;">
-              <h3 style="margin-bottom: 12px;">📄 All Cards</h3>
-              <div id="admin-cards-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+              
+              <!-- 🔥 ВИЗУАЛЬНАЯ МАТРИЦА КАРТ -->
+              <div id="admin-cards-matrix" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;"></div>
             </div>
           </div>
         </div>
