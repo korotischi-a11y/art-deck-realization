@@ -284,14 +284,14 @@ body {
   font-weight: 700;
 }
 
-/* === 🔥 СЕТКА КАРт (×2.25: 157px → 354px) === */
+/* === 🔥 СЕТКА КАРт (УВЕЛИЧЕНО: 354px → 420px) === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(354px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
   gap: var(--spacing-lg);
 }
 
-/* === 🔥 КАРТОЧКА (увеличена до 354px, ×2.25 от оригинала) === */
+/* === 🔥 КАРТОЧКА (увеличена до 420px для лучшей читаемости) === */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -493,35 +493,35 @@ body {
   cursor: zoom-out !important;
 }
 
-/* 🐛 ИСПРАВЛЕНО: Фиксированные отступы для предотвращения сдвига */
+/* 🐛 ИСПРАВЛЕНО: Увеличен min-height для card-body (155px → 180px) */
 .card-body {
-  padding: 14px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   flex: 0 0 auto;
-  min-height: 155px;
-  max-height: 155px;
+  min-height: 180px;
+  max-height: 180px;
   transform: translateZ(10px);
   will-change: transform;
 }
 
-/* ✨ ИСПРАВЛЕНО: card-title теперь с многострочностью, БЕЗ обрезания */
+/* ✨ ИСПРАВЛЕНО: card-title теперь с 3 строками, увеличен font-size */
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
-  font-size: clamp(13px, 2.5vw, 15px);
-  line-height: 1.35;
+  font-size: clamp(14px, 2.5vw, 16px);
+  line-height: 1.4;
   margin: 0;
   margin-bottom: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   word-break: break-word;
   text-wrap: balance;
-  max-height: 2.8em;
+  max-height: 4.2em;
 }
 
 /* ✨ КЛЮЧЕВОЕ: margin-top: auto прижимает автора вниз */
@@ -970,6 +970,12 @@ body {
 }
 
 /* === АДАПТИВНОСТЬ === */
+@media (max-width: 1400px) {
+  .cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(354px, 1fr));
+  }
+}
+
 @media (max-width: 1200px) {
   .cards-grid {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
