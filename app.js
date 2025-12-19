@@ -54,6 +54,9 @@ async function initApp() {
 
 async function loadInitialData() {
   try {
+    // 🔥 ПРОВЕРКА СОХРАНЁННОЙ ВКЛАДКИ ДО ЗАГРУЗКИ ДАННЫХ
+    const savedTab = localStorage.getItem('activeTab') || 'collection';
+    
     await cardMod.loadCards();
     await decks.loadDecks();
     await packs.loadPacks();
@@ -61,8 +64,7 @@ async function loadInitialData() {
     updateUserInterface();
     user.renderProfile();
     
-    // 🔥 ВОССТАНОВЛЕНИЕ ПОСЛЕДНЕЙ АКТИВНОЙ ВКЛАДКИ
-    const savedTab = localStorage.getItem('activeTab') || 'collection';
+    // 🔥 ПЕРЕКЛЮЧЕНИЕ НА СОХРАНЁННУЮ ВКЛАДКУ БЕЗ РЕНДЕРА КОЛЛЕКЦИИ
     switchTab(savedTab);
   } catch (e) { console.error('Load error:', e); }
 }
