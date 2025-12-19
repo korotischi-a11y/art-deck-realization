@@ -212,6 +212,11 @@
           <div style="display: grid; grid-template-columns: 350px 1fr; gap: 20px; height: calc(100vh - 250px);">
             <!-- 🔥 ФОРМА ДОБАВЛЕНИЯ КАРТЫ (СЛЕВА, КОМПАКТНО) -->
             <div style="border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: var(--bg-secondary); overflow-y: auto;">
+              <!-- 🔥 КНОПКА ЗАГРУЗКИ JSON -->
+              <button id="upload-json-btn" class="btn btn-secondary" style="width: 100%; margin-bottom: 16px; padding: 10px; font-size: 14px;">
+                📦 Загрузить из JSON
+              </button>
+              
               <h3 style="margin-bottom: 16px;">➕ Добавить карту</h3>
               <form id="admin-form" style="display: flex; flex-direction: column; gap: 10px;">
                 <input type="text" id="card-title" placeholder="Название" class="form-control" required style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
