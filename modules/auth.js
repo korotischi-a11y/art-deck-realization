@@ -35,6 +35,7 @@ export async function checkAuthState() {
 /**
  * Загружает данные пользователя из Firestore
  * 🔥 ИСПРАВЛЕНО: используем ПОДКОЛЛЕКЦИЮ decks, а не поле в документе
+ * 🐛 ИСПРАВЛЕНО: добавлена загрузка lastDailyPackDate
  */
 async function loadUserData(uid) {
   try {
@@ -59,11 +60,13 @@ async function loadUserData(uid) {
       isAdmin: userData.isAdmin || false,
       createdAt: userData.createdAt,
       dailyFreeOpens: userData.dailyFreeOpens || 0,
-      lastDailyReward: userData.lastDailyReward
+      lastDailyReward: userData.lastDailyReward,
+      lastDailyPackDate: userData.lastDailyPackDate || null  // 🐛 ИСПРАВЛЕНО: загрузка lastDailyPackDate
     };
     state.isAdmin = userData.isAdmin || false;
     
     console.log('✅ User data loaded:', uid);
+    console.log('🔥 lastDailyPackDate:', userData.lastDailyPackDate);
   } catch (error) {
     console.error('Ошибка загрузки пользователя:', error);
   }
@@ -98,7 +101,8 @@ export async function register(email, password) {
       totalPacks: 0,
       completedQuests: [],
       dailyFreeOpens: 1,
-      lastDailyReward: Firestore.Timestamp.now()
+      lastDailyReward: Firestore.Timestamp.now(),
+      lastDailyPackDate: null  // 🐛 ИСПРАВЛЕНО: инициализация lastDailyPackDate
     });
 
     // 🔥 ИСПРАВЛЕНО: Создаём первую колоду в ПОДКОЛЛЕКЦИИ
@@ -120,7 +124,8 @@ export async function register(email, password) {
       currency: 100,
       cards: {},
       decks: {},  // Загрузится через loadDecks()
-      isAdmin: false
+      isAdmin: false,
+      lastDailyPackDate: null  // 🐛 ИСПРАВЛЕНО
     };
 
     return { success: true, uid };
