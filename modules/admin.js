@@ -7,22 +7,266 @@ import * as ui from './ui.js';
 
 const db = firebase.firestore();
 
+// Хранилище всех карт из базы
+let allMasterCards = [];
+let currentFilters = { rarity: '', genre: '' };
+
 export function initAdminPanel() {
   if (!state.isAdmin) {
     const form = document.getElementById('admin-form');
-    form.innerHTML = '<div style="padding: 16px; color: red;">No admin rights</div>';
+    if (form) form.innerHTML = '<div style="padding: 16px; color: red;">No admin rights</div>';
     return;
   }
   const form = document.getElementById('admin-form');
-  if (!form.dataset.initialized) {
+  if (form && !form.dataset.initialized) {
     form.addEventListener('submit', handleSubmit);
     form.querySelectorAll('.power-slider').forEach(slider => {
       const valSpan = slider.parentElement.querySelector('.slider-value');
-      slider.addEventListener('input', () => { valSpan.textContent = slider.value; });
+      if (valSpan) {
+        slider.addEventListener('input', () => { valSpan.textContent = slider.value; });
+      }
     });
     form.dataset.initialized = 'true';
   }
-  renderCardsList();
+  
+  // 🔥 ИНИЦИАЛИЗАЦИЯ ФИЛЬТРОВ
+  setupFilters();
+  
+  // 🔥 ЗАГРУЖАЕМ ВСЕ КАРТЫ И ОТОБРАЖАЕМ В GRID
+  loadAllCards();
+}
+
+function setupFilters() {
+  const rarityFilter = document.getElementById('admin-filter-rarity');
+  const genreFilter = document.getElementById('admin-filter-genre');
+  
+  if (rarityFilter && !rarityFilter.dataset.initialized) {
+    rarityFilter.addEventListener('change', (e) => {
+      currentFilters.rarity = e.target.value;
+      renderCardsGrid();
+    });
+    rarityFilter.dataset.initialized = 'true';
+  }
+  
+  if (genreFilter && !genreFilter.dataset.initialized) {
+    genreFilter.addEventListener('change', (e) => {
+      currentFilters.genre = e.target.value;
+      renderCardsGrid();
+    });
+    genreFilter.dataset.initialized = 'true';
+  }
+}
+
+async function loadAllCards() {
+  try {
+    const snap = await db.collection('masterCards').orderBy('createdAt', 'desc').get();
+    allMasterCards = [];
+    snap.forEach(doc => {
+      allMasterCards.push({ id: doc.id, ...doc.data() });
+    });
+    
+    updateStatistics();
+    renderCardsGrid();
+  } catch (error) {
+    console.error('Load all cards:', error);
+  }
+}
+
+function updateStatistics() {
+  const totalEl = document.getElementById('admin-total-cards');
+  const commonEl = document.getElementById('admin-common-cards');
+  const legendaryEl = document.getElementById('admin-legendary-cards');
+  
+  if (totalEl) totalEl.textContent = allMasterCards.length;
+  
+  if (commonEl) {
+    const commonCount = allMasterCards.filter(c => c.rarity === 'common' || c.rarity === 'uncommon').length;
+    commonEl.textContent = commonCount;
+  }
+  
+  if (legendaryEl) {
+    const legendaryCount = allMasterCards.filter(c => 
+      c.rarity === 'legendary' || c.rarity === 'ancient' || c.rarity === 'exceedingly_rare' || c.rarity === 'immortal'
+    ).length;
+    legendaryEl.textContent = legendaryCount;
+  }
+}
+
+function renderCardsGrid() {
+  const container = document.getElementById('admin-cards-matrix');
+  if (!container) return;
+  
+  // 🔥 ФИЛЬТРУЕМ КАРТЫ
+  let filteredCards = allMasterCards;
+  
+  if (currentFilters.rarity) {
+    filteredCards = filteredCards.filter(c => c.rarity === currentFilters.rarity);
+  }
+  
+  if (currentFilters.genre) {
+    filteredCards = filteredCards.filter(c => c.genre === currentFilters.genre);
+  }
+  
+  container.innerHTML = '';
+  
+  if (filteredCards.length === 0) {
+    container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary);">Карт не найдено</div>';
+    return;
+  }
+  
+  // 🔥 ОТОБРАЖАЕМ КАРТЫ КАК В КОЛЛЕКЦИИ
+  filteredCards.forEach(card => {
+    const cardEl = createCardElement(card);
+    container.appendChild(cardEl);
+  });
+}
+
+function createCardElement(card) {
+  const div = document.createElement('div');
+  div.className = 'card-item';
+  div.dataset.rarity = card.rarity;
+  div.style.cursor = 'pointer';
+  
+  const rarityLabels = {
+    common: '🗑 Обычная',
+    uncommon: '🎯 Необычная',
+    rare: '🏆 Редкая',
+    mythical: '💎 Мифическая',
+    legendary: '⭐ Легендарная',
+    ancient: '🔥 Древняя',
+    exceedingly_rare: '✨ Ослепительно редкая',
+    immortal: '⚠ Бессмертная'
+  };
+  
+  const rarityColors = {
+    common: '#6b7280',
+    uncommon: '#3b82f6',
+    rare: '#8b5cf6',
+    mythical: '#d946ef',
+    legendary: '#ec4899',
+    ancient: '#f97316',
+    exceedingly_rare: '#eab308',
+    immortal: '#fbbf24'
+  };
+  
+  const genreEmojis = {
+    portrait: '👤',
+    landscape: '🌄',
+    still_life: '🍎',
+    religious: '⛪',
+    mythological: '🐉',
+    abstract: '🎨',
+    urban: '🏙️',
+    nude: '💃'
+  };
+  
+  div.innerHTML = `
+    <div class="card-image">
+      ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" loading="lazy">` : '🖼️'}
+    </div>
+    <div class="card-body">
+      <h3 class="card-title">${card.title}</h3>
+      <p class="card-artist">${card.artist} (${card.year})</p>
+      <div class="card-rarity" style="background-color: ${rarityColors[card.rarity] || '#6b7280'}20; color: ${rarityColors[card.rarity] || '#6b7280'};">
+        ${rarityLabels[card.rarity] || card.rarity}
+      </div>
+      <div class="card-params">
+        <div class="card-param-line">
+          <span>♥${card.power?.resonance || 0}</span>
+          <span>⚡${card.power?.virtuosity || 0}</span>
+        </div>
+        <div class="card-param-line">
+          <span>🧠${card.power?.profundity || 0}</span>
+          <span>⚖${card.power?.harmony || 0}</span>
+        </div>
+        ${card.genre ? `<div style="margin-top: 4px; font-size: 10px; text-align: center; color: var(--text-secondary);">${genreEmojis[card.genre] || '🎭'} ${card.genre}</div>` : ''}
+      </div>
+    </div>
+  `;
+  
+  // 🔥 КЛИК ОТКРЫВАЕТ МОДАЛКУ С ДЕТАЛЬНЫМ ПРОСМОТРОМ
+  div.addEventListener('click', () => {
+    openCardDetailModal(card);
+  });
+  
+  return div;
+}
+
+function openCardDetailModal(card) {
+  const modal = document.getElementById('card-detail-modal');
+  if (!modal) return;
+  
+  const rarityLabels = {
+    common: '🗑 Обычная',
+    uncommon: '🎯 Необычная',
+    rare: '🏆 Редкая',
+    mythical: '💎 Мифическая',
+    legendary: '⭐ Легендарная',
+    ancient: '🔥 Древняя',
+    exceedingly_rare: '✨ Ослепительно редкая',
+    immortal: '⚠ Бессмертная'
+  };
+  
+  const rarityColors = {
+    common: '#6b7280',
+    uncommon: '#3b82f6',
+    rare: '#8b5cf6',
+    mythical: '#d946ef',
+    legendary: '#ec4899',
+    ancient: '#f97316',
+    exceedingly_rare: '#eab308',
+    immortal: '#fbbf24'
+  };
+  
+  document.getElementById('modal-card-title').textContent = card.title;
+  document.getElementById('modal-card-artist').textContent = card.artist;
+  document.getElementById('modal-card-year').textContent = card.year;
+  document.getElementById('modal-card-description').textContent = card.description || 'Нет описания';
+  
+  const img = document.getElementById('modal-card-image');
+  if (card.imageUrl) {
+    img.src = card.imageUrl;
+    img.style.display = 'block';
+  } else {
+    img.style.display = 'none';
+  }
+  
+  const rarityEl = document.getElementById('modal-card-rarity');
+  rarityEl.textContent = rarityLabels[card.rarity] || card.rarity;
+  rarityEl.style.backgroundColor = (rarityColors[card.rarity] || '#6b7280') + '20';
+  rarityEl.style.color = rarityColors[card.rarity] || '#6b7280';
+  
+  // Параметры
+  const paramsTable = document.getElementById('modal-params-table');
+  paramsTable.innerHTML = `
+    <div class="modal-param-cell">
+      <div class="modal-param-label">♥ Resonance</div>
+      <div class="modal-param-value">${card.power?.resonance || 0}</div>
+    </div>
+    <div class="modal-param-cell">
+      <div class="modal-param-label">⚡ Virtuosity</div>
+      <div class="modal-param-value">${card.power?.virtuosity || 0}</div>
+    </div>
+    <div class="modal-param-cell">
+      <div class="modal-param-label">🧠 Profundity</div>
+      <div class="modal-param-value">${card.power?.profundity || 0}</div>
+    </div>
+    <div class="modal-param-cell">
+      <div class="modal-param-label">⚖ Harmony</div>
+      <div class="modal-param-value">${card.power?.harmony || 0}</div>
+    </div>
+  `;
+  
+  // Жанр и стиль
+  const countEl = document.getElementById('modal-card-count');
+  countEl.innerHTML = `
+    <div style="display: flex; justify-content: space-around; font-size: 12px;">
+      <div><strong>🎨 Стиль:</strong> ${card.theme || '—'}</div>
+      <div><strong>🎭 Жанр:</strong> ${card.genre || '—'}</div>
+    </div>
+  `;
+  
+  modal.classList.add('active');
 }
 
 async function handleSubmit(event) {
@@ -35,7 +279,6 @@ async function handleSubmit(event) {
   const imageUrl = form.querySelector('#card-image-url').value.trim();
   const rarity = form.querySelector('#card-rarity').value;
   
-  // 🔥 НОВОЕ: Получаем theme и genre
   const theme = form.querySelector('#card-theme')?.value || '';
   const genre = form.querySelector('#card-genre')?.value || '';
   
@@ -44,7 +287,6 @@ async function handleSubmit(event) {
   const profundity = parseInt(form.querySelector('#card-profundity').value, 10);
   const harmony = parseInt(form.querySelector('#card-harmony').value, 10);
   
-  // 🔥 ВАЛИДАЦИЯ
   if (!title || !artist || !description || !rarity || !theme || !genre) {
     ui.showError('Заполни все поля (включая theme & genre)');
     return;
@@ -60,7 +302,6 @@ async function handleSubmit(event) {
   try {
     const cardId = form.dataset.editingId;
     
-    // 🔥 ОБЪЕКТ КАРТЫ С THEME И GENRE
     const cardData = {
       title, 
       artist, 
@@ -68,22 +309,20 @@ async function handleSubmit(event) {
       description, 
       imageUrl, 
       rarity,
-      theme,    // ⬅️ НОВОЕ
-      genre,    // ⬅️ НОВОЕ
+      theme,
+      genre,
       power: { resonance, virtuosity, profundity, harmony }
     };
     
     if (cardId) {
-      // Редактирование
       await db.collection('masterCards').doc(cardId).update({
         ...cardData,
         updatedAt: firebase.firestore.Timestamp.now()
       });
       ui.showSuccess('Карта обновлена');
       form.dataset.editingId = '';
-      form.querySelector('button[type="submit"]').textContent = '➕ Add Card';
+      form.querySelector('button[type="submit"]').textContent = 'Добавить';
     } else {
-      // Новая карта
       await db.collection('masterCards').add({
         ...cardData,
         createdAt: firebase.firestore.Timestamp.now(),
@@ -92,7 +331,9 @@ async function handleSubmit(event) {
       ui.showSuccess('Карта добавлена');
     }
     form.reset();
-    renderCardsList();
+    
+    // 🔥 ПЕРЕЗАГРУЖАЕМ ВСЕ КАРТЫ
+    await loadAllCards();
   } catch (error) {
     console.error('Ош:', error);
     ui.showError('Ошибка: ' + error.message);
@@ -101,86 +342,11 @@ async function handleSubmit(event) {
   }
 }
 
-async function renderCardsList() {
-  try {
-    const snap = await db.collection('masterCards').orderBy('createdAt', 'desc').limit(50).get();
-    const container = document.getElementById('admin-cards-list');
-    if (!container) return;
-    container.innerHTML = '';
-    snap.forEach(doc => {
-      const card = { id: doc.id, ...doc.data() };
-      const div = document.createElement('div');
-      div.style.cssText = 'padding: 12px; border: 1px solid var(--border); margin: 8px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;';
-      
-      // 🔥 ПОКАЗЫВАЕМ THEME И GENRE
-      const themeLabel = card.theme ? `<span style="background:#3b82f620; color:#3b82f6; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:4px;">🎨 ${card.theme}</span>` : '';
-      const genreLabel = card.genre ? `<span style="background:#10b98120; color:#10b981; padding:2px 6px; border-radius:4px; font-size:10px;">🎭 ${card.genre}</span>` : '';
-      
-      div.innerHTML = `
-        <div>
-          <strong>${card.title}</strong> by ${card.artist} (${card.year})
-          <div style="font-size: 12px; color: var(--text-secondary); margin-top:4px;">
-            Rarity: ${card.rarity}
-            <div style="margin-top:4px;">${themeLabel}${genreLabel}</div>
-          </div>
-        </div>
-        <div style="display: flex; gap: 8px;">
-          <button data-id="${card.id}" class="edit-btn" style="padding: 4px 8px; background: #3a8d8e; color: white; border: none; border-radius: 4px; cursor: pointer;">✎ Edit</button>
-          <button data-id="${card.id}" class="delete-btn" style="padding: 4px 8px; background: #d32f2f; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑 Delete</button>
-        </div>
-      `;
-      const editBtn = div.querySelector('.edit-btn');
-      const delBtn = div.querySelector('.delete-btn');
-      editBtn.addEventListener('click', () => loadCardForEdit(card.id));
-      delBtn.addEventListener('click', () => {
-        if (confirm('Delete?')) deleteCard(card.id);
-      });
-      container.appendChild(div);
-    });
-  } catch (error) {
-    console.error('Render:', error);
-  }
-}
-
-async function loadCardForEdit(cardId) {
-  try {
-    const doc = await db.collection('masterCards').doc(cardId).get();
-    const card = doc.data();
-    const form = document.getElementById('admin-form');
-    form.querySelector('#card-title').value = card.title;
-    form.querySelector('#card-artist').value = card.artist;
-    form.querySelector('#card-year').value = card.year;
-    form.querySelector('#card-description').value = card.description;
-    form.querySelector('#card-image-url').value = card.imageUrl || '';
-    form.querySelector('#card-rarity').value = card.rarity;
-    
-    // 🔥 ЗАГРУЖАЕМ THEME И GENRE
-    const themeSelect = form.querySelector('#card-theme');
-    const genreSelect = form.querySelector('#card-genre');
-    if (themeSelect) themeSelect.value = card.theme || '';
-    if (genreSelect) genreSelect.value = card.genre || '';
-    
-    form.querySelector('#card-resonance').value = card.power?.resonance || 0;
-    form.querySelector('#card-virtuosity').value = card.power?.virtuosity || 0;
-    form.querySelector('#card-profundity').value = card.power?.profundity || 0;
-    form.querySelector('#card-harmony').value = card.power?.harmony || 0;
-    form.querySelectorAll('.slider-value').forEach((v, i) => {
-      const val = [card.power?.resonance || 0, card.power?.virtuosity || 0, card.power?.profundity || 0, card.power?.harmony || 0][i];
-      v.textContent = val;
-    });
-    form.dataset.editingId = cardId;
-    form.querySelector('button[type="submit"]').textContent = '💾 Update';
-    form.scrollIntoView({ behavior: 'smooth' });
-  } catch (error) {
-    console.error('Load:', error);
-  }
-}
-
 async function deleteCard(cardId) {
   try {
     await db.collection('masterCards').doc(cardId).delete();
     ui.showSuccess('Card deleted');
-    renderCardsList();
+    await loadAllCards();
   } catch (error) {
     console.error('Delete:', error);
   }
