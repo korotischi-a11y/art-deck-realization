@@ -340,7 +340,7 @@ export function renderShop() {
       <div style="font-size:40px; text-align:center; position:relative; z-index:2;">${pack.emoji || '📅'}</div>
       <div style="font-weight:700; font-size:18px; color:${packBorderColor}; text-align:center; position:relative; z-index:2;">${pack.name}</div>
       <div style="font-size:13px; color:var(--text-secondary); text-align:center; position:relative; z-index:2;">${pack.cardCount} карт</div>
-      <div style="margin-top:auto; text-align:center; font-size:16px; color:${packBorderColor}; font-weight:700; position:relative; z-index:2;">${pack.price} 💰</div>
+      <div style="margin-top:auto; text-align:center; font-size:16px; color:${canAfford ? packBorderColor : 'var(--text-secondary)'}; font-weight:700; position:relative; z-index:2;">${pack.price} 💰</div>
       
       <!-- 🔥 ГАРАНТИИ -->
       <div style="font-size:11px; color:var(--text-secondary); margin-top:8px; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; position:relative; z-index:2;">
