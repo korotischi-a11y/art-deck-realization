@@ -18,7 +18,7 @@ const TEAR_PRICES = {
   mythical:         { base: 7,   ratingMultiplier: 0.26 },
   legendary:        { base: 12,  ratingMultiplier: 0.20 },
   ancient:          { base: 20,  ratingMultiplier: 0.30 },
-  exceedingly_rare: { base: 45,  ratingMultiplier: 1.00 },
+  ethereal:         { base: 45,  ratingMultiplier: 1.00 },
   immortal:         { base: 100, ratingMultiplier: 1.30 }
 };
 
@@ -31,11 +31,11 @@ function getThemeLabel(theme) {
     renaissance: { emoji: '🏰', name: 'Renaissance', color: '#daa520' },
     surrealism: { emoji: '🌙', name: 'Surrealism', color: '#9b59b6' },
     abstract: { emoji: '🎨', name: 'Abstract', color: '#e74c3c' },
-    realism: { emoji: '🖼️', name: 'Realism', color: '#8b4513' },
+    realism: { emoji: '🚼️', name: 'Realism', color: '#8b4513' },
     modernism: { emoji: '✨', name: 'Modernism', color: '#3498db' },
     baroque: { emoji: '👑', name: 'Baroque', color: '#ffd700' },
     romanticism: { emoji: '🌹', name: 'Romanticism', color: '#e91e63' },
-    cubism: { emoji: '🔶', name: 'Cubism', color: '#f39c12' },
+    cubism: { emoji: '🟦', name: 'Cubism', color: '#f39c12' },
     expressionism: { emoji: '🔥', name: 'Expressionism', color: '#ff5722' },
     contemporary: { emoji: '🔮', name: 'Contemporary', color: '#00bcd4' }
   };
@@ -43,7 +43,7 @@ function getThemeLabel(theme) {
 }
 
 /**
- * 🎭 Получить бейдж для genre
+ * 🊭 Получить бейдж для genre
  */
 function getGenreLabel(genre) {
   const genres = {
@@ -75,7 +75,7 @@ function calculateCardRating(card) {
 }
 
 export async function loadCards() {
-  console.log('🎠 Loading cards...');
+  console.log('🎁 Loading cards...');
   try {
     const snap = await db.collection('masterCards')
       .orderBy('createdAt', 'desc')
@@ -139,7 +139,7 @@ export function renderCollection() {
 
   if (viewingDeck) {
     userCardIds = Object.keys(viewingDeck.cards || {});
-    title = viewingDeck.isDiscardDeck ? '🗑 Карты без колод' : `🎴 ${viewingDeck.name}`;
+    title = viewingDeck.isDiscardDeck ? '🗑 Карты без колод' : `🂴 ${viewingDeck.name}`;
   } else {
     const allCardIds = new Set();
     for (const deck of Object.values(decksObj)) {
@@ -475,7 +475,7 @@ function renderCardActionButtons(card, currentCount, container) {
   deleteBtn.type = 'button';
   deleteBtn.className = 'btn';
   deleteBtn.style.cssText = 'width:100%; background:#ef4444; color:white; border:none; cursor:pointer; font-weight:600; padding:10px; border-radius:6px;';
-  deleteBtn.textContent = `💰 ПРОДАТЬ (${tearPrice} 💎 за шт)`;
+  deleteBtn.textContent = `💰 ПРОДАТЬ (${tearPrice} 💎 за шт.)`;
   deleteBtn.onclick = () => openTearCardModal(card, currentCount, tearPrice);
   container.appendChild(deleteBtn);
 }
@@ -492,7 +492,7 @@ function openTearCardModal(card, maxCount, tearPrice) {
 
   if (availableEl) availableEl.textContent = maxCount;
   if (inputEl) { inputEl.value = '1'; inputEl.max = maxCount; }
-  if (titleEl) titleEl.textContent = `Сколько копий порвать? (${tearPrice} 💎 за шт)`;
+  if (titleEl) titleEl.textContent = `Сколько копий порвать? (${tearPrice} 💎 за шт.)`;
 
   confirmBtn.onclick = async () => {
     const quantity = parseInt(inputEl.value, 10);
