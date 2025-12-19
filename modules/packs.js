@@ -40,7 +40,7 @@ async function initDefaultPacks() {
         emoji: '🍢', 
         color: '#3b82f6',
         borderColor: '#1e40af',
-        rarityWeights: { common: 10 } 
+        rarityWeights: { common: 8, uncommon: 2 } 
       },
       { 
         name: 'Стартер', 
@@ -49,7 +49,7 @@ async function initDefaultPacks() {
         emoji: '⭐', 
         color: '#06b6d4',
         borderColor: '#0369a1',
-        rarityWeights: { common: 7, uncommon: 3 } 
+        rarityWeights: { common: 6, uncommon: 3, rare: 1 } 
       },
       { 
         name: 'Стандарт', 
@@ -58,7 +58,7 @@ async function initDefaultPacks() {
         emoji: '🎆', 
         color: '#f59e0b',
         borderColor: '#b45309',
-        rarityWeights: { uncommon: 5, rare: 2 } 
+        rarityWeights: { common: 3, uncommon: 5, rare: 2 } 
       },
       { 
         name: 'Премиум', 
@@ -67,7 +67,7 @@ async function initDefaultPacks() {
         emoji: '💎', 
         color: '#a855f7',
         borderColor: '#6d28d9',
-        rarityWeights: { rare: 4, mythical: 2, legendary: 1 } 
+        rarityWeights: { uncommon: 3, rare: 4, mythical: 2, legendary: 1 } 
       },
       { 
         name: 'Легендарный', 
@@ -76,7 +76,7 @@ async function initDefaultPacks() {
         emoji: '🌟', 
         color: '#ec4899',
         borderColor: '#831843',
-        rarityWeights: { rare: 3, mythical: 3, legendary: 2, ancient: 1 } 
+        rarityWeights: { rare: 4, mythical: 3, legendary: 2, ancient: 1 } 
       },
       { 
         name: 'Бессмертный', 
@@ -85,7 +85,7 @@ async function initDefaultPacks() {
         emoji: '⚠️', 
         color: '#ef4444',
         borderColor: '#7f1d1d',
-        rarityWeights: { mythical: 4, legendary: 3, ancient: 2, exceedingly_rare: 1 } 
+        rarityWeights: { mythical: 4, legendary: 3, ancient: 2, exceedingly_rare: 1, immortal: 0.5 } 
       }
     ];
     
@@ -126,7 +126,7 @@ function calculateGuarantees(rarityWeights, cardCount) {
     mythical: 'Мифическая',
     legendary: 'Легендарная',
     ancient: 'Древняя',
-    exceedingly_rare: 'Осколбительно редкая',
+    exceedingly_rare: 'Ослепительно редкая',
     immortal: 'Бессмертная'
   };
   
@@ -225,8 +225,14 @@ export function renderShop() {
     return;
   }
   
-  // БЕСПЛАТНЫЙ ПАК В НАЧАЛЕ
+  // 🔥 БЕСПЛАТНЫЙ ПАК В НАЧАЛЕ (с динамическими гарантиями)
   const timeData = calculateTimeUntilFreepack();
+  const freePackWeights = { common: 2, uncommon: 1 };
+  const freePackGuarantees = calculateGuarantees(freePackWeights, 3);
+  const freePackGuaranteeHtml = freePackGuarantees
+    .map(g => `<div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>${g.emoji} ${g.name}</span><span>${g.percentage}%</span></div>`)
+    .join('');
+  
   const dailyPack = document.createElement('div');
   dailyPack.style.cssText = `
     min-width: 220px;
@@ -269,10 +275,9 @@ export function renderShop() {
     </div>
     
     <!-- 🔥 ГАРАНТИИ -->
-    <div style="font-size:11px; color:rgba(255,255,255,0.9); margin-top:8px; padding:8px; background:rgba(0,0,0,0.3); border-radius:8px;">
+    <div style="font-size:11px; color:rgba(255,255,255,0.9); margin-top:8px; padding:8px; background:rgba(0,0,0,0.3); border-radius:8px; position:relative; z-index:5;">
       <div style="font-weight:600; margin-bottom:4px;">📊 Гарантии:</div>
-      <div>🗑 Обычная: 66%</div>
-      <div>🎯 Необычная: 33%</div>
+      ${freePackGuaranteeHtml}
     </div>
     
     <button id="free-pack-button" class="btn" style="width:100%; margin-top:12px; background:#fff; color:#047857; border:none; cursor:${timeData ? 'not-allowed' : 'pointer'}; font-weight:700; font-size:14px; padding:10px; border-radius:10px; transition:all 0.3s; position:relative; z-index:5; opacity:${timeData ? '0.6' : '1'};" onmouseover="!this.disabled && (this.style.transform='scale(1.05)')" onmouseout="!this.disabled && (this.style.transform='scale(1)')">${timeData ? '🔒 ЗАКРЫТО' : 'ПОЛУЧИТЬ'}</button>
@@ -290,7 +295,7 @@ export function renderShop() {
   // Начнём обновлять таймер
   startFreePkTimer();
   
-  // ОБЫЧНЫЕ ПАКИ с КАЖДЫМ своим цветом
+  // 🔥 ОБЫЧНЫЕ ПАКИ с КАЖДЫМ своим цветом и гарантиями
   state.packs.forEach((pack, idx) => {
     const packColor = pack.color || '#6366f1';
     const packBorderColor = pack.borderColor || packColor;
@@ -330,10 +335,11 @@ export function renderShop() {
     
     div.appendChild(gloss);
     
+    // 🔥 ВЫЧИСЛЯЕМ ГАРАНТИИ ДЛЯ КАЖДОГО ПАКА
     const guarantees = calculateGuarantees(pack.rarityWeights, pack.cardCount);
     const guaranteeHtml = guarantees
-      .slice(0, 3)
-      .map(g => `<div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>${g.emoji}</span><span>${g.percentage}%</span></div>`)
+      .slice(0, 4) // Показываем топ-4 редкости
+      .map(g => `<div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>${g.emoji} ${g.name}</span><span>${g.percentage}%</span></div>`)
       .join('');
     
     div.innerHTML += `
@@ -345,7 +351,7 @@ export function renderShop() {
       <!-- 🔥 ГАРАНТИИ -->
       <div style="font-size:11px; color:var(--text-secondary); margin-top:8px; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; position:relative; z-index:2;">
         <div style="font-weight:600; color:var(--text); margin-bottom:4px;">📊 Гарантии:</div>
-        ${guaranteeHtml}
+        ${guaranteeHtml || '<div style="color:var(--text-secondary);">Нет данных</div>'}
       </div>
       
       <button class="btn btn-primary" style="width:100%; margin-top:12px; background:linear-gradient(135deg, ${packColor}, ${packBorderColor}); border:none; color:white; font-weight:700; font-size:14px; padding:10px; border-radius:10px; transition:all 0.3s; cursor:${canAfford ? 'pointer' : 'not-allowed'};" onmouseover="this.style.transform='${canAfford ? 'scale(1.05)' : 'scale(1)'}' " onmouseout="this.style.transform='scale(1)'" ${!canAfford ? 'disabled' : ''}>${canAfford ? 'ОТКРЫТЬ' : '💰 Недостаточно'}</button>
@@ -393,12 +399,13 @@ async function openDailyPack() {
   }
   
   try {
-    const rarity = ['common', 'common', 'uncommon'][
-      Math.floor(Math.random() * 3)
-    ];
+    // 🔥 ИСПОЛЬЗУЕМ ТЕ ЖЕ ВЕСА, ЧТО И В ГАРАНТИЯХ
+    const freePackWeights = { common: 2, uncommon: 1 };
+    const rarityPool = buildRarityPool(freePackWeights);
     const drawnCards = [];
     
     for (let i = 0; i < 3; i++) {
+      const rarity = pickWeightedRarity(rarityPool);
       const card = pickRandomCardByRarity(rarity);
       if (card) drawnCards.push(card);
     }
