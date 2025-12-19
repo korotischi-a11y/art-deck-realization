@@ -54,7 +54,7 @@
   --font-size-xl: 24px;
   --font-size-2xl: 32px;
   
-  /* === ТЕНи === */
+  /* === ТЕНИ === */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.7);
@@ -131,7 +131,7 @@ body {
   color: var(--bg-primary);
 }
 
-/* === ГЛАВНОЙ КОНТЕНт === */
+/* === ГЛАВНОЙ КОНТЕНТ === */
 .main-content {
   display: flex;
   flex-direction: column;
@@ -245,7 +245,7 @@ body {
   }
 }
 
-/* === КОЛЛЕКЦИОННЫЙ ЗАГОЛОвОК === */
+/* === КОЛЛЕКЦИОННЫЙ ЗАГОЛОВОК === */
 .collection-header {
   display: flex;
   justify-content: space-between;
@@ -284,14 +284,14 @@ body {
   font-weight: 700;
 }
 
-/* === 🔥 СЕТКА КАРт (УВЕЛИЧЕНО: 354px → 420px) === */
+/* === 🔥 СЕТКА КАРТ (УВЕЛИЧЕНО: 130px → 390px ×3) === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(390px, 1fr));
   gap: var(--spacing-lg);
 }
 
-/* === 🔥 КАРТОЧКА (увеличена до 420px для лучшей читаемости) === */
+/* === 🔥 КАРТОЧКА (увеличена в 3 раза: 130px → 390px) === */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -305,6 +305,23 @@ body {
   box-shadow: var(--shadow-sm);
   transform-style: preserve-3d;
   transition: transform 0.12s linear, box-shadow 0.12s linear, border-color 0.12s linear;
+  
+  /* 🔥 ИСПРАВЛЕНО: предотвращение мигания */
+  visibility: hidden;
+  animation: cardAppear 0.3s ease forwards;
+}
+
+@keyframes cardAppear {
+  0% {
+    visibility: visible;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 #cards-grid {
@@ -493,68 +510,69 @@ body {
   cursor: zoom-out !important;
 }
 
-/* 🐛 ИСПРАВЛЕНО: Увеличен min-height для card-body (155px → 180px) */
+/* 🔥 УВЕЛИЧЕН: card-body (180px → 250px) */
 .card-body {
-  padding: 16px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   flex: 0 0 auto;
-  min-height: 180px;
-  max-height: 180px;
+  min-height: 250px;
+  max-height: 250px;
   transform: translateZ(10px);
   will-change: transform;
 }
 
-/* ✨ ИСПРАВЛЕНО: card-title теперь с 3 строками, увеличен font-size */
+/* 🔥 УВЕЛИЧЕН: card-title (16px → 20px, 3 → 4 строки) */
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
-  font-size: clamp(14px, 2.5vw, 16px);
+  font-size: clamp(18px, 2.8vw, 20px);
   line-height: 1.4;
   margin: 0;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   word-break: break-word;
   text-wrap: balance;
-  max-height: 4.2em;
+  max-height: 5.6em;
 }
 
-/* ✨ КЛЮЧЕВОЕ: margin-top: auto прижимает автора вниз */
+/* 🔥 УВЕЛИЧЕН: card-artist (12px → 15px) */
 .card-artist {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--text-secondary);
   margin: 0;
   margin-top: auto;
-  padding-top: 4px;
+  padding-top: 6px;
 }
 
-/* 🐛 ИСПРАВЛЕНО: Фиксированный margin для предотвращения сдвига */
+/* 🔥 УВЕЛИЧЕН: card-rarity (12px → 15px) */
 .card-rarity {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-xs);
   width: 100%;
-  padding: 5px 10px;
+  padding: 8px 12px;
   border-radius: var(--radius-md);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 600;
-  margin: 4px 0;
+  margin: 6px 0;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
+/* 🔥 УВЕЛИЧЕН: card-params (11px → 14px) */
 .card-params {
-  font-size: 11px;
+  font-size: 14px;
   color: var(--text-secondary);
-  line-height: 1.3;
+  line-height: 1.4;
   margin: 0;
-  padding-top: 6px;
+  padding-top: 8px;
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
 }
@@ -563,18 +581,19 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
+/* 🔥 УВЕЛИЧЕН: card-count (11px → 14px) */
 .card-count {
   background-color: var(--bg-tertiary);
-  padding: 5px 10px;
+  padding: 8px 12px;
   border-radius: var(--radius-md);
-  margin-top: 4px;
+  margin-top: 6px;
   text-align: center;
   font-weight: 600;
   color: var(--wood-light);
-  font-size: 11px;
+  font-size: 14px;
   margin: 0;
 }
 
@@ -797,7 +816,7 @@ body {
   background-repeat: no-repeat;
 }
 
-/* === КНОПКи === */
+/* === КНОПКИ === */
 .btn {
   padding: var(--spacing-md) var(--spacing-lg);
   border: none;
@@ -969,16 +988,26 @@ body {
   }
 }
 
-/* === АДАПТИВНОСТЬ === */
-@media (max-width: 1400px) {
+/* === 🔥 АДАПТИВНОСТЬ (ОБНОВЛЕНО ПОД 390px) === */
+@media (max-width: 1600px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(354px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   }
 }
 
 @media (max-width: 1200px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+  
+  .card-body {
+    min-height: 220px;
+    max-height: 220px;
+    padding: 16px;
+  }
+  
+  .card-title {
+    font-size: 18px;
   }
 }
 
@@ -1003,7 +1032,18 @@ body {
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+  
+  .card-body {
+    min-height: 200px;
+    max-height: 200px;
+    padding: 14px;
+  }
+  
+  .card-title {
+    font-size: 16px;
+    -webkit-line-clamp: 3;
   }
   
   .modal-content {
@@ -1019,6 +1059,30 @@ body {
 @media (max-width: 480px) {
   .cards-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .card-body {
+    min-height: 160px;
+    max-height: 160px;
+    padding: 12px;
+  }
+  
+  .card-title {
+    font-size: 14px;
+    -webkit-line-clamp: 2;
+  }
+  
+  .card-artist {
+    font-size: 12px;
+  }
+  
+  .card-rarity {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+  
+  .card-params {
+    font-size: 11px;
   }
   
   .header-info {
