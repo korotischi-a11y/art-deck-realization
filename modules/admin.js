@@ -83,7 +83,7 @@ function updateStatistics() {
   
   if (legendaryEl) {
     const legendaryCount = allMasterCards.filter(c => 
-      c.rarity === 'legendary' || c.rarity === 'ancient' || c.rarity === 'exceedingly_rare' || c.rarity === 'immortal'
+      c.rarity === 'legendary' || c.rarity === 'ancient' || c.rarity === 'ethereal' || c.rarity === 'immortal'
     ).length;
     legendaryEl.textContent = legendaryCount;
   }
@@ -129,7 +129,7 @@ function createCardElement(card) {
     mythical: '💎 Мифическая',
     legendary: '⭐ Легендарная',
     ancient: '🔥 Древняя',
-    exceedingly_rare: '✨ Ослепительно редкая',
+    ethereal: '🔮 Эфирная',
     immortal: '⚠ Бессмертная'
   };
   
@@ -140,7 +140,7 @@ function createCardElement(card) {
     mythical: '#d946ef',
     legendary: '#ec4899',
     ancient: '#f97316',
-    exceedingly_rare: '#eab308',
+    ethereal: '#06b6d4',
     immortal: '#fbbf24'
   };
   
@@ -205,7 +205,7 @@ function openCardDetailModal(card) {
     mythical: '💎 Мифическая',
     legendary: '⭐ Легендарная',
     ancient: '🔥 Древняя',
-    exceedingly_rare: '✨ Ослепительно редкая',
+    ethereal: '🔮 Эфирная',
     immortal: '⚠ Бессмертная'
   };
   
@@ -216,7 +216,7 @@ function openCardDetailModal(card) {
     mythical: '#d946ef',
     legendary: '#ec4899',
     ancient: '#f97316',
-    exceedingly_rare: '#eab308',
+    ethereal: '#06b6d4',
     immortal: '#fbbf24'
   };
   
