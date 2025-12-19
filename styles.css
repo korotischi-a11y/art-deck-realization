@@ -54,7 +54,7 @@
   --font-size-xl: 24px;
   --font-size-2xl: 32px;
   
-  /* === ТЕНИ === */
+  /* === ТЕНи === */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.7);
@@ -131,7 +131,7 @@ body {
   color: var(--bg-primary);
 }
 
-/* === ГЛАВНОЙ КОНТЕНТ === */
+/* === ГЛАВНОЙ КОНТЕНт === */
 .main-content {
   display: flex;
   flex-direction: column;
@@ -245,7 +245,7 @@ body {
   }
 }
 
-/* === КОЛЛЕКЦИОННЫЙ ЗАГОЛОВОК === */
+/* === КОЛЛЕКЦИОННЫЙ ЗАГОЛОвОК === */
 .collection-header {
   display: flex;
   justify-content: space-between;
@@ -284,7 +284,7 @@ body {
   font-weight: 700;
 }
 
-/* === 🔥 СЕТКА КАРТ (×2.25: 157px → 354px) === */
+/* === 🔥 СЕТКА КАРт (×2.25: 157px → 354px) === */
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(354px, 1fr));
@@ -414,6 +414,7 @@ body {
   border: 2px solid #06b6d4;
   animation: glow-ethereal 2.5s ease-in-out infinite;
   position: relative;
+  background: linear-gradient(135deg, rgba(6,182,212,0.05) 0%, rgba(6,182,212,0.02) 100%), var(--bg-secondary);
 }
 
 .card-item[data-rarity="ethereal"]::after {
@@ -795,7 +796,7 @@ body {
   background-repeat: no-repeat;
 }
 
-/* === КНОПКИ === */
+/* === КНОПКи === */
 .btn {
   padding: var(--spacing-md) var(--spacing-lg);
   border: none;
