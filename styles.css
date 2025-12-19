@@ -422,7 +422,7 @@ body {
   color: var(--text-secondary);
   overflow: hidden;
   position: relative;
-  cursor: pointer;
+  cursor: zoom-in;
   transform: translateZ(20px);
 }
 
@@ -435,6 +435,22 @@ body {
 
 .card-image img:hover {
   transform: scale(1.05);
+}
+
+/* 🔥 ЗУМ ПО КЛИКУ */
+.card-image-zoomed {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) scale(2.5) !important;
+  z-index: 100 !important;
+  cursor: zoom-out !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+.card-image-zoomed img {
+  cursor: zoom-out !important;
 }
 
 /* 🐛 ИСПРАВЛЕНО: Фиксированные отступы для предотвращения сдвига */
@@ -871,7 +887,7 @@ body {
   text-transform: uppercase;
 }
 
-/* === ТОСТ === */
+/* === ТОАСТ === */
 .toast-container {
   position: fixed;
   bottom: var(--spacing-lg);
