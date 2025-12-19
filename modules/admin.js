@@ -160,31 +160,44 @@ function createCardElement(card) {
     nude: '💃'
   };
   
-  div.innerHTML = `
-    <div class="card-image">
-      ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" loading="lazy">` : '🖼️'}
+  // 🔥 ПРЕВЬЮ С ЗУМОМ ПО КЛИКУ
+  const imgWrapper = document.createElement('div');
+  imgWrapper.className = 'card-image';
+  imgWrapper.innerHTML = card.imageUrl
+    ? `<img src="${card.imageUrl}" alt="${card.title}" loading="lazy">`
+    : '🖼️';
+  
+  // 🔥 ЗУМ ПО КЛИКУ НА ИЗОБРАЖЕНИЕ
+  imgWrapper.addEventListener('click', (e) => {
+    e.stopPropagation(); // Не открываем модалку при клике на изображение
+    imgWrapper.classList.toggle('card-image-zoomed');
+  });
+  
+  const body = document.createElement('div');
+  body.className = 'card-body';
+  body.innerHTML = `
+    <h3 class="card-title">${card.title}</h3>
+    <p class="card-artist">${card.artist} (${card.year})</p>
+    <div class="card-rarity" style="background-color: ${rarityColors[card.rarity] || '#6b7280'}20; color: ${rarityColors[card.rarity] || '#6b7280'};">
+      ${rarityLabels[card.rarity] || card.rarity}
     </div>
-    <div class="card-body">
-      <h3 class="card-title">${card.title}</h3>
-      <p class="card-artist">${card.artist} (${card.year})</p>
-      <div class="card-rarity" style="background-color: ${rarityColors[card.rarity] || '#6b7280'}20; color: ${rarityColors[card.rarity] || '#6b7280'};">
-        ${rarityLabels[card.rarity] || card.rarity}
+    <div class="card-params">
+      <div class="card-param-line">
+        <span>♥${card.power?.resonance || 0}</span>
+        <span>⚡${card.power?.virtuosity || 0}</span>
       </div>
-      <div class="card-params">
-        <div class="card-param-line">
-          <span>♥${card.power?.resonance || 0}</span>
-          <span>⚡${card.power?.virtuosity || 0}</span>
-        </div>
-        <div class="card-param-line">
-          <span>🧠${card.power?.profundity || 0}</span>
-          <span>⚖${card.power?.harmony || 0}</span>
-        </div>
-        ${card.genre ? `<div style="margin-top: 4px; font-size: 10px; text-align: center; color: var(--text-secondary);">${genreEmojis[card.genre] || '🎭'} ${card.genre}</div>` : ''}
+      <div class="card-param-line">
+        <span>🧠${card.power?.profundity || 0}</span>
+        <span>⚖${card.power?.harmony || 0}</span>
       </div>
+      ${card.genre ? `<div style="margin-top: 4px; font-size: 10px; text-align: center; color: var(--text-secondary);">${genreEmojis[card.genre] || '🎭'} ${card.genre}</div>` : ''}
     </div>
   `;
   
-  // 🔥 КЛИК ОТКРЫВАЕТ МОДАЛКУ С ДЕТАЛЬНЫМ ПРОСМОТРОМ
+  div.appendChild(imgWrapper);
+  div.appendChild(body);
+  
+  // 🔥 КЛИК НА КАРТОЧКУ ОТКРЫВАЕТ МОДАЛКУ С ДЕТАЛЬНЫМ ПРОСМОТРОМ
   div.addEventListener('click', () => {
     openCardDetailModal(card);
   });
