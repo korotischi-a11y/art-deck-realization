@@ -17,6 +17,46 @@ const TAB_TITLES = {
   collection: '📚 Коллекция', profile: '👤 Профиль', leaderboard: '🏆 Рейтинг', packs: '📋 Паки', admin: '⚙ Админ'
 };
 
+// 🔥 3D TILT ЭФФЕКТ ДЛЯ КАРТ
+export function apply3DTilt() {
+  const cards = document.querySelectorAll('.card-item');
+  
+  cards.forEach(card => {
+    // Удаляем старые обработчики если есть
+    if (card.dataset.tiltInitialized === 'true') return;
+    card.dataset.tiltInitialized = 'true';
+    
+    const handleMouseMove = (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const rotateX = ((y - centerY) / centerY) * -10; // Наклон по Y
+      const rotateY = ((x - centerX) / centerX) * 10;  // Наклон по X
+      
+      // Позиция блика
+      const glareX = (x / rect.width) * 100;
+      const glareY = (y / rect.height) * 100;
+      
+      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+      card.style.setProperty('--glare-x', `${glareX}%`);
+      card.style.setProperty('--glare-y', `${glareY}%`);
+      card.classList.add('tilt-active');
+    };
+    
+    const handleMouseLeave = () => {
+      card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+      card.classList.remove('tilt-active');
+    };
+    
+    card.addEventListener('mousemove', handleMouseMove);
+    card.addEventListener('mouseleave', handleMouseLeave);
+  });
+}
+
 async function checkDailyRewards() {
   try {
     const u = firebase.auth().currentUser;
@@ -54,7 +94,6 @@ async function initApp() {
 
 async function loadInitialData() {
   try {
-    // 🔥 ПРОВЕРКА СОХРАНЁННОЙ ВКЛАДКИ ДО ЗАГРУЗКИ ДАННЫХ
     const savedTab = localStorage.getItem('activeTab') || 'collection';
     
     await cardMod.loadCards();
@@ -64,7 +103,6 @@ async function loadInitialData() {
     updateUserInterface();
     user.renderProfile();
     
-    // 🔥 ПЕРЕКЛЮЧЕНИЕ НА СОХРАНЁННУЮ ВКЛАДКУ БЕЗ РЕНДЕРА КОЛЛЕКЦИИ
     switchTab(savedTab);
   } catch (e) { console.error('Load error:', e); }
 }
@@ -85,13 +123,14 @@ export function switchTab(tabName) {
   document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.getElementById('page-title').textContent = TAB_TITLES[tabName] || 'Art Deck';
   
-  // 🔥 СОХРАНЕНИЕ АКТИВНОЙ ВКЛАДКИ В localStorage
   localStorage.setItem('activeTab', tabName);
   
   switch (tabName) {
     case 'collection':
       cardMod.renderCollection();
       decks.renderDecks();
+      // 🔥 ПРИМЕНЯЕМ 3D ПОСЛЕ РЕНДЕРА
+      setTimeout(apply3DTilt, 100);
       break;
     case 'profile': user.renderProfile(); break;
     case 'leaderboard': leaderboard.renderLeaderboard(); break;
@@ -136,6 +175,7 @@ function setupAuthListeners() {
   });
   document.getElementById('toggle-auth')?.addEventListener('click', () => { state.isLoginMode = !state.isLoginMode; updateAuthUI(); });
 }
+
 function setupEventListeners() {
   document.querySelectorAll('.sidebar-btn[data-tab]').forEach(b => { b.addEventListener('click', () => switchTab(b.dataset.tab)); });
   document.getElementById('logout-btn')?.addEventListener('click', async () => { await auth.logout(); state.currentUser = null; showAuthPage(); });
@@ -145,6 +185,7 @@ function setupEventListeners() {
   });
   document.getElementById('rarity-filter')?.addEventListener('change', () => {
     cardMod.renderCollection();
+    setTimeout(apply3DTilt, 100); // 🔥 3D ПОСЛЕ ФИЛЬТРАЦИИ
   });
   
   // 🔥 ОБРАБОТЧИК ЗАГРУЗКИ JSON
@@ -155,6 +196,16 @@ function setupEventListeners() {
     });
     uploadBtn.dataset.initialized = 'true';
   }
+  
+  // 🔥 ОБРАБОТЧИК ЭКСПОРТА JSON
+  const exportBtn = document.getElementById('export-json-btn');
+  if (exportBtn && !exportBtn.dataset.initialized) {
+    exportBtn.addEventListener('click', () => {
+      admin.exportCardsToJSON();
+    });
+    exportBtn.dataset.initialized = 'true';
+  }
 }
+
 export { updateUserInterface };
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initApp); } else { initApp(); }

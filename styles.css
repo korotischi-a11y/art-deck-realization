@@ -284,14 +284,14 @@ body {
   font-weight: 700;
 }
 
-/* === 🔥 СЕТКА КАРТ (УВЕЛИЧЕНО: 130px → 390px ×3) === */
+/* === 🔥 СЕТКА КАРТ (УМЕНЬШЕНО: 390px → 260px) === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(390px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: var(--spacing-lg);
 }
 
-/* === 🔥 КАРТОЧКА (увеличена в 3 раза: 130px → 390px) === */
+/* === 🔥 КАРТОЧКА С 3D ЭФФЕКТОМ (260px) === */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -303,10 +303,11 @@ body {
   position: relative;
   aspect-ratio: 155 / 268;
   box-shadow: var(--shadow-sm);
-  transform-style: preserve-3d;
-  transition: transform 0.12s linear, box-shadow 0.12s linear, border-color 0.12s linear;
   
-  /* 🔥 ИСПРАВЛЕНО: предотвращение мигания */
+  /* 🔥 3D TRANSFORM */
+  transform-style: preserve-3d;
+  transition: transform 0.1s linear, box-shadow 0.1s linear, border-color 0.1s linear;
+  
   visibility: hidden;
   animation: cardAppear 0.3s ease forwards;
 }
@@ -324,19 +325,21 @@ body {
   }
 }
 
+/* 🔥 КОНТЕЙНЕР С PERSPECTIVE ДЛЯ 3D */
 #cards-grid {
-  perspective: 900px;
+  perspective: 1000px;
 }
 
-.card-item[data-tilt] {
-  will-change: transform;
-}
-
+/* 🔥 БЛИК ПРИ ДВИЖЕНИИ МЫШИ */
 .card-item::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 30%), rgba(255,255,255,0.18), transparent 55%);
+  background: radial-gradient(
+    circle at var(--glare-x, 50%) var(--glare-y, 30%), 
+    rgba(255,255,255,0.25), 
+    transparent 60%
+  );
   opacity: 0;
   transition: opacity 0.15s ease-out;
   pointer-events: none;
@@ -467,7 +470,7 @@ body {
   animation: glow-ancient 2s ease-in-out infinite;
 }
 
-/* ✨ НОВОЕ: Увеличено пространство для изображения */
+/* === ИЗОБРАЖЕНИЕ КАРТЫ === */
 .card-image {
   width: 100%;
   flex: 1.35;
@@ -510,69 +513,69 @@ body {
   cursor: zoom-out !important;
 }
 
-/* 🔥 УВЕЛИЧЕН: card-body (180px → 250px) */
+/* === ТЕЛО КАРТЫ (УМЕНЬШЕНО: 250px → 170px) === */
 .card-body {
-  padding: 20px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   flex: 0 0 auto;
-  min-height: 250px;
-  max-height: 250px;
+  min-height: 170px;
+  max-height: 170px;
   transform: translateZ(10px);
   will-change: transform;
 }
 
-/* 🔥 УВЕЛИЧЕН: card-title (16px → 20px, 3 → 4 строки) */
+/* === ЗАГОЛОВОК КАРТЫ (УМЕНЬШЕНО: 20px → 14px) === */
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
-  font-size: clamp(18px, 2.8vw, 20px);
-  line-height: 1.4;
+  font-size: clamp(13px, 2.2vw, 14px);
+  line-height: 1.3;
   margin: 0;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   word-break: break-word;
   text-wrap: balance;
-  max-height: 5.6em;
+  max-height: 3.9em;
 }
 
-/* 🔥 УВЕЛИЧЕН: card-artist (12px → 15px) */
+/* === ХУДОЖНИК (УМЕНЬШЕНО: 15px → 11px) === */
 .card-artist {
-  font-size: 15px;
+  font-size: 11px;
   color: var(--text-secondary);
   margin: 0;
   margin-top: auto;
-  padding-top: 6px;
+  padding-top: 4px;
 }
 
-/* 🔥 УВЕЛИЧЕН: card-rarity (12px → 15px) */
+/* === РЕДКОСТЬ (УМЕНЬШЕНО: 15px → 11px) === */
 .card-rarity {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-xs);
   width: 100%;
-  padding: 8px 12px;
+  padding: 5px 8px;
   border-radius: var(--radius-md);
-  font-size: 15px;
+  font-size: 11px;
   font-weight: 600;
-  margin: 6px 0;
+  margin: 4px 0;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-/* 🔥 УВЕЛИЧЕН: card-params (11px → 14px) */
+/* === ПАРАМЕТРЫ (УМЕНЬШЕНО: 14px → 10px) === */
 .card-params {
-  font-size: 14px;
+  font-size: 10px;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.3;
   margin: 0;
-  padding-top: 8px;
+  padding-top: 5px;
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
 }
@@ -581,19 +584,19 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
-/* 🔥 УВЕЛИЧЕН: card-count (11px → 14px) */
+/* === СЧЁТЧИК (УМЕНЬШЕНО: 14px → 10px) === */
 .card-count {
   background-color: var(--bg-tertiary);
-  padding: 8px 12px;
+  padding: 5px 8px;
   border-radius: var(--radius-md);
-  margin-top: 6px;
+  margin-top: 4px;
   text-align: center;
   font-weight: 600;
   color: var(--wood-light);
-  font-size: 14px;
+  font-size: 10px;
   margin: 0;
 }
 
@@ -988,26 +991,26 @@ body {
   }
 }
 
-/* === 🔥 АДАПТИВНОСТЬ (ОБНОВЛЕНО ПОД 390px) === */
+/* === 🔥 АДАПТИВНОСТЬ (ОБНОВЛЕНО ПОД 260px) === */
 @media (max-width: 1600px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   }
 }
 
 @media (max-width: 1200px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
   
   .card-body {
-    min-height: 220px;
-    max-height: 220px;
-    padding: 16px;
+    min-height: 150px;
+    max-height: 150px;
+    padding: 12px;
   }
   
   .card-title {
-    font-size: 18px;
+    font-size: 13px;
   }
 }
 
@@ -1032,18 +1035,18 @@ body {
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
   
   .card-body {
-    min-height: 200px;
-    max-height: 200px;
-    padding: 14px;
+    min-height: 140px;
+    max-height: 140px;
+    padding: 10px;
   }
   
   .card-title {
-    font-size: 16px;
-    -webkit-line-clamp: 3;
+    font-size: 12px;
+    -webkit-line-clamp: 2;
   }
   
   .modal-content {
@@ -1062,27 +1065,27 @@ body {
   }
   
   .card-body {
-    min-height: 160px;
-    max-height: 160px;
-    padding: 12px;
+    min-height: 130px;
+    max-height: 130px;
+    padding: 8px;
   }
   
   .card-title {
-    font-size: 14px;
+    font-size: 11px;
     -webkit-line-clamp: 2;
   }
   
   .card-artist {
-    font-size: 12px;
+    font-size: 9px;
   }
   
   .card-rarity {
-    font-size: 12px;
-    padding: 6px 8px;
+    font-size: 9px;
+    padding: 4px 6px;
   }
   
   .card-params {
-    font-size: 11px;
+    font-size: 8px;
   }
   
   .header-info {
