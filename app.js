@@ -68,8 +68,8 @@ function updateUserInterface() {
   const { currentUser } = state;
   document.getElementById('user-name').textContent = currentUser?.username || currentUser?.email?.split('@')[0] || 'Guest';
   document.getElementById('coins-display').textContent = currentUser?.currency || 100;
-  const tiers = { 'Common': '📑', 'Uncommon': '🎯', 'Rare': '🏆', 'Epic': '💎', 'Ancient': '🔥', 'Legendary': '⭐', 'Immortal': '👑' };
-  document.getElementById('user-rank').textContent = `${tiers['Common'] || '📑'} Common`;
+  const tiers = { 'Common': '📁', 'Uncommon': '🎯', 'Rare': '🏆', 'Epic': '💎', 'Ancient': '🔥', 'Legendary': '⭐', 'Immortal': '👑' };
+  document.getElementById('user-rank').textContent = `${tiers['Common'] || '📁'} Common`;
   const ab = document.getElementById('admin-btn');
   ab.style.display = state.isAdmin ? 'flex' : 'none';
 }
@@ -138,6 +138,15 @@ function setupEventListeners() {
   document.getElementById('rarity-filter')?.addEventListener('change', () => {
     cardMod.renderCollection();
   });
+  
+  // 🔥 ОБРАБОТЧИК ЗАГРУЗКИ JSON
+  const uploadBtn = document.getElementById('upload-json-btn');
+  if (uploadBtn && !uploadBtn.dataset.initialized) {
+    uploadBtn.addEventListener('click', () => {
+      admin.uploadCardsFromJSON();
+    });
+    uploadBtn.dataset.initialized = 'true';
+  }
 }
 export { updateUserInterface };
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initApp); } else { initApp(); }
