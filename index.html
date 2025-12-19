@@ -107,7 +107,7 @@
               <h2 style="margin: 0;">🏛️ Выбор галереи</h2>
               <div id="galleries-list" style="display: flex; flex-direction: column; gap: 12px; overflow-y: auto;">
                 <div style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; color: var(--text-secondary);">
-                  <p>🏗️ Система галерей в разработке</p>
+                  <p>🏭️ Система галерей в разработке</p>
                   <p style="font-size: 12px; margin-top: 8px;">Скоро вы сможете создавать свои галереи и атаковать галереи других игроков!</p>
                 </div>
               </div>
@@ -176,7 +176,10 @@
 
           <div style="display: grid; grid-template-columns: 350px 1fr; gap: 20px; height: calc(100vh - 250px);">
             <div style="border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: var(--bg-secondary); overflow-y: auto;">
-              <button id="upload-json-btn" class="btn btn-secondary" style="width: 100%; margin-bottom: 16px; padding: 10px; font-size: 14px;">📦 Загрузить из JSON</button>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+                <button id="upload-json-btn" class="btn btn-secondary" style="padding: 10px; font-size: 13px;">📦 Загрузить</button>
+                <button id="export-json-btn" class="btn btn-secondary" style="padding: 10px; font-size: 13px;">📥 Скачать</button>
+              </div>
               <h3 style="margin-bottom: 16px;">➕ Добавить карту</h3>
               <form id="admin-form" style="display: flex; flex-direction: column; gap: 10px;">
                 <input type="text" id="card-title" placeholder="Название" class="form-control" required style="padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
