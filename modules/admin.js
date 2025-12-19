@@ -516,3 +516,52 @@ export function uploadCardsFromJSON() {
   
   input.click();
 }
+
+// 🔥 ЭКСПОРТ КАРТ В JSON
+export async function exportCardsToJSON() {
+  try {
+    ui.showSuccess('📥 Скачиваю данные...');
+    
+    const snap = await db.collection('masterCards').orderBy('createdAt', 'desc').get();
+    const cardsData = [];
+    
+    snap.forEach(doc => {
+      const data = doc.data();
+      cardsData.push({
+        title: data.title,
+        artist: data.artist,
+        year: data.year,
+        description: data.description,
+        imageUrl: data.imageUrl || '',
+        rarity: data.rarity,
+        theme: data.theme,
+        genre: data.genre,
+        power: {
+          resonance: data.power?.resonance || 5,
+          virtuosity: data.power?.virtuosity || 5,
+          profundity: data.power?.profundity || 5,
+          harmony: data.power?.harmony || 5
+        }
+      });
+    });
+    
+    // Создаём JSON файл
+    const jsonString = JSON.stringify(cardsData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    // Создаём ссылку для скачивания
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `art-deck-cards-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    ui.showSuccess(`✅ Экспортировано ${cardsData.length} карт!`);
+  } catch (error) {
+    console.error('Export JSON error:', error);
+    ui.showError(`❌ Ошибка экспорта: ${error.message}`);
+  }
+}
