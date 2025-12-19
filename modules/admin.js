@@ -402,3 +402,93 @@ async function handleSubmit(event) {
     submitBtn.disabled = false;
   }
 }
+
+// 🔥 МАССОВАЯ ЗАГРУЗКА ИЗ JSON
+export function uploadCardsFromJSON() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    
+    reader.onload = async (event) => {
+      try {
+        const jsonData = JSON.parse(event.target.result);
+        
+        // Валидация: должен быть массив
+        if (!Array.isArray(jsonData)) {
+          ui.showError('❌ JSON должен содержать массив карт!');
+          return;
+        }
+        
+        if (jsonData.length === 0) {
+          ui.showError('❌ Массив карт пуст!');
+          return;
+        }
+        
+        // Валидация структуры первой карты
+        const firstCard = jsonData[0];
+        const requiredFields = ['title', 'artist', 'year', 'description', 'rarity', 'theme', 'genre'];
+        const missingFields = requiredFields.filter(field => !firstCard[field]);
+        
+        if (missingFields.length > 0) {
+          ui.showError(`❌ Отсутствуют поля: ${missingFields.join(', ')}`);
+          return;
+        }
+        
+        // Подтверждение загрузки
+        const confirmed = confirm(`📦 Загрузить ${jsonData.length} карт в базу данных?`);
+        if (!confirmed) return;
+        
+        ui.showSuccess(`📦 Загружаю ${jsonData.length} карт...`);
+        
+        let uploaded = 0;
+        const batch = db.batch();
+        
+        for (const card of jsonData) {
+          const docRef = db.collection('masterCards').doc();
+          batch.set(docRef, {
+            title: card.title,
+            artist: card.artist,
+            year: card.year,
+            description: card.description,
+            imageUrl: card.imageUrl || '',
+            rarity: card.rarity,
+            theme: card.theme,
+            genre: card.genre,
+            power: {
+              resonance: card.power?.resonance || 5,
+              virtuosity: card.power?.virtuosity || 5,
+              profundity: card.power?.profundity || 5,
+              harmony: card.power?.harmony || 5
+            },
+            createdAt: firebase.firestore.Timestamp.now(),
+            totalOwners: 0
+          });
+          uploaded++;
+        }
+        
+        await batch.commit();
+        
+        ui.showSuccess(`✅ Успешно загружено ${uploaded} карт!`);
+        await loadAllCards();
+        
+      } catch (error) {
+        console.error('Upload JSON error:', error);
+        ui.showError(`❌ Ошибка: ${error.message}`);
+      }
+    };
+    
+    reader.onerror = () => {
+      ui.showError('❌ Ошибка чтения файла!');
+    };
+    
+    reader.readAsText(file);
+  };
+  
+  input.click();
+}
