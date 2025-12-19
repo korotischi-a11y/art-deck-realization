@@ -29,10 +29,7 @@ export function initAdminPanel() {
     form.dataset.initialized = 'true';
   }
   
-  // 🔥 ИНИЦИАЛИЗАЦИЯ ФИЛЬТРОВ
   setupFilters();
-  
-  // 🔥 ЗАГРУЖАЕМ ВСЕ КАРТЫ И ОТОБРАЖАЕМ В GRID
   loadAllCards();
 }
 
@@ -96,7 +93,6 @@ function renderCardsGrid() {
   const container = document.getElementById('admin-cards-matrix');
   if (!container) return;
   
-  // 🔥 ФИЛЬТРУЕМ КАРТЫ
   let filteredCards = allMasterCards;
   
   if (currentFilters.rarity) {
@@ -114,7 +110,6 @@ function renderCardsGrid() {
     return;
   }
   
-  // 🔥 ОТОБРАЖАЕМ КАРТЫ КАК В КОЛЛЕКЦИИ
   filteredCards.forEach(card => {
     const cardEl = createCardElement(card);
     container.appendChild(cardEl);
@@ -160,18 +155,12 @@ function createCardElement(card) {
     nude: '💃'
   };
   
-  // 🔥 ПРЕВЬЮ С ЗУМОМ ПО КЛИКУ
+  // 🔥 ПРЕВЬЮ БЕЗ ЗУМА (зум только в модалке)
   const imgWrapper = document.createElement('div');
   imgWrapper.className = 'card-image';
   imgWrapper.innerHTML = card.imageUrl
     ? `<img src="${card.imageUrl}" alt="${card.title}" loading="lazy">`
     : '🖼️';
-  
-  // 🔥 ЗУМ ПО КЛИКУ НА ИЗОБРАЖЕНИЕ
-  imgWrapper.addEventListener('click', (e) => {
-    e.stopPropagation(); // Не открываем модалку при клике на изображение
-    imgWrapper.classList.toggle('card-image-zoomed');
-  });
   
   const body = document.createElement('div');
   body.className = 'card-body';
@@ -197,7 +186,7 @@ function createCardElement(card) {
   div.appendChild(imgWrapper);
   div.appendChild(body);
   
-  // 🔥 КЛИК НА КАРТОЧКУ ОТКРЫВАЕТ МОДАЛКУ С ДЕТАЛЬНЫМ ПРОСМОТРОМ
+  // 🔥 КЛИК НА КАРТОЧКУ ОТКРЫВАЕТ МОДАЛКУ С ВОЗМОЖНОСТЬЮ РЕДАКТИРОВАНИЯ
   div.addEventListener('click', () => {
     openCardDetailModal(card);
   });
@@ -240,6 +229,14 @@ function openCardDetailModal(card) {
   if (card.imageUrl) {
     img.src = card.imageUrl;
     img.style.display = 'block';
+    
+    // 🔥 ЗУМ ПО КЛИКУ НА ИЗОБРАЖЕНИЕ В МОДАЛКЕ
+    img.style.cursor = 'zoom-in';
+    img.onclick = (e) => {
+      e.stopPropagation();
+      img.classList.toggle('modal-image-zoomed');
+      img.style.cursor = img.classList.contains('modal-image-zoomed') ? 'zoom-out' : 'zoom-in';
+    };
   } else {
     img.style.display = 'none';
   }
@@ -249,7 +246,6 @@ function openCardDetailModal(card) {
   rarityEl.style.backgroundColor = (rarityColors[card.rarity] || '#6b7280') + '20';
   rarityEl.style.color = rarityColors[card.rarity] || '#6b7280';
   
-  // Параметры
   const paramsTable = document.getElementById('modal-params-table');
   paramsTable.innerHTML = `
     <div class="modal-param-cell">
@@ -270,16 +266,69 @@ function openCardDetailModal(card) {
     </div>
   `;
   
-  // Жанр и стиль
   const countEl = document.getElementById('modal-card-count');
   countEl.innerHTML = `
-    <div style="display: flex; justify-content: space-around; font-size: 12px;">
+    <div style="display: flex; justify-content: space-around; font-size: 12px; margin-bottom: 12px;">
       <div><strong>🎨 Стиль:</strong> ${card.theme || '—'}</div>
       <div><strong>🎭 Жанр:</strong> ${card.genre || '—'}</div>
     </div>
+    ${state.isAdmin ? `<button id="edit-card-btn" class="btn btn-primary" style="width: 100%;">✏️ Изменить карту</button>` : ''}
   `;
   
+  // 🔥 КНОПКА РЕДАКТИРОВАНИЯ (только для админа)
+  if (state.isAdmin) {
+    const editBtn = countEl.querySelector('#edit-card-btn');
+    if (editBtn) {
+      editBtn.addEventListener('click', () => {
+        fillFormForEdit(card);
+        modal.classList.remove('active');
+        
+        // Переключаемся на админ-таб и прокручиваем к форме
+        document.querySelector('[data-tab="admin"]').click();
+        setTimeout(() => {
+          document.getElementById('admin-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      });
+    }
+  }
+  
   modal.classList.add('active');
+}
+
+function fillFormForEdit(card) {
+  const form = document.getElementById('admin-form');
+  if (!form) return;
+  
+  form.querySelector('#card-title').value = card.title || '';
+  form.querySelector('#card-artist').value = card.artist || '';
+  form.querySelector('#card-year').value = card.year || '';
+  form.querySelector('#card-description').value = card.description || '';
+  form.querySelector('#card-image-url').value = card.imageUrl || '';
+  form.querySelector('#card-rarity').value = card.rarity || '';
+  form.querySelector('#card-theme').value = card.theme || '';
+  form.querySelector('#card-genre').value = card.genre || '';
+  
+  const resonance = form.querySelector('#card-resonance');
+  const virtuosity = form.querySelector('#card-virtuosity');
+  const profundity = form.querySelector('#card-profundity');
+  const harmony = form.querySelector('#card-harmony');
+  
+  resonance.value = card.power?.resonance || 5;
+  virtuosity.value = card.power?.virtuosity || 5;
+  profundity.value = card.power?.profundity || 5;
+  harmony.value = card.power?.harmony || 5;
+  
+  // Обновляем отображение значений слайдеров
+  resonance.parentElement.querySelector('.slider-value').textContent = resonance.value;
+  virtuosity.parentElement.querySelector('.slider-value').textContent = virtuosity.value;
+  profundity.parentElement.querySelector('.slider-value').textContent = profundity.value;
+  harmony.parentElement.querySelector('.slider-value').textContent = harmony.value;
+  
+  // Сохраняем ID для обновления
+  form.dataset.editingId = card.id;
+  form.querySelector('button[type="submit"]').textContent = '💾 Сохранить изменения';
+  
+  ui.showSuccess('✏️ Карта загружена для редактирования');
 }
 
 async function handleSubmit(event) {
@@ -332,35 +381,24 @@ async function handleSubmit(event) {
         ...cardData,
         updatedAt: firebase.firestore.Timestamp.now()
       });
-      ui.showSuccess('Карта обновлена');
+      ui.showSuccess('✅ Карта обновлена');
       form.dataset.editingId = '';
-      form.querySelector('button[type="submit"]').textContent = 'Добавить';
+      form.querySelector('button[type="submit"]').textContent = '➕ Добавить';
     } else {
       await db.collection('masterCards').add({
         ...cardData,
         createdAt: firebase.firestore.Timestamp.now(),
         totalOwners: 0
       });
-      ui.showSuccess('Карта добавлена');
+      ui.showSuccess('✅ Карта добавлена');
     }
     form.reset();
     
-    // 🔥 ПЕРЕЗАГРУЖАЕМ ВСЕ КАРТЫ
     await loadAllCards();
   } catch (error) {
     console.error('Ош:', error);
     ui.showError('Ошибка: ' + error.message);
   } finally {
     submitBtn.disabled = false;
-  }
-}
-
-async function deleteCard(cardId) {
-  try {
-    await db.collection('masterCards').doc(cardId).delete();
-    ui.showSuccess('Card deleted');
-    await loadAllCards();
-  } catch (error) {
-    console.error('Delete:', error);
   }
 }
