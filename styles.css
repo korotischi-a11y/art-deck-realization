@@ -287,7 +287,7 @@ body {
 /* === 🔥 СЕТКА КАРТ (УВЕЛИЧЕНО: 800px для максимальной видимости изображений) === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(900px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(1100px, 1fr));
   gap: var(--spacing-lg);
 }
 
@@ -500,8 +500,8 @@ body {
   flex-direction: column;
   gap: 6px;
   flex: 0 0 auto;
-  min-height: 170px;
-  max-height: 170px;
+  min-height: 210px;
+  max-height: 210px;
   transform: translateZ(10px);
   will-change: transform;
 }
