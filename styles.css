@@ -500,8 +500,8 @@ body {
   flex-direction: column;
   gap: 6px;
   flex: 0 0 auto;
-  min-height: 140px;
-  max-height: 140px;
+  min-height: 150px;
+  max-height: 150px;
   transform: translateZ(10px);
   will-change: transform;
 }
@@ -517,11 +517,11 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   word-break: break-word;
   text-wrap: balance;
-  max-height: 2.6em;
+  max-height: 3.9em;
 }
 
 /* ✨ КОМПАКТНЫЙ АВТОР: 12px */
