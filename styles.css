@@ -301,7 +301,7 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  aspect-ratio: 2 / 3; /* ← БЫЛО: 155 / 268, СТАЛО: 2/3 (стандартная карта) */
+  aspect-ratio: 3 / 5; /* ← ОПТИМАЛЬНО: 60% ширины к высоте */
   box-shadow: var(--shadow-sm);
   transform-style: preserve-3d;
   transition: transform 0.12s linear, box-shadow 0.12s linear, border-color 0.12s linear;
@@ -495,13 +495,13 @@ body {
 
 /* 🔥 ТЕКСТ: flex 1 = 20% */
 .card-body {
-  padding: 12px;
+  padding: 10px; /* ← Уменьшил с 12px до 10px */
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px; /* ← Уменьшил с 6px до 5px */
   flex: 1;
   min-height: 0;
-  width: 100%; /* ← КРИТИЧНО! Ограничивает ширину */
+  box-sizing: border-box; /* ← КРИТИЧНО! Padding включён в размер */
   transform: translateZ(10px);
   will-change: transform;
   justify-content: space-between;
@@ -526,15 +526,15 @@ body {
 
 /* ✨ АВТОР: 11px */
 .card-artist {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-secondary);
   margin: 0;
   flex-shrink: 0;
 }
 
-/* 🔥 РЕДКОСТЬ (ВНУТРИ ГРАНИЦ) */
+/* 🔥 РЕДКОСТЬ */
 .card-rarity {
-  display: inline-flex;
+  display: flex; /* ← Убрал inline-flex */
   align-items: center;
   justify-content: center;
   gap: 4px;
@@ -542,10 +542,9 @@ body {
   border-radius: var(--radius-md);
   font-size: 10px;
   font-weight: 600;
-  margin: 4px 0 0 0;
+  margin: 3px 0 0 0; /* ← Уменьшил отступ */
   white-space: nowrap;
   flex-shrink: 0;
-  /* width: 100% УБРАНО! */
 }
 
 .card-params {
@@ -553,10 +552,9 @@ body {
   color: var(--text-secondary);
   line-height: 1.2;
   margin: 0;
-  padding-top: 4px;
+  padding-top: 3px; /* ← Уменьшил с 4px */
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
-  width: 100%; /* ← КРИТИЧНО! */
 }
 
 .card-param-line {
