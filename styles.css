@@ -501,6 +501,7 @@ body {
   gap: 6px;
   flex: 1;
   min-height: 0;
+  width: 100%; /* ← КРИТИЧНО! Ограничивает ширину */
   transform: translateZ(10px);
   will-change: transform;
   justify-content: space-between;
@@ -510,7 +511,7 @@ body {
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1.3;
   margin: 0;
   overflow: hidden;
@@ -531,7 +532,7 @@ body {
   flex-shrink: 0;
 }
 
-/* 🔥 РЕДКОСТЬ (БЕЗ ВЫПАДЕНИЯ ЗА ГРАНИЦЫ) */
+/* 🔥 РЕДКОСТЬ (ВНУТРИ ГРАНИЦ) */
 .card-rarity {
   display: inline-flex;
   align-items: center;
@@ -544,7 +545,7 @@ body {
   margin: 4px 0 0 0;
   white-space: nowrap;
   flex-shrink: 0;
-  align-self: stretch; /* Растягивается по ширине контейнера */
+  /* width: 100% УБРАНО! */
 }
 
 .card-params {
@@ -555,6 +556,7 @@ body {
   padding-top: 4px;
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
+  width: 100%; /* ← КРИТИЧНО! */
 }
 
 .card-param-line {
