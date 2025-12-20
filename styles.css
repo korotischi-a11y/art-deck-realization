@@ -301,7 +301,7 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  aspect-ratio: 155 / 268;
+  aspect-ratio: 2 / 3; /* ← БЫЛО: 155 / 268, СТАЛО: 2/3 (стандартная карта) */
   box-shadow: var(--shadow-sm);
   transform-style: preserve-3d;
   transition: transform 0.12s linear, box-shadow 0.12s linear, border-color 0.12s linear;
