@@ -453,7 +453,7 @@ body {
 /* 🔥 МАКСИМУМ ИЗОБРАЖЕНИЯ: flex 3.5 = 80% карты теперь КАРТИНА! */
 .card-image {
   width: 100%;
-  flex: 3.5;
+  flex: 5;
   background: linear-gradient(135deg, var(--bg-tertiary), var(--wood-darker));
   display: flex;
   align-items: center;
@@ -499,9 +499,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 0 0 auto;
-  min-height: 200px;
-  max-height: 200px;
+  flex: 1;
+  min-height: 0;
+  max-height: none;
   transform: translateZ(10px);
   will-change: transform;
 }
