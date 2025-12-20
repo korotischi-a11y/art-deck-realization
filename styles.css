@@ -495,7 +495,7 @@ body {
 
 /* 🔥 ТЕКСТ: flex 1 = 20% */
 .card-body {
-  padding: 14px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
