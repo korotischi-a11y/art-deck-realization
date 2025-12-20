@@ -284,14 +284,14 @@ body {
   font-weight: 700;
 }
 
-/* === 🔥 СЕТКА КАРт (УВЕЛИЧЕНО: 354px → 420px) === */
+/* === 🔥 СЕТКА КАРт (УВЕЛИЧЕНО В 2 РАЗА: 420px → 550px) === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(550px, 1fr));
   gap: var(--spacing-lg);
 }
 
-/* === 🔥 КАРТОЧКА (увеличена до 420px для лучшей читаемости) === */
+/* === 🔥 КАРТОЧКА (увеличена до 550px для максимальной читаемости) === */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -493,27 +493,27 @@ body {
   cursor: zoom-out !important;
 }
 
-/* 🐛 ИСПРАВЛЕНО: Увеличен min-height для card-body (155px → 180px) */
+/* 🔥 УВЕЛИЧЕНО: card-body теперь 200px для карт 550px */
 .card-body {
-  padding: 16px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   flex: 0 0 auto;
-  min-height: 180px;
-  max-height: 180px;
+  min-height: 200px;
+  max-height: 200px;
   transform: translateZ(10px);
   will-change: transform;
 }
 
-/* ✨ ИСПРАВЛЕНО: card-title теперь с 3 строками, увеличен font-size */
+/* ✨ УВЕЛИЧЕНО: card-title 18px для карт 550px, поддержка 3 строк */
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
-  font-size: clamp(14px, 2.5vw, 16px);
+  font-size: 18px;
   line-height: 1.4;
   margin: 0;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -521,28 +521,28 @@ body {
   -webkit-box-orient: vertical;
   word-break: break-word;
   text-wrap: balance;
-  max-height: 4.2em;
+  max-height: 5em;
 }
 
 /* ✨ КЛЮЧЕВОЕ: margin-top: auto прижимает автора вниз */
 .card-artist {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   margin: 0;
   margin-top: auto;
   padding-top: 4px;
 }
 
-/* 🐛 ИСПРАВЛЕНО: Фиксированный margin для предотвращения сдвига */
+/* 🔥 УВЕЛИЧЕНО: padding и font-size для карт 550px */
 .card-rarity {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-xs);
   width: 100%;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: var(--radius-md);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   margin: 4px 0;
   white-space: nowrap;
@@ -550,7 +550,7 @@ body {
 }
 
 .card-params {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-secondary);
   line-height: 1.3;
   margin: 0;
@@ -972,13 +972,13 @@ body {
 /* === АДАПТИВНОСТЬ === */
 @media (max-width: 1400px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(354px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
   }
 }
 
 @media (max-width: 1200px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(354px, 1fr));
   }
 }
 
@@ -1003,7 +1003,7 @@ body {
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
   
   .modal-content {
