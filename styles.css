@@ -284,18 +284,18 @@ body {
   font-weight: 700;
 }
 
-/* === 🔥 СЕТКА КАРТ (КОМПАКТНЫЕ: 130px) === */
+/* === 🔥 СЕТКА КАРТ (УВЕЛИЧЕНО: 130px → 390px ×3) === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: var(--spacing-md);
+  grid-template-columns: repeat(auto-fill, minmax(390px, 1fr));
+  gap: var(--spacing-lg);
 }
 
-/* === 🔥 КАРТОЧКА С 3D ЭФФЕКТОМ (130px) === */
+/* === 🔥 КАРТОЧКА (увеличена в 3 раза: 130px → 390px) === */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
   display: flex;
@@ -303,11 +303,10 @@ body {
   position: relative;
   aspect-ratio: 155 / 268;
   box-shadow: var(--shadow-sm);
-  
-  /* 🔥 3D TRANSFORM */
   transform-style: preserve-3d;
-  transition: transform 0.1s linear, box-shadow 0.1s linear, border-color 0.1s linear;
+  transition: transform 0.12s linear, box-shadow 0.12s linear, border-color 0.12s linear;
   
+  /* 🔥 ИСПРАВЛЕНО: предотвращение мигания */
   visibility: hidden;
   animation: cardAppear 0.3s ease forwards;
 }
@@ -325,21 +324,19 @@ body {
   }
 }
 
-/* 🔥 КОНТЕЙНЕР С PERSPECTIVE ДЛЯ 3D */
 #cards-grid {
-  perspective: 1000px;
+  perspective: 900px;
 }
 
-/* 🔥 БЛИК ПРИ ДВИЖЕНИИ МЫШИ */
+.card-item[data-tilt] {
+  will-change: transform;
+}
+
 .card-item::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    circle at var(--glare-x, 50%) var(--glare-y, 30%), 
-    rgba(255,255,255,0.25), 
-    transparent 60%
-  );
+  background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 30%), rgba(255,255,255,0.18), transparent 55%);
   opacity: 0;
   transition: opacity 0.15s ease-out;
   pointer-events: none;
@@ -442,7 +439,7 @@ body {
   position: absolute;
   inset: -2px;
   border: 2px solid #06b6d4;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   animation: rotate-border 10s linear infinite;
   opacity: 0.3;
   pointer-events: none;
@@ -459,7 +456,7 @@ body {
   position: absolute;
   inset: -2px;
   border: 2px solid #eab308;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   animation: rotate-border 8s linear infinite;
   opacity: 0.5;
   pointer-events: none;
@@ -470,7 +467,7 @@ body {
   animation: glow-ancient 2s ease-in-out infinite;
 }
 
-/* === ИЗОБРАЖЕНИЕ КАРТЫ === */
+/* ✨ НОВОЕ: Увеличено пространство для изображения */
 .card-image {
   width: 100%;
   flex: 1.35;
@@ -478,7 +475,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: var(--font-size-2xl);
   color: var(--text-secondary);
   overflow: hidden;
   position: relative;
@@ -506,76 +503,76 @@ body {
   z-index: 100 !important;
   cursor: zoom-out !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
-  border-radius: var(--radius-md) !important;
+  border-radius: var(--radius-lg) !important;
 }
 
 .card-image-zoomed img {
   cursor: zoom-out !important;
 }
 
-/* === ТЕЛО КАРТЫ (КОМПАКТНОЕ: 90px) === */
+/* 🔥 УВЕЛИЧЕН: card-body (180px → 250px) */
 .card-body {
-  padding: 8px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 8px;
   flex: 0 0 auto;
-  min-height: 90px;
-  max-height: 90px;
+  min-height: 250px;
+  max-height: 250px;
   transform: translateZ(10px);
   will-change: transform;
 }
 
-/* === ЗАГОЛОВОК КАРТЫ (10px, 2 строки) === */
+/* 🔥 УВЕЛИЧЕН: card-title (16px → 20px, 3 → 4 строки) */
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
-  font-size: 10px;
-  line-height: 1.2;
+  font-size: clamp(18px, 2.8vw, 20px);
+  line-height: 1.4;
   margin: 0;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   word-break: break-word;
   text-wrap: balance;
-  max-height: 2.4em;
+  max-height: 5.6em;
 }
 
-/* === ХУДОЖНИК (8px) === */
+/* 🔥 УВЕЛИЧЕН: card-artist (12px → 15px) */
 .card-artist {
-  font-size: 8px;
+  font-size: 15px;
   color: var(--text-secondary);
   margin: 0;
   margin-top: auto;
-  padding-top: 2px;
+  padding-top: 6px;
 }
 
-/* === РЕДКОСТЬ (8px) === */
+/* 🔥 УВЕЛИЧЕН: card-rarity (12px → 15px) */
 .card-rarity {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--spacing-xs);
   width: 100%;
-  padding: 3px 5px;
-  border-radius: 4px;
-  font-size: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
   font-weight: 600;
-  margin: 2px 0;
+  margin: 6px 0;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-/* === ПАРАМЕТРЫ (7px) === */
+/* 🔥 УВЕЛИЧЕН: card-params (11px → 14px) */
 .card-params {
-  font-size: 7px;
+  font-size: 14px;
   color: var(--text-secondary);
-  line-height: 1.2;
+  line-height: 1.4;
   margin: 0;
-  padding-top: 3px;
+  padding-top: 8px;
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
 }
@@ -584,19 +581,19 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
 }
 
-/* === СЧЁТЧИК (7px) === */
+/* 🔥 УВЕЛИЧЕН: card-count (11px → 14px) */
 .card-count {
   background-color: var(--bg-tertiary);
-  padding: 3px 5px;
-  border-radius: 4px;
-  margin-top: 2px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  margin-top: 6px;
   text-align: center;
   font-weight: 600;
   color: var(--wood-light);
-  font-size: 7px;
+  font-size: 14px;
   margin: 0;
 }
 
@@ -991,26 +988,26 @@ body {
   }
 }
 
-/* === 🔥 АДАПТИВНОСТЬ (КОМПАКТНЫЕ КАРТЫ) === */
+/* === 🔥 АДАПТИВНОСТЬ (ОБНОВЛЕНО ПОД 390px) === */
 @media (max-width: 1600px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   }
 }
 
 @media (max-width: 1200px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
   
   .card-body {
-    min-height: 85px;
-    max-height: 85px;
-    padding: 7px;
+    min-height: 220px;
+    max-height: 220px;
+    padding: 16px;
   }
   
   .card-title {
-    font-size: 9px;
+    font-size: 18px;
   }
 }
 
@@ -1035,18 +1032,18 @@ body {
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
   
   .card-body {
-    min-height: 80px;
-    max-height: 80px;
-    padding: 6px;
+    min-height: 200px;
+    max-height: 200px;
+    padding: 14px;
   }
   
   .card-title {
-    font-size: 9px;
-    -webkit-line-clamp: 2;
+    font-size: 16px;
+    -webkit-line-clamp: 3;
   }
   
   .modal-content {
@@ -1061,31 +1058,31 @@ body {
 
 @media (max-width: 480px) {
   .cards-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .card-body {
-    min-height: 75px;
-    max-height: 75px;
-    padding: 5px;
+    min-height: 160px;
+    max-height: 160px;
+    padding: 12px;
   }
   
   .card-title {
-    font-size: 8px;
+    font-size: 14px;
     -webkit-line-clamp: 2;
   }
   
   .card-artist {
-    font-size: 7px;
+    font-size: 12px;
   }
   
   .card-rarity {
-    font-size: 7px;
-    padding: 2px 4px;
+    font-size: 12px;
+    padding: 6px 8px;
   }
   
   .card-params {
-    font-size: 6px;
+    font-size: 11px;
   }
   
   .header-info {
