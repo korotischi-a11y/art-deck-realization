@@ -231,7 +231,7 @@ function createCardElement(card, count) {
   return div;
 }
 
-// 🔥 ИСПРАВЛЕНО: карта отклоняется ОТ курсора (оба минуса!)
+// 🔥 REACTBITS TILT: карта наклоняется К курсору!
 function handleTiltMove(e) {
   const card = e.currentTarget;
   const rect = card.getBoundingClientRect();
@@ -240,9 +240,15 @@ function handleTiltMove(e) {
   const cx = rect.width / 2;
   const cy = rect.height / 2;
   
-  // 🔥 МИНУС для отклонения ОТ курсора!
-  const rotX = -((y - cy) / cy) * 8;  // вертикальное отклонение
-  const rotY = -((x - cx) / cx) * 8;  // горизонтальное отклонение
+  // 🔥 КЛЮЧЕВАЯ ФОРМУЛА: rotY БЕЗ минуса!
+  const rotX = -((y - cy) / cy) * 10;  // минус для вертикали
+  const rotY = ((x - cx) / cx) * 10;   // БЕЗ минуса для горизонтали!
+  
+  // 🔥 GLARE эффект: блик следует за курсором
+  const glareX = (x / rect.width) * 100;
+  const glareY = (y / rect.height) * 100;
+  card.style.setProperty('--glare-x', `${glareX}%`);
+  card.style.setProperty('--glare-y', `${glareY}%`);
   
   card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
   card.classList.add('tilt-active');
