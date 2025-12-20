@@ -231,6 +231,7 @@ function createCardElement(card, count) {
   return div;
 }
 
+// 🔥 ИСПРАВЛЕНО: карта отклоняется ОТ курсора (оба минуса!)
 function handleTiltMove(e) {
   const card = e.currentTarget;
   const rect = card.getBoundingClientRect();
@@ -238,8 +239,11 @@ function handleTiltMove(e) {
   const y = e.clientY - rect.top;
   const cx = rect.width / 2;
   const cy = rect.height / 2;
-  const rotX = ((y - cy) / cy) * 8;
-  const rotY = ((cx - x) / cx) * 8;
+  
+  // 🔥 МИНУС для отклонения ОТ курсора!
+  const rotX = -((y - cy) / cy) * 8;  // вертикальное отклонение
+  const rotY = -((x - cx) / cx) * 8;  // горизонтальное отклонение
+  
   card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
   card.classList.add('tilt-active');
 }
