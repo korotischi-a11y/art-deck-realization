@@ -284,14 +284,14 @@ body {
   font-weight: 700;
 }
 
-/* === 🔥 СЕТКА КАРТ (УВЕЛИЧЕНО: 800px для максимальной видимости изображений) === */
+/* === 🔥 СЕТКА КАРТ === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(950px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(900px, 1fr));
   gap: var(--spacing-lg);
 }
 
-/* === 🔥 КАРТОЧКА (увеличена до 800px) === */
+/* === 🔥 КАРТОЧКА === */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -450,10 +450,10 @@ body {
   animation: glow-ancient 2s ease-in-out infinite;
 }
 
-/* 🔥 МАКСИМУМ ИЗОБРАЖЕНИЯ: flex 3.5 = 80% карты теперь КАРТИНА! */
+/* 🔥 ИЗОБРАЖЕНИЕ: flex 4 = 80% */
 .card-image {
   width: 100%;
-  flex: 5;
+  flex: 4;
   background: linear-gradient(135deg, var(--bg-tertiary), var(--wood-darker));
   display: flex;
   align-items: center;
@@ -493,64 +493,62 @@ body {
   cursor: zoom-out !important;
 }
 
-/* 🔥 КОМПАКТНЫЙ ТЕКСТ: card-body теперь 140px (минимум) */
+/* 🔥 ТЕКСТ: flex 1 = 20% */
 .card-body {
-  padding: 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   flex: 1;
   min-height: 0;
-  max-height: none;
   transform: translateZ(10px);
   will-change: transform;
+  justify-content: space-between;
 }
 
-/* 🔥 КОМПАКТНОЕ НАЗВАНИЕ: 16px, 2 строки */
+/* 🔥 НАЗВАНИЕ: 14px, 2 строки */
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.3;
   margin: 0;
-  margin-bottom: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   word-break: break-word;
-  text-wrap: balance;
-  max-height: 3.9em;
+  max-height: 2.6em;
+  flex-shrink: 0;
 }
 
-/* ✨ КОМПАКТНЫЙ АВТОР: 12px */
+/* ✨ АВТОР: 11px */
 .card-artist {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
   margin: 0;
-  margin-top: auto;
-  padding-top: 2px;
+  flex-shrink: 0;
 }
 
-/* 🔥 КОМПАКТНАЯ РЕДКОСТЬ */
+/* 🔥 РЕДКОСТЬ */
 .card-rarity {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
   width: 100%;
-  padding: 4px 8px;
+  padding: 3px 6px;
   border-radius: var(--radius-md);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  margin: 2px 0;
+  margin: 4px 0 0 0;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .card-params {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-secondary);
   line-height: 1.2;
   margin: 0;
@@ -568,13 +566,12 @@ body {
 
 .card-count {
   background-color: var(--bg-tertiary);
-  padding: 3px 6px;
+  padding: 2px 5px;
   border-radius: var(--radius-md);
-  margin-top: 2px;
   text-align: center;
   font-weight: 600;
   color: var(--wood-light);
-  font-size: 10px;
+  font-size: 9px;
   margin: 0;
 }
 
