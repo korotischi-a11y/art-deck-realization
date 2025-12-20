@@ -531,13 +531,12 @@ body {
   flex-shrink: 0;
 }
 
-/* 🔥 РЕДКОСТЬ */
+/* 🔥 РЕДКОСТЬ (БЕЗ ВЫПАДЕНИЯ ЗА ГРАНИЦЫ) */
 .card-rarity {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  width: 100%;
   padding: 3px 6px;
   border-radius: var(--radius-md);
   font-size: 10px;
@@ -545,6 +544,7 @@ body {
   margin: 4px 0 0 0;
   white-space: nowrap;
   flex-shrink: 0;
+  align-self: stretch; /* Растягивается по ширине контейнера */
 }
 
 .card-params {
