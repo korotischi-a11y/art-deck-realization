@@ -284,14 +284,14 @@ body {
   font-weight: 700;
 }
 
-/* === 🔥 СЕТКА КАРТ (УВЕЛИЧЕНО: 700px для максимальной видимости) === */
+/* === 🔥 СЕТКА КАРТ (УВЕЛИЧЕНО: 800px для максимальной видимости изображений) === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(700px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(800px, 1fr));
   gap: var(--spacing-lg);
 }
 
-/* === 🔥 КАРТОЧКА (увеличена до 700px) === */
+/* === 🔥 КАРТОЧКА (увеличена до 800px) === */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -450,10 +450,10 @@ body {
   animation: glow-ancient 2s ease-in-out infinite;
 }
 
-/* 🔥 УВЕЛИЧЕНО: ИЗОБРАЖЕНИЕ ТЕПЕРЬ БОЛЬШЕ (flex: 1.35 → 1.6) */
+/* 🔥 МАКСИМУМ ИЗОБРАЖЕНИЯ: flex 3.5 = 80% карты теперь КАРТИНА! */
 .card-image {
   width: 100%;
-  flex: 1.6;
+  flex: 3.5;
   background: linear-gradient(135deg, var(--bg-tertiary), var(--wood-darker));
   display: flex;
   align-items: center;
@@ -493,68 +493,68 @@ body {
   cursor: zoom-out !important;
 }
 
-/* 🔥 УВЕЛИЧЕНО: card-body теперь 220px для карт 700px */
+/* 🔥 КОМПАКТНЫЙ ТЕКСТ: card-body теперь 140px (минимум) */
 .card-body {
-  padding: 20px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   flex: 0 0 auto;
-  min-height: 220px;
-  max-height: 220px;
+  min-height: 140px;
+  max-height: 140px;
   transform: translateZ(10px);
   will-change: transform;
 }
 
-/* 🔥 УВЕЛИЧЕНО: card-title 22px для карт 700px, поддержка 4 строк */
+/* 🔥 КОМПАКТНОЕ НАЗВАНИЕ: 16px, 2 строки */
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
-  font-size: 22px;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.3;
   margin: 0;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   word-break: break-word;
   text-wrap: balance;
-  max-height: 6em;
+  max-height: 2.6em;
 }
 
-/* ✨ КЛЮЧЕВОЕ: margin-top: auto прижимает автора вниз */
+/* ✨ КОМПАКТНЫЙ АВТОР: 12px */
 .card-artist {
-  font-size: 15px;
+  font-size: 12px;
   color: var(--text-secondary);
   margin: 0;
   margin-top: auto;
-  padding-top: 6px;
+  padding-top: 2px;
 }
 
-/* 🔥 УВЕЛИЧЕНО: padding и font-size для карт 700px */
+/* 🔥 КОМПАКТНАЯ РЕДКОСТЬ */
 .card-rarity {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-xs);
+  gap: 4px;
   width: 100%;
-  padding: 8px 14px;
+  padding: 4px 8px;
   border-radius: var(--radius-md);
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 600;
-  margin: 6px 0;
+  margin: 2px 0;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .card-params {
-  font-size: 13px;
+  font-size: 10px;
   color: var(--text-secondary);
-  line-height: 1.3;
+  line-height: 1.2;
   margin: 0;
-  padding-top: 6px;
+  padding-top: 4px;
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
 }
@@ -568,13 +568,13 @@ body {
 
 .card-count {
   background-color: var(--bg-tertiary);
-  padding: 5px 10px;
+  padding: 3px 6px;
   border-radius: var(--radius-md);
-  margin-top: 4px;
+  margin-top: 2px;
   text-align: center;
   font-weight: 600;
   color: var(--wood-light);
-  font-size: 11px;
+  font-size: 10px;
   margin: 0;
 }
 
@@ -970,21 +970,21 @@ body {
 }
 
 /* === АДАПТИВНОСТЬ === */
-@media (max-width: 1600px) {
+@media (max-width: 1800px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(550px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
   }
 }
 
 @media (max-width: 1400px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
   }
 }
 
 @media (max-width: 1200px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   }
 }
 
@@ -1009,7 +1009,7 @@ body {
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   }
   
   .modal-content {
