@@ -520,7 +520,7 @@ export function uploadCardsFromJSON() {
 // 🔥 ЭКСПОРТ КАРТ В JSON
 export async function exportCardsToJSON() {
   try {
-    ui.showSuccess('📥 Скачиваю данные...');
+    ui.showSuccess('📅 Скачиваю данные...');
     
     const snap = await db.collection('masterCards').orderBy('createdAt', 'desc').get();
     const cardsData = [];
