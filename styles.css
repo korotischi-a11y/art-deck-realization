@@ -291,7 +291,7 @@ body {
   gap: var(--spacing-lg);
 }
 
-/* === 🔥 КАРТОЧКА === */
+/* === 🔥 КАРТОЧКА 7×14 === */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -301,7 +301,7 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  aspect-ratio: 3 / 5; /* ← ОПТИМАЛЬНО: 60% ширины к высоте */
+  aspect-ratio: 7 / 14; /* было 155 / 268 или 7 / 12 */
   box-shadow: var(--shadow-sm);
   transform-style: preserve-3d;
   transition: transform 0.12s linear, box-shadow 0.12s linear, border-color 0.12s linear;
