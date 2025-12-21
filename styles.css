@@ -450,10 +450,9 @@ body {
   animation: glow-ancient 2s ease-in-out infinite;
 }
 
-/* 🔥 ИЗОБРАЖЕНИЕ: flex 4 = 80% */
 .card-image {
   width: 100%;
-  flex: 4;
+  flex: 3;              /* было 4 */
   background: linear-gradient(135deg, var(--bg-tertiary), var(--wood-darker));
   display: flex;
   align-items: center;
@@ -493,17 +492,15 @@ body {
   cursor: zoom-out !important;
 }
 
-/* 🔥 ТЕКСТ: flex 1 = 20% */
+/* 🔥 ТЕКСТ: 40% высоты */
 .card-body {
-  padding: 10px; /* ← Уменьшил с 12px до 10px */
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 5px; /* ← Уменьшил с 6px до 5px */
-  flex: 1;
+  gap: 4px;
+  flex: 2;              /* было 1 */
   min-height: 0;
-  box-sizing: border-box; /* ← КРИТИЧНО! Padding включён в размер */
-  transform: translateZ(10px);
-  will-change: transform;
+  box-sizing: border-box;
   justify-content: space-between;
 }
 
