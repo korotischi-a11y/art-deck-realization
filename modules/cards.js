@@ -27,17 +27,17 @@ const TEAR_PRICES = {
  */
 function getThemeLabel(theme) {
   const themes = {
-    impressionism: { emoji: '🌻', name: 'Impressionism', color: '#ffb347' },
-    renaissance: { emoji: '🏰', name: 'Renaissance', color: '#daa520' },
-    surrealism: { emoji: '🌙', name: 'Surrealism', color: '#9b59b6' },
-    abstract: { emoji: '🎨', name: 'Abstract', color: '#e74c3c' },
-    realism: { emoji: '🚼️', name: 'Realism', color: '#8b4513' },
-    modernism: { emoji: '✨', name: 'Modernism', color: '#3498db' },
-    baroque: { emoji: '👑', name: 'Baroque', color: '#ffd700' },
-    romanticism: { emoji: '🌹', name: 'Romanticism', color: '#e91e63' },
-    cubism: { emoji: '🟦', name: 'Cubism', color: '#f39c12' },
-    expressionism: { emoji: '🔥', name: 'Expressionism', color: '#ff5722' },
-    contemporary: { emoji: '🔮', name: 'Contemporary', color: '#00bcd4' }
+    impressionism: { emoji: '🌻', name: 'Импрессионизм', color: '#ffb347' },
+    renaissance: { emoji: '🏰', name: 'Ренессанс', color: '#daa520' },
+    surrealism: { emoji: '🌙', name: 'Сюриализм', color: '#9b59b6' },
+    abstract: { emoji: '🎨', name: 'Абстракционизм', color: '#e74c3c' },
+    realism: { emoji: '🚼️', name: 'Реализм', color: '#8b4513' },
+    modernism: { emoji: '✨', name: 'Модернизм', color: '#3498db' },
+    baroque: { emoji: '👑', name: 'Бароко', color: '#ffd700' },
+    romanticism: { emoji: '🌹', name: 'Романтизм', color: '#e91e63' },
+    cubism: { emoji: '🟦', name: 'Кубизм', color: '#f39c12' },
+    expressionism: { emoji: '🔥', name: 'Экспрессионизм', color: '#ff5722' },
+    contemporary: { emoji: '🔮', name: 'Современное искусство', color: '#00bcd4' }
   };
   return themes[theme] || { emoji: '❓', name: theme || 'Unknown', color: '#999' };
 }
@@ -47,14 +47,14 @@ function getThemeLabel(theme) {
  */
 function getGenreLabel(genre) {
   const genres = {
-    portrait: { emoji: '👤', name: 'Portrait', role: 'Hero', color: '#3b82f6' },
-    landscape: { emoji: '🌄', name: 'Landscape', role: 'Dream', color: '#10b981' },
-    still_life: { emoji: '🍎', name: 'Still Life', role: 'Heal', color: '#84cc16' },
-    religious: { emoji: '⛪', name: 'Religious', role: 'Divine', color: '#fbbf24' },
-    mythological: { emoji: '🐉', name: 'Mythological', role: 'Epic', color: '#a855f7' },
-    abstract: { emoji: '🎨', name: 'Abstract', role: 'Chaos', color: '#ef4444' },
-    urban: { emoji: '🏙️', name: 'Urban', role: 'Stability', color: '#6366f1' },
-    nude: { emoji: '💃', name: 'Nude', role: 'Beauty', color: '#ec4899' }
+    portrait: { emoji: '👤', name: 'Портрет', role: 'Hero', color: '#3b82f6' },
+    landscape: { emoji: '🌄', name: 'Ландшафт', role: 'Dream', color: '#10b981' },
+    still_life: { emoji: '🍎', name: 'Натюрморт', role: 'Heal', color: '#84cc16' },
+    religious: { emoji: '⛪', name: 'Религия', role: 'Divine', color: '#fbbf24' },
+    mythological: { emoji: '🐉', name: 'Мифология', role: 'Epic', color: '#a855f7' },
+    abstract: { emoji: '🎨', name: 'Абстракция', role: 'Chaos', color: '#ef4444' },
+    urban: { emoji: '🏙️', name: 'Уличная жизнь', role: 'Stability', color: '#6366f1' },
+    nude: { emoji: '💃', name: 'Ню', role: 'Beauty', color: '#ec4899' }
   };
   return genres[genre] || { emoji: '❓', name: genre || 'Unknown', role: '?', color: '#999' };
 }
