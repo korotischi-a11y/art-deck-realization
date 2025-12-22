@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мини-игры - ArtDeck</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <nav class="navbar">
+      <div class="nav-brand">
+        <span class="logo">🎴 ArtDeck</span>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">🏠 Главная</a>
+        <a href="gallery.html">🖼 Галерея</a>
+        <a href="minigames.html" class="active">🎮 Игры</a>
+        <a href="#" id="logout-btn">🚪 Выход</a>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1>🎮 Мини-игры</h1>
+        <p>Играй с картами из твоей коллекции</p>
+      </div>
+
+      <div class="games-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-top: 32px;">
+        <!-- Мемори -->
+        <div class="game-card" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED); padding: 24px; border-radius: 16px; color: white; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+          <div style="font-size: 48px; margin-bottom: 16px;">🃏</div>
+          <h3 style="margin: 0 0 12px 0; font-size: 24px;">Мемори</h3>
+          <p style="margin: 0 0 16px 0; font-size: 14px; opacity: 0.9;">Найди парные картины из своей коллекции</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+            <span style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px; font-size: 12px;">Память</span>
+            <span style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px; font-size: 12px;">4-20 карт</span>
+          </div>
+          <button class="play-memory-btn" style="width: 100%; padding: 12px; background: white; color: #7C3AED; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">🎮 Играть</button>
+        </div>
+
+        <!-- Викторина (в разработке) -->
+        <div class="game-card" style="background: linear-gradient(135deg, #3B82F6, #2563EB); padding: 24px; border-radius: 16px; color: white; opacity: 0.6;">
+          <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
+          <h3 style="margin: 0 0 12px 0; font-size: 24px;">Викторина</h3>
+          <p style="margin: 0 0 16px 0; font-size: 14px; opacity: 0.9;">Проверь знания об искусстве</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+            <span style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px; font-size: 12px;">Знания</span>
+            <span style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px; font-size: 12px;">10 вопросов</span>
+          </div>
+          <button disabled style="width: 100%; padding: 12px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: not-allowed;">⏳ Скоро</button>
+        </div>
+
+        <!-- Хронология (в разработке) -->
+        <div class="game-card" style="background: linear-gradient(135deg, #F59E0B, #D97706); padding: 24px; border-radius: 16px; color: white; opacity: 0.6;">
+          <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+          <h3 style="margin: 0 0 12px 0; font-size: 24px;">Хронология</h3>
+          <p style="margin: 0 0 16px 0; font-size: 14px; opacity: 0.9;">Расставь картины по годам создания</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+            <span style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px; font-size: 12px;">Логика</span>
+            <span style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px; font-size: 12px;">5-10 карт</span>
+          </div>
+          <button disabled style="width: 100%; padding: 12px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: not-allowed;">⏳ Скоро</button>
+        </div>
+
+        <!-- Угадай автора (в разработке) -->
+        <div class="game-card" style="background: linear-gradient(135deg, #EC4899, #DB2777); padding: 24px; border-radius: 16px; color: white; opacity: 0.6;">
+          <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
+          <h3 style="margin: 0 0 12px 0; font-size: 24px;">Угадай автора</h3>
+          <p style="margin: 0 0 16px 0; font-size: 14px; opacity: 0.9;">Определи художника по фрагменту</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+            <span style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px; font-size: 12px;">Знания</span>
+            <span style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px; font-size: 12px;">10 раундов</span>
+          </div>
+          <button disabled style="width: 100%; padding: 12px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: not-allowed;">⏳ Скоро</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { state, loadState, logout } from './app.js';
+    import { showMemoryGame } from './modules/memory.js';
+
+    // Проверка авторизации
+    loadState();
+    if (!state.currentUser) {
+      window.location.href = 'index.html';
+    }
+
+    // Выход
+    document.getElementById('logout-btn').addEventListener('click', (e) => {
+      e.preventDefault();
+      logout();
+    });
+
+    // Запуск игры Мемори
+    document.querySelector('.play-memory-btn').addEventListener('click', () => {
+      showMemoryGame();
+    });
+  </script>
+</body>
+</html>
