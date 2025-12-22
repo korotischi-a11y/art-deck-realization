@@ -1,6 +1,6 @@
 /**
- * modules/coloring.js - Мини-игра "Раскраска по номерам"
- * Раскрась чёрно-белую картину по секторам
+ * modules/coloring.js - Мини-игра "Алмазная мозаика"
+ * Раскрась картину по пикселям как алмазную мозаику
  */
 
 import * as ui from './ui.js';
@@ -15,9 +15,11 @@ export function showColoringGame(card) {
   modal.style.cssText = 'z-index: 9999;';
   
   let currentColor = '#EF4444';
-  let canvas, ctx, segmentCanvas, segmentCtx;
-  let segments = []; // сегменты для раскраски
-  let coloredSegments = new Map(); // сохранённые цвета
+  let canvas, ctx;
+  let gridSize = 30; // ОГРОМНАЯ СЕТКА для эффекта мозаики
+  let segments = [];
+  let coloredSegments = new Map();
+  let pixelatedColors = []; // Цвета пикселизированного изображения
   
   // Палитра
   const palette = [
@@ -36,10 +38,10 @@ export function showColoringGame(card) {
   ];
   
   modal.innerHTML = `
-    <div class="modal-content" style="max-width: 900px; max-height: 95vh; overflow-y: auto; padding: 24px;">
+    <div class="modal-content" style="max-width: 1000px; max-height: 95vh; overflow-y: auto; padding: 24px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <div>
-          <h2 style="margin: 0 0 8px 0; color: var(--text-accent);">🎨 Раскраска: ${card.title}</h2>
+          <h2 style="margin: 0 0 8px 0; color: var(--text-accent);">💎 Алмазная мозаика: ${card.title}</h2>
           <p style="margin: 0; font-size: 14px; color: var(--text-secondary);">${card.artist}, ${card.year}</p>
         </div>
         <button class="modal-close" style="padding: 0; width: 36px; height: 36px; font-size: 24px; background: none; border: none; color: var(--text); cursor: pointer;">×</button>
@@ -53,12 +55,21 @@ export function showColoringGame(card) {
             <h4 style="margin: 0 0 8px 0; color: #92400E; font-size: 14px; font-weight: 700;">Как играть:</h4>
             <ul style="margin: 0; padding-left: 20px; color: #78350F; font-size: 13px; line-height: 1.6;">
               <li><strong>Выбери цвет</strong> из палитры или используй пипетку</li>
-              <li><strong>Кликни на область</strong> чёрно-белого изображения, чтобы залить её цветом</li>
-              <li><strong>Ластик:</strong> стирает цвет, возвращая область в белый</li>
-              <li><strong>Совет:</strong> используй превью оригинала для подсказки</li>
+              <li><strong>Кликни на пиксель</strong> чтобы раскрасить его — ${gridSize}×${gridSize} = ${gridSize * gridSize} пикселей!</li>
+              <li><strong>Авто-заполнение:</strong> нажми "🎨 Показать оригинал" чтобы увидеть подсказку</li>
+              <li><strong>Сложность:</strong> выбери размер сетки (чем больше — тем детальнее)</li>
             </ul>
           </div>
         </div>
+      </div>
+      
+      <!-- Сложность -->
+      <div style="display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; align-items: center;">
+        <span style="font-size: 13px; color: var(--text-secondary); font-weight: 600;">Детализация:</span>
+        <button class="grid-size-btn" data-size="20" style="padding: 8px 16px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">20×20</button>
+        <button class="grid-size-btn" data-size="30" style="padding: 8px 16px; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">30×30</button>
+        <button class="grid-size-btn" data-size="40" style="padding: 8px 16px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">40×40</button>
+        <button class="grid-size-btn" data-size="50" style="padding: 8px 16px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">50×50 🔥</button>
       </div>
       
       <div style="display: flex; gap: 20px; flex-wrap: wrap;">
@@ -96,12 +107,19 @@ export function showColoringGame(card) {
             />
           </div>
           
+          <!-- Статистика -->
+          <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Прогресс</div>
+            <div style="font-size: 20px; font-weight: 700; color: var(--text-accent);" id="progress-display">0%</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;"><span id="colored-count">0</span> / <span id="total-count">${gridSize * gridSize}</span></div>
+          </div>
+          
           <!-- Кнопки -->
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <button 
-              id="eraser-btn"
-              style="padding: 10px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
-              🧯 Ластик
+              id="toggle-hint-btn"
+              style="padding: 10px; background: linear-gradient(135deg, #8B5CF6, #7C3AED); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
+              🎨 Показать оригинал
             </button>
             <button 
               id="clear-btn"
@@ -114,31 +132,22 @@ export function showColoringGame(card) {
               💾 Сохранить
             </button>
           </div>
-          
-          <!-- Превью -->
-          <div style="margin-top: 16px;">
-            <div style="margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);">Оригинал</div>
-            <img src="${card.imageUrl}" alt="Оригинал" style="width: 100%; border-radius: 8px; opacity: 0.7; border: 2px solid var(--border-light);" />
-          </div>
         </div>
         
         <!-- Холст -->
         <div style="flex: 1; min-width: 300px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h4 style="margin: 0; font-size: 14px; color: var(--text-accent);">🖼️ Раскрась картину</h4>
+            <h4 style="margin: 0; font-size: 14px; color: var(--text-accent);">💎 Мозаика ${gridSize}×${gridSize}</h4>
             <div style="font-size: 12px; color: var(--text-secondary);">
               Текущий: <span id="current-color-display" style="display: inline-block; width: 20px; height: 20px; background: ${currentColor}; border: 1px solid var(--border); border-radius: 4px; vertical-align: middle;"></span>
             </div>
           </div>
           <div style="position: relative; border: 2px solid var(--border-light); border-radius: 12px; overflow: hidden; background: white;">
-            <!-- Скрытый canvas для сегментации -->
-            <canvas id="segment-canvas" width="600" height="600" style="display: none;"></canvas>
-            <!-- Основной canvas -->
             <canvas 
               id="drawing-canvas" 
               width="600" 
               height="600"
-              style="display: block; max-width: 100%; height: auto; cursor: pointer;"
+              style="display: block; max-width: 100%; height: auto; cursor: crosshair; image-rendering: pixelated;"
             ></canvas>
           </div>
         </div>
@@ -154,96 +163,111 @@ export function showColoringGame(card) {
   // Инициализация
   canvas = modal.querySelector('#drawing-canvas');
   ctx = canvas.getContext('2d');
-  segmentCanvas = modal.querySelector('#segment-canvas');
-  segmentCtx = segmentCanvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false; // Пикселизация
+  
+  let showHint = false;
   
   // Загрузка изображения
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.onload = () => {
-    // Рисуем чёрно-белую версию
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    
-    // Применяем чёрно-белый фильтр
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    
-    for (let i = 0; i < data.length; i += 4) {
-      const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-      data[i] = avg;     // R
-      data[i + 1] = avg; // G
-      data[i + 2] = avg; // B
-    }
-    
-    ctx.putImageData(imageData, 0, 0);
-    
-    // Создаём сегменты (сетку 4x4)
-    createSegments();
-    
-    // Добавляем контуры
-    drawContours();
+    initMosaic();
   };
   
   img.onerror = () => {
     ctx.fillStyle = '#F0F0F0';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#666';
-    ctx.font = '20px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Не удалось загрузить изображение', canvas.width / 2, canvas.height / 2);
   };
   
   img.src = card.imageUrl;
   
-  // Создание сегментов (сетка 4x4 = 16 областей)
-  function createSegments() {
-    const gridSize = 4;
-    const segmentWidth = canvas.width / gridSize;
-    const segmentHeight = canvas.height / gridSize;
+  // Инициализация мозаики
+  function initMosaic() {
+    // Пикселизация изображения
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = gridSize;
+    tempCanvas.height = gridSize;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.imageSmoothingEnabled = false;
     
+    // Рисуем изображение в маленьком размере
+    tempCtx.drawImage(img, 0, 0, gridSize, gridSize);
+    
+    // Получаем цвета пикселей
+    const imageData = tempCtx.getImageData(0, 0, gridSize, gridSize);
+    const data = imageData.data;
+    
+    pixelatedColors = [];
+    for (let y = 0; y < gridSize; y++) {
+      for (let x = 0; x < gridSize; x++) {
+        const i = (y * gridSize + x) * 4;
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        pixelatedColors.push(`rgb(${r},${g},${b})`);
+      }
+    }
+    
+    // Создаём сегменты
+    createSegments();
+    renderCanvas();
+    updateProgress();
+  }
+  
+  // Создание сегментов
+  function createSegments() {
+    const pixelSize = canvas.width / gridSize;
     segments = [];
+    
     for (let row = 0; row < gridSize; row++) {
       for (let col = 0; col < gridSize; col++) {
         segments.push({
           id: `${row}-${col}`,
-          x: col * segmentWidth,
-          y: row * segmentHeight,
-          width: segmentWidth,
-          height: segmentHeight
+          x: col * pixelSize,
+          y: row * pixelSize,
+          size: pixelSize,
+          colorIndex: row * gridSize + col
         });
       }
     }
   }
   
-  // Отрисовка контуров
-  function drawContours() {
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-    ctx.lineWidth = 1;
+  // Рендер canvas
+  function renderCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Фон
+    ctx.fillStyle = '#F5F5F5';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     segments.forEach(seg => {
-      ctx.strokeRect(seg.x, seg.y, seg.width, seg.height);
+      // Если показываем подсказку - рисуем оригинальный цвет полупрозрачным
+      if (showHint) {
+        ctx.fillStyle = pixelatedColors[seg.colorIndex];
+        ctx.globalAlpha = 0.3;
+        ctx.fillRect(seg.x, seg.y, seg.size, seg.size);
+        ctx.globalAlpha = 1.0;
+      }
+      
+      // Если пользователь раскрасил - рисуем его цвет
+      if (coloredSegments.has(seg.id)) {
+        ctx.fillStyle = coloredSegments.get(seg.id);
+        ctx.fillRect(seg.x + 1, seg.y + 1, seg.size - 2, seg.size - 2);
+      }
+      
+      // Сетка
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(seg.x, seg.y, seg.size, seg.size);
     });
   }
   
   // Получение сегмента по клику
   function getSegmentAtPoint(x, y) {
     return segments.find(seg => 
-      x >= seg.x && x < seg.x + seg.width &&
-      y >= seg.y && y < seg.y + seg.height
+      x >= seg.x && x < seg.x + seg.size &&
+      y >= seg.y && y < seg.y + seg.size
     );
-  }
-  
-  // Заливка сегмента
-  function fillSegment(segment, color) {
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.6;
-    ctx.fillRect(segment.x + 1, segment.y + 1, segment.width - 2, segment.height - 2);
-    ctx.globalAlpha = 1.0;
-    
-    // Перерисовываем контур
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(segment.x, segment.y, segment.width, segment.height);
   }
   
   // Клик по canvas
@@ -257,9 +281,35 @@ export function showColoringGame(card) {
     const segment = getSegmentAtPoint(x, y);
     if (segment) {
       coloredSegments.set(segment.id, currentColor);
-      fillSegment(segment, currentColor);
+      renderCanvas();
+      updateProgress();
     }
   });
+  
+  // Обновление прогресса
+  function updateProgress() {
+    const colored = coloredSegments.size;
+    const total = segments.length;
+    const percent = Math.round((colored / total) * 100);
+    
+    modal.querySelector('#progress-display').textContent = `${percent}%`;
+    modal.querySelector('#colored-count').textContent = colored;
+    modal.querySelector('#total-count').textContent = total;
+    
+    if (percent === 100) {
+      setTimeout(() => {
+        ui.showToast('🎉 Мозаика завершена!', 'success');
+      }, 300);
+    }
+  }
+  
+  // Переключение подсказки
+  modal.querySelector('#toggle-hint-btn').onclick = () => {
+    showHint = !showHint;
+    const btn = modal.querySelector('#toggle-hint-btn');
+    btn.textContent = showHint ? '🙈 Скрыть оригинал' : '🎨 Показать оригинал';
+    renderCanvas();
+  };
   
   // Выбор цвета
   modal.querySelectorAll('.color-btn').forEach(btn => {
@@ -275,29 +325,12 @@ export function showColoringGame(card) {
     updateColorUI();
   };
   
-  // Ластик
-  modal.querySelector('#eraser-btn').onclick = () => {
-    currentColor = 'transparent';
-    updateColorUI();
-  };
-  
   // Очистить
   modal.querySelector('#clear-btn').onclick = () => {
-    if (confirm('Очистить все цвета?')) {
+    if (confirm('Очистить всю мозаику?')) {
       coloredSegments.clear();
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      
-      // Чёрно-белый фильтр
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-      for (let i = 0; i < data.length; i += 4) {
-        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-        data[i] = avg;
-        data[i + 1] = avg;
-        data[i + 2] = avg;
-      }
-      ctx.putImageData(imageData, 0, 0);
-      drawContours();
+      renderCanvas();
+      updateProgress();
     }
   };
   
@@ -305,19 +338,39 @@ export function showColoringGame(card) {
   modal.querySelector('#save-btn').onclick = () => {
     const dataURL = canvas.toDataURL('image/png');
     const link = document.createElement('a');
-    link.download = `coloring_${card.title.replace(/\s+/g, '_')}_${Date.now()}.png`;
+    link.download = `mosaic_${card.title.replace(/\s+/g, '_')}_${Date.now()}.png`;
     link.href = dataURL;
     link.click();
-    ui.showToast('💾 Рисунок сохранён!', 'success');
+    ui.showToast('💾 Мозаика сохранена!', 'success');
   };
+  
+  // Смена размера сетки
+  modal.querySelectorAll('.grid-size-btn').forEach(btn => {
+    btn.onclick = () => {
+      gridSize = parseInt(btn.dataset.size);
+      
+      modal.querySelectorAll('.grid-size-btn').forEach(b => {
+        b.style.background = 'var(--bg-tertiary)';
+        b.style.color = 'var(--text)';
+        b.style.border = '1px solid var(--border-light)';
+      });
+      btn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+      btn.style.color = 'white';
+      btn.style.border = 'none';
+      
+      coloredSegments.clear();
+      initMosaic();
+      
+      // Обновляем заголовок
+      modal.querySelector('h4').textContent = `💎 Мозаика ${gridSize}×${gridSize}`;
+    };
+  });
   
   function updateColorUI() {
     modal.querySelectorAll('.color-btn').forEach(btn => {
       btn.style.border = btn.dataset.color === currentColor ? '3px solid var(--text-accent)' : '3px solid transparent';
     });
-    modal.querySelector('#current-color-display').style.background = currentColor === 'transparent' ? '#FFF' : currentColor;
-    if (currentColor !== 'transparent') {
-      colorPicker.value = currentColor;
-    }
+    modal.querySelector('#current-color-display').style.background = currentColor;
+    colorPicker.value = currentColor;
   }
 }
