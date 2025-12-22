@@ -62,17 +62,26 @@ export function saveNote(cardId, note) {
   saveGalleryData();
 }
 
-// Получение уникальных карт
+// 🔥 ИСПРАВЛЕНО: Получение уникальных карт ТОЛЬКО ИЗ КОЛЛЕКЦИИ ПОЛЬЗОВАТЕЛЯ
 function getUniqueCards() {
   const uniqueMap = new Map();
   
-  state.cards.forEach(card => {
-    if (!uniqueMap.has(card.id)) {
-      uniqueMap.set(card.id, { ...card, count: 1 });
-    } else {
-      uniqueMap.get(card.id).count++;
+  // 🔥 Собираем все cardId из всех колод пользователя
+  const decksObj = state.currentUser?.decks || {};
+  
+  for (const deck of Object.values(decksObj)) {
+    for (const [cardId, count] of Object.entries(deck.cards || {})) {
+      // 🔥 Находим полную информацию о карте из state.cards
+      const cardData = state.cards.find(c => c.id === cardId);
+      if (!cardData) continue;
+      
+      if (!uniqueMap.has(cardId)) {
+        uniqueMap.set(cardId, { ...cardData, count });
+      } else {
+        uniqueMap.get(cardId).count += count;
+      }
     }
-  });
+  }
   
   return Array.from(uniqueMap.values());
 }
@@ -243,8 +252,12 @@ function updateGalleryStats() {
   const uniqueEl = document.getElementById('gallery-unique-cards');
   const favoritesEl = document.getElementById('gallery-favorites-count');
   
-  if (totalEl) totalEl.textContent = state.cards.length;
-  if (uniqueEl) uniqueEl.textContent = getUniqueCards().length;
+  // 🔥 Подсчёт общего количества карт в коллекции
+  const uniqueCards = getUniqueCards();
+  const totalCards = uniqueCards.reduce((sum, card) => sum + card.count, 0);
+  
+  if (totalEl) totalEl.textContent = totalCards;
+  if (uniqueEl) uniqueEl.textContent = uniqueCards.length;
   if (favoritesEl) favoritesEl.textContent = galleryState.favorites.size;
 }
 
