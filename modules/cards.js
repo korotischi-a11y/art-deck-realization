@@ -211,8 +211,8 @@ function createCardElement(card, count) {
         <span>${card.year}</span>
       </div>
       
-      <!-- 🔥 МАТРИЦА: Theme & Genre ВЛЕВО + эмодзи + текст (шрифт 6px) -->
-      <div style="display:flex; gap:4px; font-size:6px; justify-content:flex-start; flex-wrap:wrap;">
+      <!-- 🔥 МАТРИЦА: Theme & Genre ВЛЕВО + эмодзи + текст (шрифт 6.5px) + В ОДНУ СТРОКУ -->
+      <div style="display:flex; gap:4px; font-size:6.5px; justify-content:flex-start; flex-wrap:nowrap; overflow:hidden;">
         <span style="background:${themeLabel.color}20; color:${themeLabel.color}; padding:2px 4px; border-radius:3px; border:1px solid ${themeLabel.color}40; white-space:nowrap; font-weight:600;">${themeLabel.emoji} ${themeLabel.name}</span>
         <span style="background:${genreLabel.color}20; color:${genreLabel.color}; padding:2px 4px; border-radius:3px; border:1px solid ${genreLabel.color}40; white-space:nowrap; font-weight:600;">${genreLabel.emoji} ${genreLabel.name}</span>
       </div>
