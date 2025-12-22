@@ -10,11 +10,17 @@ import * as leaderboard from './modules/leaderboard.js';
 import * as packs from './modules/packs.js';
 import * as admin from './modules/admin.js';
 import * as ui from './modules/ui.js';
+import * as gallery from './modules/gallery.js';
 
 export const state = { currentUser: null, cards: [], packs: [], leaderboard: [], isAdmin: false, isLoginMode: true };
 
 const TAB_TITLES = {
-  collection: '📚 Коллекция', profile: '👤 Профиль', leaderboard: '🏆 Рейтинг', packs: '📋 Паки', admin: '⚙ Админ'
+  collection: '📚 Коллекция',
+  gallery: '🖼️ Галерея',
+  profile: '👤 Профиль',
+  leaderboard: '🏆 Рейтинг',
+  packs: '📋 Паки',
+  admin: '⚙ Админ'
 };
 
 async function checkDailyRewards() {
@@ -54,17 +60,17 @@ async function initApp() {
 
 async function loadInitialData() {
   try {
-    // 🔥 ПРОВЕРКА СОХРАНЁННОЙ ВКЛАДКИ ДО ЗАГРУЗКИ ДАННЫХ
     const savedTab = localStorage.getItem('activeTab') || 'collection';
     
     await cardMod.loadCards();
     await decks.loadDecks();
     await packs.loadPacks();
     await leaderboard.loadLeaderboard();
+    gallery.loadGalleryData();
+    
     updateUserInterface();
     user.renderProfile();
     
-    // 🔥 ПЕРЕКЛЮЧЕНИЕ НА СОХРАНЁННУЮ ВКЛАДКУ БЕЗ РЕНДЕРА КОЛЛЕКЦИИ
     switchTab(savedTab);
   } catch (e) { console.error('Load error:', e); }
 }
@@ -85,7 +91,6 @@ export function switchTab(tabName) {
   document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.getElementById('page-title').textContent = TAB_TITLES[tabName] || 'Art Deck';
   
-  // 🔥 СОХРАНЕНИЕ АКТИВНОЙ ВКЛАДКИ В localStorage
   localStorage.setItem('activeTab', tabName);
   
   switch (tabName) {
@@ -93,10 +98,22 @@ export function switchTab(tabName) {
       cardMod.renderCollection();
       decks.renderDecks();
       break;
-    case 'profile': user.renderProfile(); break;
-    case 'leaderboard': leaderboard.renderLeaderboard(); break;
-    case 'packs': packs.renderShop(); break;
-    case 'admin': admin.initAdminPanel(); break;
+    case 'gallery':
+      gallery.renderGallery();
+      gallery.setupGalleryListeners();
+      break;
+    case 'profile':
+      user.renderProfile();
+      break;
+    case 'leaderboard':
+      leaderboard.renderLeaderboard();
+      break;
+    case 'packs':
+      packs.renderShop();
+      break;
+    case 'admin':
+      admin.initAdminPanel();
+      break;
   }
 }
 
@@ -110,6 +127,7 @@ function updateAuthUI() {
   if (state.isLoginMode) { btn.textContent = '🔐 Login'; toggle.textContent = 'Register'; }
   else { btn.textContent = '✨ Reg'; toggle.textContent = 'Have account?'; }
 }
+
 function setupAuthListeners() {
   document.getElementById('toggle-password')?.addEventListener('click', (e) => {
     e.preventDefault();
@@ -136,6 +154,7 @@ function setupAuthListeners() {
   });
   document.getElementById('toggle-auth')?.addEventListener('click', () => { state.isLoginMode = !state.isLoginMode; updateAuthUI(); });
 }
+
 function setupEventListeners() {
   document.querySelectorAll('.sidebar-btn[data-tab]').forEach(b => { b.addEventListener('click', () => switchTab(b.dataset.tab)); });
   document.getElementById('logout-btn')?.addEventListener('click', async () => { await auth.logout(); state.currentUser = null; showAuthPage(); });
@@ -147,7 +166,6 @@ function setupEventListeners() {
     cardMod.renderCollection();
   });
   
-  // 🔥 ОБРАБОТЧИК ЗАГРУЗКИ JSON
   const uploadBtn = document.getElementById('upload-json-btn');
   if (uploadBtn && !uploadBtn.dataset.initialized) {
     uploadBtn.addEventListener('click', () => {
@@ -156,5 +174,6 @@ function setupEventListeners() {
     uploadBtn.dataset.initialized = 'true';
   }
 }
+
 export { updateUserInterface };
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initApp); } else { initApp(); }
