@@ -14,12 +14,15 @@ export function showPuzzleGame(card) {
   modal.id = 'puzzle-game-modal';
   modal.style.cssText = 'z-index: 9999;';
   
-  const difficulty = 3; // Начинаем с 3x3
+  const difficulty = 3;
   let gridSize = difficulty;
   let moves = 0;
   let startTime = Date.now();
   let tiles = [];
   let emptyIndex = gridSize * gridSize - 1;
+  
+  // Размер игрового поля (фиксированный)
+  const PUZZLE_SIZE = 450; // пикселей
   
   modal.innerHTML = `
     <div class="modal-content" style="max-width: 800px; max-height: 95vh; overflow-y: auto; padding: 24px;">
@@ -58,7 +61,7 @@ export function showPuzzleGame(card) {
           <div style="font-size: 12px; color: var(--text-secondary);">Время</div>
         </div>
         <div style="flex: 1; text-align: center;">
-          <div style="font-size: 24px; font-weight: 700; color: var(--text-accent);">${gridSize}×${gridSize}</div>
+          <div style="font-size: 24px; font-weight: 700; color: var(--text-accent);" id="puzzle-difficulty">${gridSize}×${gridSize}</div>
           <div style="font-size: 12px; color: var(--text-secondary);">Сложность</div>
         </div>
       </div>
@@ -72,14 +75,14 @@ export function showPuzzleGame(card) {
       
       <!-- Игровое поле -->
       <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
-        <!-- Превью оригинала -->
+        <!-- Превью -->
         <div style="flex: 0 0 auto;">
           <div style="margin-bottom: 8px; font-size: 12px; color: var(--text-secondary); text-align: center;">Оригинал</div>
           <img src="${card.imageUrl}" alt="Оригинал" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; opacity: 0.5; border: 2px solid var(--border-light);" />
         </div>
         
         <!-- Пазл -->
-        <div style="flex: 1; min-width: 300px; max-width: 500px;">
+        <div style="flex: 0 0 auto;">
           <div id="puzzle-grid" style="
             display: grid;
             grid-template-columns: repeat(${gridSize}, 1fr);
@@ -87,15 +90,13 @@ export function showPuzzleGame(card) {
             background: var(--bg-primary);
             padding: 4px;
             border-radius: 12px;
-            aspect-ratio: 1;
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
+            width: ${PUZZLE_SIZE}px;
+            height: ${PUZZLE_SIZE}px;
           "></div>
         </div>
       </div>
       
-      <!-- Кнопки управления -->
+      <!-- Кнопки -->
       <div style="display: flex; gap: 12px; margin-top: 20px;">
         <button id="shuffle-btn" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #F59E0B, #D97706); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">🔀 Перемешать</button>
         <button id="hint-btn" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #8B5CF6, #7C3AED); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">💡 Подсказка</button>
@@ -105,25 +106,21 @@ export function showPuzzleGame(card) {
   
   document.body.appendChild(modal);
   
-  // Закрытие модалки
   modal.querySelector('.modal-close').onclick = () => modal.remove();
   modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
   
-  // Инициализация игры
+  // Инициализация
   function initPuzzle(size) {
     gridSize = size;
     moves = 0;
     startTime = Date.now();
     emptyIndex = gridSize * gridSize - 1;
     
-    // Обновляем сложность в UI
     modal.querySelector('#puzzle-moves').textContent = '0';
-    modal.querySelector('.modal-content > div:nth-child(3) > div:nth-child(3) > div:first-child').textContent = `${gridSize}×${gridSize}`;
+    modal.querySelector('#puzzle-difficulty').textContent = `${gridSize}×${gridSize}`;
     
-    // Создаём плитки
     tiles = Array.from({ length: gridSize * gridSize }, (_, i) => i);
     
-    // Обновляем grid
     const grid = modal.querySelector('#puzzle-grid');
     grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
     
@@ -131,25 +128,30 @@ export function showPuzzleGame(card) {
     shuffle();
   }
   
-  // Рендер пазла
+  // Рендер пазла (ИСПРАВЛЕНО: пиксельное позиционирование)
   function renderPuzzle() {
     const grid = modal.querySelector('#puzzle-grid');
-    const tileSize = 100 / gridSize;
+    const tileSize = PUZZLE_SIZE / gridSize; // размер одной плитки в пикселях
     
     grid.innerHTML = tiles.map((tileIndex, position) => {
       const row = Math.floor(tileIndex / gridSize);
       const col = tileIndex % gridSize;
       const isEmpty = tileIndex === gridSize * gridSize - 1;
       
+      // ИСПРАВЛЕНО: используем пиксели вместо процентов
+      const bgX = -col * tileSize;
+      const bgY = -row * tileSize;
+      
       return `
         <div 
           class="puzzle-tile"
           data-position="${position}"
           style="
-            aspect-ratio: 1;
+            width: ${tileSize}px;
+            height: ${tileSize}px;
             background: ${isEmpty ? 'var(--bg-tertiary)' : `url(${card.imageUrl})`};
-            background-size: ${gridSize * 100}%;
-            background-position: ${col * tileSize}% ${row * tileSize}%;
+            background-size: ${PUZZLE_SIZE}px ${PUZZLE_SIZE}px;
+            background-position: ${bgX}px ${bgY}px;
             border-radius: 4px;
             cursor: ${isEmpty ? 'default' : 'pointer'};
             transition: all 0.2s ease;
@@ -160,7 +162,6 @@ export function showPuzzleGame(card) {
       `;
     }).join('');
     
-    // Добавляем обработчики кликов
     grid.querySelectorAll('.puzzle-tile').forEach(tile => {
       tile.addEventListener('click', () => {
         const position = parseInt(tile.dataset.position);
@@ -181,7 +182,6 @@ export function showPuzzleGame(card) {
     });
   }
   
-  // Проверка возможности хода
   function canMove(position) {
     const emptyRow = Math.floor(emptyIndex / gridSize);
     const emptyCol = emptyIndex % gridSize;
@@ -192,7 +192,6 @@ export function showPuzzleGame(card) {
            (Math.abs(emptyCol - posCol) === 1 && emptyRow === posRow);
   }
   
-  // Перемещение плитки
   function moveTile(position) {
     if (!canMove(position)) return;
     
@@ -208,7 +207,6 @@ export function showPuzzleGame(card) {
     }
   }
   
-  // Перемешивание
   function shuffle() {
     for (let i = 0; i < gridSize * gridSize * 10; i++) {
       const neighbors = getNeighbors(emptyIndex);
@@ -219,7 +217,6 @@ export function showPuzzleGame(card) {
     renderPuzzle();
   }
   
-  // Получить соседей пустой клетки
   function getNeighbors(index) {
     const neighbors = [];
     const row = Math.floor(index / gridSize);
@@ -233,12 +230,10 @@ export function showPuzzleGame(card) {
     return neighbors;
   }
   
-  // Проверка решения
   function isSolved() {
     return tiles.every((tile, index) => tile === index);
   }
   
-  // Победа
   function showVictory() {
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
     const minutes = Math.floor(elapsed / 60);
@@ -292,7 +287,6 @@ export function showPuzzleGame(card) {
     ui.showToast('🎉 Пазл собран!', 'success');
   }
   
-  // Подсказка
   function showHint() {
     const wrongTiles = tiles.filter((tile, index) => tile !== index && tile !== gridSize * gridSize - 1);
     if (wrongTiles.length === 0) return;
@@ -300,7 +294,6 @@ export function showPuzzleGame(card) {
     const grid = modal.querySelector('#puzzle-grid');
     const allTiles = grid.querySelectorAll('.puzzle-tile');
     
-    // Подсвечиваем неправильные плитки
     allTiles.forEach((tileEl, index) => {
       if (tiles[index] !== index && tiles[index] !== gridSize * gridSize - 1) {
         tileEl.style.border = '2px solid #EF4444';
@@ -326,7 +319,6 @@ export function showPuzzleGame(card) {
     }
   }, 1000);
   
-  // Обработчики кнопок
   modal.querySelector('#shuffle-btn').onclick = () => {
     shuffle();
     moves = 0;
@@ -336,7 +328,6 @@ export function showPuzzleGame(card) {
   
   modal.querySelector('#hint-btn').onclick = showHint;
   
-  // Переключение сложности
   modal.querySelectorAll('.difficulty-btn').forEach(btn => {
     btn.onclick = () => {
       modal.querySelectorAll('.difficulty-btn').forEach(b => {
@@ -352,6 +343,5 @@ export function showPuzzleGame(card) {
     };
   });
   
-  // Инициализация
   initPuzzle(3);
 }
