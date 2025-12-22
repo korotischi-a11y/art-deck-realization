@@ -11,6 +11,7 @@ import * as packs from './modules/packs.js';
 import * as admin from './modules/admin.js';
 import * as ui from './modules/ui.js';
 import * as gallery from './modules/gallery.js';
+import { showMemoryGame } from './modules/memory.js';
 
 export const state = { currentUser: null, cards: [], packs: [], leaderboard: [], isAdmin: false, isLoginMode: true };
 
@@ -20,6 +21,7 @@ const TAB_TITLES = {
   profile: '👤 Профиль',
   leaderboard: '🏆 Рейтинг',
   packs: '📋 Паки',
+  games: '🎮 Мини-игры',
   admin: '⚙ Админ'
 };
 
@@ -53,6 +55,7 @@ async function initApp() {
     showApp();
     await loadInitialData();
     setupEventListeners();
+    setupGamesListeners();
     await checkDailyRewards();
     console.log('✅ Ready');
   } catch (e) { console.error('Init error:', e); }
@@ -111,10 +114,22 @@ export function switchTab(tabName) {
     case 'packs':
       packs.renderShop();
       break;
+    case 'games':
+      // Вкладка игр - статический HTML, обработчики уже навешены
+      break;
     case 'admin':
       admin.initAdminPanel();
       break;
   }
+}
+
+// Обработчики для игр
+function setupGamesListeners() {
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.play-memory-btn')) {
+      showMemoryGame();
+    }
+  });
 }
 
 export function openModal(id) { document.getElementById(id)?.classList.add('active'); }
@@ -148,6 +163,7 @@ function setupAuthListeners() {
       await loadInitialData();
       showApp();
       setupEventListeners();
+      setupGamesListeners();
       await checkDailyRewards();
     } catch (e) { document.getElementById('auth-error').textContent = e.message; }
     finally { btn.disabled = false; }
