@@ -29,11 +29,11 @@ function getThemeLabel(theme) {
   const themes = {
     impressionism: { emoji: '🌻', name: 'Импрессионизм', color: '#ffb347' },
     renaissance: { emoji: '🏰', name: 'Ренессанс', color: '#daa520' },
-    surrealism: { emoji: '🌙', name: 'Сюриализм', color: '#9b59b6' },
+    surrealism: { emoji: '🌙', name: 'Сюрреализм', color: '#9b59b6' },
     abstract: { emoji: '🎨', name: 'Абстракционизм', color: '#e74c3c' },
     realism: { emoji: '🚼️', name: 'Реализм', color: '#8b4513' },
     modernism: { emoji: '✨', name: 'Модернизм', color: '#3498db' },
-    baroque: { emoji: '👑', name: 'Бароко', color: '#ffd700' },
+    baroque: { emoji: '👑', name: 'Барокко', color: '#ffd700' },
     romanticism: { emoji: '🌹', name: 'Романтизм', color: '#e91e63' },
     cubism: { emoji: '🟦', name: 'Кубизм', color: '#f39c12' },
     expressionism: { emoji: '🔥', name: 'Экспрессионизм', color: '#ff5722' },
@@ -48,12 +48,12 @@ function getThemeLabel(theme) {
 function getGenreLabel(genre) {
   const genres = {
     portrait: { emoji: '👤', name: 'Портрет', role: 'Hero', color: '#3b82f6' },
-    landscape: { emoji: '🌄', name: 'Ландшафт', role: 'Dream', color: '#10b981' },
+    landscape: { emoji: '🌄', name: 'Пейзаж', role: 'Dream', color: '#10b981' },
     still_life: { emoji: '🍎', name: 'Натюрморт', role: 'Heal', color: '#84cc16' },
-    religious: { emoji: '⛪', name: 'Религия', role: 'Divine', color: '#fbbf24' },
+    religious: { emoji: '⛪', name: 'Религиозный', role: 'Divine', color: '#fbbf24' },
     mythological: { emoji: '🐉', name: 'Мифология', role: 'Epic', color: '#a855f7' },
     abstract: { emoji: '🎨', name: 'Абстракция', role: 'Chaos', color: '#ef4444' },
-    urban: { emoji: '🏙️', name: 'Уличная жизнь', role: 'Stability', color: '#6366f1' },
+    urban: { emoji: '🏛️', name: 'Бытовой жанр', role: 'Stability', color: '#6366f1' },
     nude: { emoji: '💃', name: 'Ню', role: 'Beauty', color: '#ec4899' }
   };
   return genres[genre] || { emoji: '❓', name: genre || 'Unknown', role: '?', color: '#999' };
@@ -211,8 +211,8 @@ function createCardElement(card, count) {
         <span>${card.year}</span>
       </div>
       
-      <!-- 🔥 Theme & Genre -->
-      <div style="display:flex; gap:4px; font-size:9px;">
+      <!-- 🔥 Theme & Genre: выровнено по центру -->
+      <div style="display:flex; gap:4px; font-size:9px; justify-content:center;">
         <span style="background:${themeLabel.color}20; color:${themeLabel.color}; padding:2px 6px; border-radius:4px; border:1px solid ${themeLabel.color}40; white-space:nowrap;">${themeLabel.emoji}</span>
         <span style="background:${genreLabel.color}20; color:${genreLabel.color}; padding:2px 6px; border-radius:4px; border:1px solid ${genreLabel.color}40; white-space:nowrap;">${genreLabel.emoji}</span>
       </div>
@@ -291,7 +291,7 @@ function showCardDetail(card, count) {
 
   titleEl.textContent = card.title;
   artistEl.textContent = card.artist;
-  yearEl.textContent = `Year: ${card.year}`;
+  yearEl.textContent = `Год: ${card.year}`;
 
   imgEl.src = card.imageUrl || '';
   imgEl.style.cursor = 'pointer';
@@ -330,12 +330,12 @@ function showCardDetail(card, count) {
   `;
   paramsTable.appendChild(themeGenreDiv);
   
-  // 🔥 2. ТАБЛИЦА СПОСОБНОСТЕЙ (2x2)
+  // 🔥 2. ТАБЛИЦА СПОСОБНОСТЕЙ (2x2) - ПЕРЕВЕДЕНО НА РУССКИЙ
   const params = [
-    { name: '💓 Resonance', value: card.power?.resonance || 0, color: 'var(--resonance)' },
-    { name: '🎯 Virtuosity', value: card.power?.virtuosity || 0, color: 'var(--virtuosity)' },
-    { name: '🧠 Profundity', value: card.power?.profundity || 0, color: 'var(--profundity)' },
-    { name: '⚖ Harmony', value: card.power?.harmony || 0, color: 'var(--harmony)' }
+    { name: '💓 Резонанс', value: card.power?.resonance || 0, color: 'var(--resonance)' },
+    { name: '🎯 Виртуозность', value: card.power?.virtuosity || 0, color: 'var(--virtuosity)' },
+    { name: '🧠 Глубина', value: card.power?.profundity || 0, color: 'var(--profundity)' },
+    { name: '⚖ Гармония', value: card.power?.harmony || 0, color: 'var(--harmony)' }
   ];
 
   params.forEach(p => {
@@ -428,10 +428,11 @@ function renderDeckSelector(cardId, countInActive, container) {
   quantityWrapper.appendChild(quantityInput);
   wrapper.appendChild(quantityWrapper);
 
+  // 🔥 УНИФИЦИРОВАННАЯ КНОПКА: font-size:14px, font-weight:600, padding:12px
   const moveBtn = document.createElement('button');
   moveBtn.type = 'button';
   moveBtn.className = 'btn btn-primary';
-  moveBtn.style.cssText = 'width:100%; padding:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; border-radius:6px;';
+  moveBtn.style.cssText = 'width:100%; padding:12px; font-size:14px; font-weight:600; border:none; cursor:pointer; border-radius:6px;';
   moveBtn.textContent = '🔄 Перенести в колоду';
 
   moveBtn.onclick = async () => {
@@ -463,10 +464,11 @@ function renderDeckSelector(cardId, countInActive, container) {
 
 function renderCardActionButtons(card, currentCount, container) {
   if (decks.activeDeckId) {
+    // 🔥 УНИФИЦИРОВАННАЯ КНОПКА
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'btn';
-    removeBtn.style.cssText = 'width:100%; background:#666; color:white; border:none; cursor:pointer; font-weight:600; padding:10px; border-radius:6px;';
+    removeBtn.style.cssText = 'width:100%; background:#666; color:white; border:none; cursor:pointer; font-weight:600; padding:12px; border-radius:6px; font-size:14px;';
     removeBtn.textContent = '🗑 Удалить из колоды';
     removeBtn.onclick = async () => {
       const success = await decks.removeCardFromActiveDeck(card.id);
@@ -481,11 +483,12 @@ function renderCardActionButtons(card, currentCount, container) {
   }
 
   const tearPrice = calculateTearPrice(card);
+  // 🔥 УНИФИЦИРОВАННАЯ КНОПКА
   const deleteBtn = document.createElement('button');
   deleteBtn.type = 'button';
   deleteBtn.className = 'btn';
-  deleteBtn.style.cssText = 'width:100%; background:#ef4444; color:white; border:none; cursor:pointer; font-weight:600; padding:10px; border-radius:6px;';
-  deleteBtn.textContent = `💰 ПРОДАТЬ (${tearPrice} 💎 за шт.)`;
+  deleteBtn.style.cssText = 'width:100%; background:#ef4444; color:white; border:none; cursor:pointer; font-weight:600; padding:12px; border-radius:6px; font-size:14px;';
+  deleteBtn.textContent = `💰 Продать (${tearPrice} 💎 за шт.)`;
   deleteBtn.onclick = () => openTearCardModal(card, currentCount, tearPrice);
   container.appendChild(deleteBtn);
 }
@@ -502,7 +505,7 @@ function openTearCardModal(card, maxCount, tearPrice) {
 
   if (availableEl) availableEl.textContent = maxCount;
   if (inputEl) { inputEl.value = '1'; inputEl.max = maxCount; }
-  if (titleEl) titleEl.textContent = `Сколько копий порвать? (${tearPrice} 💎 за шт.)`;
+  if (titleEl) titleEl.textContent = `Сколько копий продать? (${tearPrice} 💎 за шт.)`;
 
   confirmBtn.onclick = async () => {
     const quantity = parseInt(inputEl.value, 10);
@@ -510,7 +513,7 @@ function openTearCardModal(card, maxCount, tearPrice) {
       return ui.showError(`Количество должно быть от 1 до ${maxCount}`);
     }
     const totalCoins = tearPrice * quantity;
-    const ok = confirm(`⚠️ Это ПРОДАСТ ${quantity} копию/копий карты "${card.title}"!\n\nВы получите: ${totalCoins} 💎\n\nВы уверены?`);
+    const ok = confirm(`⚠️ Продать ${quantity} копию/копий карты "${card.title}"?\n\nВы получите: ${totalCoins} 💎\n\nПродолжить?`);
     if (!ok) return;
 
     const success = await tearCardWithReward(card.id, quantity, totalCoins);
@@ -522,7 +525,7 @@ function openTearCardModal(card, maxCount, tearPrice) {
       decks.renderDecks();
       renderCollection();
       document.getElementById('coins-display').textContent = state.currentUser.currency;
-    } else ui.showError('Ошибка при удалении');
+    } else ui.showError('Ошибка при продаже');
   };
 
   cancelBtn.onclick = () => closeModal('tear-card-modal');
