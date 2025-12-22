@@ -213,8 +213,8 @@ function createCardElement(card, count) {
       
       <!-- 🔥 Theme & Genre: выровнено по центру -->
       <div style="display:flex; gap:4px; font-size:9px; justify-content:center;">
-        <span style="background:${themeLabel.color}20; color:${themeLabel.color}; padding:2px 6px; border-radius:4px; border:1px solid ${themeLabel.color}40; white-space:nowrap;">${themeLabel.emoji}</span>
-        <span style="background:${genreLabel.color}20; color:${genreLabel.color}; padding:2px 6px; border-radius:4px; border:1px solid ${genreLabel.color}40; white-space:nowrap;">${genreLabel.emoji}</span>
+        <span style="background:${themeLabel.color}20; color:${themeLabel.color}; padding:2px 6px; border-radius:4px; border:1px solid ${themeLabel.color}40; white-space:nowrap; text-align:center;">${themeLabel.emoji} ${themeLabel.name}</span>
+        <span style="background:${genreLabel.color}20; color:${genreLabel.color}; padding:2px 6px; border-radius:4px; border:1px solid ${genreLabel.color}40; white-space:nowrap; text-align:center;">${genreLabel.emoji} ${genreLabel.name}</span>
       </div>
       
       <div class="card-rarity" style="background:${rarity.color}15; border-color:${rarity.color}; color:${rarity.color}; padding:4px 8px; border-radius:8px; text-align:center; font-size:11px; border:1px solid ${rarity.color};">
