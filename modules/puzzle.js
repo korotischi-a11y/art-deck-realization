@@ -31,6 +31,22 @@ export function showPuzzleGame(card) {
         <button class="modal-close" style="padding: 0; width: 36px; height: 36px; font-size: 24px; background: none; border: none; color: var(--text); cursor: pointer;">×</button>
       </div>
       
+      <!-- ИНСТРУКЦИЯ -->
+      <div style="background: linear-gradient(135deg, #EFF6FF, #DBEAFE); border: 2px solid #3B82F6; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: start; gap: 12px;">
+          <div style="font-size: 24px; flex-shrink: 0;">ℹ️</div>
+          <div>
+            <h4 style="margin: 0 0 8px 0; color: #1E40AF; font-size: 14px; font-weight: 700;">Как играть:</h4>
+            <ul style="margin: 0; padding-left: 20px; color: #1E3A8A; font-size: 13px; line-height: 1.6;">
+              <li><strong>Кликай на плитку</strong> рядом с пустой клеткой, чтобы переместить её</li>
+              <li><strong>Цель:</strong> восстанови изображение в правильном порядке</li>
+              <li><strong>Сложность:</strong> выбери 3×3 (легко), 4×4 (средне) или 5×5 (сложно)</li>
+              <li><strong>Подсказка:</strong> красные рамки покажут неправильно расположенные плитки</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
       <!-- Статистика -->
       <div style="display: flex; gap: 20px; margin-bottom: 20px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
         <div style="flex: 1; text-align: center;">
@@ -49,9 +65,9 @@ export function showPuzzleGame(card) {
       
       <!-- Сложность -->
       <div style="display: flex; gap: 8px; margin-bottom: 20px; justify-content: center;">
-        <button class="difficulty-btn" data-size="3" style="padding: 8px 16px; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">3×3</button>
-        <button class="difficulty-btn" data-size="4" style="padding: 8px 16px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600;">4×4</button>
-        <button class="difficulty-btn" data-size="5" style="padding: 8px 16px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600;">5×5</button>
+        <button class="difficulty-btn" data-size="3" style="padding: 8px 16px; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">3×3 Легко</button>
+        <button class="difficulty-btn" data-size="4" style="padding: 8px 16px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600;">4×4 Средне</button>
+        <button class="difficulty-btn" data-size="5" style="padding: 8px 16px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600;">5×5 Сложно</button>
       </div>
       
       <!-- Игровое поле -->
@@ -102,7 +118,7 @@ export function showPuzzleGame(card) {
     
     // Обновляем сложность в UI
     modal.querySelector('#puzzle-moves').textContent = '0';
-    modal.querySelector('.modal-content h2').nextElementSibling.nextElementSibling.children[2].children[0].textContent = `${gridSize}×${gridSize}`;
+    modal.querySelector('.modal-content > div:nth-child(3) > div:nth-child(3) > div:first-child').textContent = `${gridSize}×${gridSize}`;
     
     // Создаём плитки
     tiles = Array.from({ length: gridSize * gridSize }, (_, i) => i);
@@ -154,11 +170,13 @@ export function showPuzzleGame(card) {
       tile.addEventListener('mouseenter', () => {
         if (canMove(parseInt(tile.dataset.position))) {
           tile.style.transform = 'scale(1.05)';
+          tile.style.filter = 'brightness(1.1)';
         }
       });
       
       tile.addEventListener('mouseleave', () => {
         tile.style.transform = 'scale(1)';
+        tile.style.filter = 'brightness(1)';
       });
     });
   }
