@@ -62,17 +62,36 @@ export function saveNote(cardId, note) {
   saveGalleryData();
 }
 
-// Получение уникальных карт
+/**
+ * ИСПРАВЛЕНО: Получение уникальных карт ИЗ КОЛЛЕКЦИИ ПОЛЬЗОВАТЕЛЯ
+ * Берём карты из всех колод пользователя (включая дубликаты)
+ */
 function getUniqueCards() {
   const uniqueMap = new Map();
   
-  state.cards.forEach(card => {
-    if (!uniqueMap.has(card.id)) {
-      uniqueMap.set(card.id, { ...card, count: 1 });
-    } else {
-      uniqueMap.get(card.id).count++;
+  // Проверяем наличие пользователя и его колод
+  if (!state.currentUser?.decks) {
+    return [];
+  }
+  
+  // Собираем все карты из всех колод
+  const decks = state.currentUser.decks;
+  for (const deck of Object.values(decks)) {
+    if (!deck.cards) continue;
+    
+    for (const [cardId, count] of Object.entries(deck.cards)) {
+      // Находим полную информацию о карте из state.cards
+      const cardInfo = state.cards.find(c => c.id === cardId);
+      if (!cardInfo) continue;
+      
+      if (!uniqueMap.has(cardId)) {
+        uniqueMap.set(cardId, { ...cardInfo, count });
+      } else {
+        // Суммируем количество из разных колод
+        uniqueMap.get(cardId).count += count;
+      }
     }
-  });
+  }
   
   return Array.from(uniqueMap.values());
 }
@@ -131,8 +150,8 @@ export function renderGallery() {
   if (cards.length === 0) {
     container.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-secondary);">
-        <p style="font-size: 18px; margin-bottom: 8px;">😔 Ничего не найдено</p>
-        <p style="font-size: 14px;">Попробуйте изменить фильтры или поисковый запрос</p>
+        <p style="font-size: 18px; margin-bottom: 8px;">🎨 Галерея пуста</p>
+        <p style="font-size: 14px;">Добавьте карты в коллекцию, чтобы увидеть их здесь</p>
       </div>
     `;
     return;
@@ -247,8 +266,11 @@ function updateGalleryStats() {
   const uniqueEl = document.getElementById('gallery-unique-cards');
   const favoritesEl = document.getElementById('gallery-favorites-count');
   
-  if (totalEl) totalEl.textContent = state.cards.length;
-  if (uniqueEl) uniqueEl.textContent = getUniqueCards().length;
+  const uniqueCards = getUniqueCards();
+  const totalCount = uniqueCards.reduce((sum, card) => sum + card.count, 0);
+  
+  if (totalEl) totalEl.textContent = totalCount;
+  if (uniqueEl) uniqueEl.textContent = uniqueCards.length;
   if (favoritesEl) favoritesEl.textContent = galleryState.favorites.size;
 }
 
