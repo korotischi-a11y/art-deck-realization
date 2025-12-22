@@ -54,7 +54,7 @@
   --font-size-xl: 24px;
   --font-size-2xl: 32px;
   
-  /* === ТЕНи === */
+  /* === ТЕНi === */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.7);
@@ -498,7 +498,7 @@ body {
 .card-body {
   height: 40%;
   flex-shrink: 0;
-  padding: 8px;
+  padding: 8px 8px 12px 8px;  /* 🔥 ДОБАВЛЕН padding-bottom: 12px */
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -809,7 +809,7 @@ body {
   background-repeat: no-repeat;
 }
 
-/* === КНОПКи === */
+/* === КНОПКi === */
 .btn {
   padding: var(--spacing-md) var(--spacing-lg);
   border: none;
