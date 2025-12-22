@@ -23,15 +23,15 @@
   --profundity: #95E1D3;
   --harmony: #FFD93D;
   
-  /* === РЕДКОСТИ === */
-  --rarity-common: #6b7280;
-  --rarity-uncommon: #3b82f6;
-  --rarity-rare: #8b5cf6;
-  --rarity-mythical: #d946ef;
-  --rarity-legendary: #ec4899;
-  --rarity-ancient: #f97316;
-  --rarity-ethereal: #06b6d4;
-  --rarity-immortal: #fbbf24;
+  /* === 🎨 РЕДКОСТИ - ОБНОВЛЁННАЯ ПАЛИТРА === */
+  --rarity-common: #9ca3af;          /* 🔄 Тёмно-серый (было #6b7280) */
+  --rarity-uncommon: #10b981;        /* 🆕 Изумрудно-зелёный (было синий #3b82f6) */
+  --rarity-rare: #6366f1;            /* 🔄 Насыщенный индиго (было #8b5cf6) */
+  --rarity-mythical: #a855f7;        /* 🔄 Яркий пурпур (было #d946ef) */
+  --rarity-legendary: #f43f5e;       /* 🔄 Малиновый (было розовый #ec4899) */
+  --rarity-ancient: #f97316;         /* ✅ Оранжевый (без изменений) */
+  --rarity-ethereal: #06b6d4;        /* ✅ Бирюзовый (без изменений) */
+  --rarity-immortal: #fbbf24;        /* ✅ Янтарный (без изменений) */
   
   /* === РАЗМЕРЫ === */
   --radius-sm: 4px;
