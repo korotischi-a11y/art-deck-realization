@@ -287,11 +287,11 @@ body {
 /* === 🔥 СЕТКА КАРТ === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(900px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--spacing-lg);
 }
 
-/* === 🔥 КАРТОЧКА 7×14 === */
+/* === 🔥 КАРТОЧКА - ИСПРАВЛЕНО === */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -301,7 +301,7 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  aspect-ratio: 7 / 14; /* было 155 / 268 или 7 / 12 */
+  aspect-ratio: 7 / 14;
   box-shadow: var(--shadow-sm);
   transform-style: preserve-3d;
   transition: transform 0.12s linear, box-shadow 0.12s linear, border-color 0.12s linear;
@@ -335,7 +335,7 @@ body {
   border-color: var(--wood-medium);
 }
 
-/* === РЕДКОСТИ / GLOW === */
+/* === РЕДКОСТИ / GLOW (ВСЕ ЭФФЕКТЫ СОХРАНЕНЫ) === */
 @keyframes glow-immortal {
   0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
   50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.7); }
@@ -450,9 +450,11 @@ body {
   animation: glow-ancient 2s ease-in-out infinite;
 }
 
+/* 🔥 ИЗОБРАЖЕНИЕ: 60% высоты, ФИКСИРОВАННО */
 .card-image {
   width: 100%;
-  flex: 3;              /* было 4 */
+  height: 60%;
+  flex-shrink: 0;
   background: linear-gradient(135deg, var(--bg-tertiary), var(--wood-darker));
   display: flex;
   align-items: center;
@@ -492,24 +494,24 @@ body {
   cursor: zoom-out !important;
 }
 
-/* 🔥 ТЕКСТ: 40% высоты */
+/* 🔥 ТЕКСТОВАЯ ЧАСТЬ: 40% высоты, ФИКСИРОВАННО */
 .card-body {
-  padding: 10px;
+  height: 40%;
+  flex-shrink: 0;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 2;              /* было 1 */
-  min-height: 0;
   box-sizing: border-box;
-  justify-content: space-between;
+  overflow: hidden;
 }
 
-/* 🔥 НАЗВАНИЕ: 14px, 2 строки */
+/* 🔥 НАЗВАНИЕ: фиксированная высота, 2 строки */
 .card-title {
   font-weight: 600;
   color: var(--text-accent);
-  font-size: 12px;
-  line-height: 1.3;
+  font-size: 11px;
+  line-height: 1.25;
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -517,41 +519,50 @@ body {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   word-break: break-word;
-  max-height: 2.6em;
+  height: 27.5px;
   flex-shrink: 0;
 }
 
-/* ✨ АВТОР: 11px */
+/* 🔥 АВТОР: одна строка, фиксированная высота */
 .card-artist {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-secondary);
   margin: 0;
-  flex-shrink: 0;
-}
-
-/* 🔥 РЕДКОСТЬ */
-.card-rarity {
-  display: flex; /* ← Убрал inline-flex */
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 3px 6px;
-  border-radius: var(--radius-md);
-  font-size: 10px;
-  font-weight: 600;
-  margin: 3px 0 0 0; /* ← Уменьшил отступ */
+  height: 11.25px;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-.card-params {
+/* 🔥 РЕДКОСТЬ: фиксированная высота, ВСЕГДА НА ОДНОМ УРОВНЕ */
+.card-rarity {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: var(--radius-md);
   font-size: 9px;
+  font-weight: 600;
+  margin: 2px 0;
+  white-space: nowrap;
+  height: 17px;
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+/* 🔥 ПАРАМЕТРЫ: фиксированная высота */
+.card-params {
+  font-size: 8px;
   color: var(--text-secondary);
   line-height: 1.2;
   margin: 0;
-  padding-top: 3px; /* ← Уменьшил с 4px */
+  padding-top: 3px;
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .card-param-line {
@@ -559,17 +570,22 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 4px;
+  height: 10px;
 }
 
+/* 🔥 СЧЁТЧИК: фиксированная высота */
 .card-count {
   background-color: var(--bg-tertiary);
-  padding: 2px 5px;
+  padding: 1px 4px;
   border-radius: var(--radius-md);
   text-align: center;
   font-weight: 600;
   color: var(--wood-light);
-  font-size: 9px;
-  margin: 0;
+  font-size: 8px;
+  margin: 2px 0 0 0;
+  height: 14px;
+  line-height: 14px;
+  flex-shrink: 0;
 }
 
 /* === МОДАЛЬНОЕ ОКНО === */
@@ -966,19 +982,19 @@ body {
 /* === АДАПТИВНОСТЬ === */
 @media (max-width: 1800px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   }
 }
 
 @media (max-width: 1400px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
 }
 
 @media (max-width: 1200px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
 }
 
@@ -1003,7 +1019,7 @@ body {
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
   
   .modal-content {
