@@ -211,10 +211,10 @@ function createCardElement(card, count) {
         <span>${card.year}</span>
       </div>
       
-      <!-- 🔥 МАТРИЦА: Theme & Genre ВЛЕВО + шрифт 6px (9px / 1.5) -->
-      <div style="display:flex; gap:4px; font-size:6px; justify-content:flex-start;">
-        <span style="background:${themeLabel.color}20; color:${themeLabel.color}; padding:2px 4px; border-radius:3px; border:1px solid ${themeLabel.color}40; white-space:nowrap;">${themeLabel.emoji}</span>
-        <span style="background:${genreLabel.color}20; color:${genreLabel.color}; padding:2px 4px; border-radius:3px; border:1px solid ${genreLabel.color}40; white-space:nowrap;">${genreLabel.emoji}</span>
+      <!-- 🔥 МАТРИЦА: Theme & Genre ВЛЕВО + эмодзи + текст (шрифт 5px) -->
+      <div style="display:flex; gap:4px; font-size:5px; justify-content:flex-start; flex-wrap:wrap;">
+        <span style="background:${themeLabel.color}20; color:${themeLabel.color}; padding:2px 4px; border-radius:3px; border:1px solid ${themeLabel.color}40; white-space:nowrap; font-weight:600;">${themeLabel.emoji} ${themeLabel.name}</span>
+        <span style="background:${genreLabel.color}20; color:${genreLabel.color}; padding:2px 4px; border-radius:3px; border:1px solid ${genreLabel.color}40; white-space:nowrap; font-weight:600;">${genreLabel.emoji} ${genreLabel.name}</span>
       </div>
       
       <!-- 🔥 МАТРИЦА: Редкость ВЛЕВО + text-align:left -->
