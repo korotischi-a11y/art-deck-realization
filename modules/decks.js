@@ -11,13 +11,14 @@
 import { state, closeModal, openModal } from '../app.js';
 import * as ui from './ui.js';
 import * as cardMod from './cards.js';
+import * as albums from './albums.js';
 
 const db = firebase.firestore();
 
 // 🔥 АКТИВНАЯ КОЛОДА (для рейтинга в лидерборде)
 export let activeDeckId = null;
 
-// 👀 ПРОСМАТРИВАЕМАЯ КОЛОДА (для отображения карт)
+// 👀 ПРОСМАТРИВАЕМАЯ КОЛОДА (для отображения)
 export let viewingDeckId = null;
 
 // КОНСТАНТА для колоды сброса
@@ -298,6 +299,14 @@ export function renderDecks() {
     });
   });
   
+  // 📖 Кнопка "Преобразовать в альбом"
+  panel.querySelectorAll('.deck-convert-album-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      albums.showCreateAlbumModal(btn.dataset.deckId);
+    });
+  });
+  
   document.getElementById('create-deck-btn')?.addEventListener('click', openCreateDeckModal);
 }
 
@@ -322,8 +331,9 @@ function createDeckElement(deck, uniqueCount, totalCount, isActive, isViewing, d
     <div style="font-size:11px; color:var(--text-secondary);">
       🎰 ${uniqueCount} уник. (${totalCount} всего) | ⭐ ${Math.round(deckRating)}
     </div>
-    ${!deck.isDiscardDeck ? `<div class="deck-actions" style="position:absolute; top:8px; right:8px; display:none; gap:4px;">
+    ${!deck.isDiscardDeck ? `<div class="deck-actions" style="position:absolute; top:8px; right:8px; display:none; gap:4px; flex-wrap: wrap;">
       ${!isActive ? `<button class="deck-activate-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:var(--wood-light); border:none; border-radius:4px; color:var(--bg-primary); font-size:10px; cursor:pointer;">⭐</button>` : ''}
+      <button class="deck-convert-album-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:#8B5CF6; border:none; border-radius:4px; color:white; font-size:10px; cursor:pointer;">📖</button>
       <button class="deck-edit-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:var(--wood-medium); border:none; border-radius:4px; color:var(--bg-primary); font-size:10px; cursor:pointer;">✍️</button>
       <button class="deck-delete-btn" data-deck-id="${deck.id}" style="padding:4px 8px; background:var(--resonance); border:none; border-radius:4px; color:white; font-size:10px; cursor:pointer;">🗑</button>
     </div>` : ''}
@@ -342,7 +352,8 @@ function createDeckElement(deck, uniqueCount, totalCount, isActive, isViewing, d
   deckEl.addEventListener('click', (e) => {
     if (e.target.classList.contains('deck-edit-btn') || 
         e.target.classList.contains('deck-delete-btn') ||
-        e.target.classList.contains('deck-activate-btn')) return;
+        e.target.classList.contains('deck-activate-btn') ||
+        e.target.classList.contains('deck-convert-album-btn')) return;
     
     // 👀 Только просмотр, НЕ активация!
     viewingDeckId = deck.id;
