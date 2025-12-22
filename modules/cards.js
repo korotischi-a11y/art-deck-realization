@@ -202,7 +202,7 @@ function createCardElement(card, count) {
     <div class="card-image" style="position:relative; overflow:hidden;">
       <div style="position:absolute; top:0; left:0; right:0; padding:6px 4px; background:rgba(50, 50, 50, 0.9); font-size:10px; font-weight:600; color:#d0d0d0; text-shadow:0 1px 3px rgba(0,0,0,0.95); z-index:10; border-bottom:1px solid rgba(200,200,200,0.15);">${params}</div>
       <div style="position:absolute; top:4px; right:4px; z-index:11; background:rgba(30,30,30,0.8); padding:3px 6px; border-radius:4px; font-size:11px; font-weight:600; color:${rarity.color}; border:1px solid ${rarity.color};">${count}</div>
-      ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" style="width:100%; height:100%; object-fit:contain; object-position:center; background:var(--bg-tertiary);" />` : '🎨'}
+      ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" style="width:100%; height:100%; object-fit:cover; object-position:center;" />` : '🎨'}
     </div>
     <div class="card-body" style="display:flex; flex-direction:column; gap:6px; padding:8px 8px 12px 8px;">
       <div class="card-title" title="${ui.sanitizeHTML(card.title)}">${ui.sanitizeHTML(card.title)}</div>
