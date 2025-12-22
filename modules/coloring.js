@@ -1,6 +1,6 @@
 /**
- * modules/coloring.js - Мини-игра "Раскраска"
- * Раскрась картину по номерам
+ * modules/coloring.js - Мини-игра "Раскраска по номерам"
+ * Раскрась чёрно-белую картину по секторам
  */
 
 import * as ui from './ui.js';
@@ -14,15 +14,13 @@ export function showColoringGame(card) {
   modal.id = 'coloring-game-modal';
   modal.style.cssText = 'z-index: 9999;';
   
-  let currentColor = '#000000';
-  let brushSize = 10;
-  let isDrawing = false;
-  let canvas, ctx;
+  let currentColor = '#EF4444';
+  let canvas, ctx, segmentCanvas, segmentCtx;
+  let segments = []; // сегменты для раскраски
+  let coloredSegments = new Map(); // сохранённые цвета
   
-  // Палитра цветов
+  // Палитра
   const palette = [
-    { name: 'Чёрный', color: '#000000' },
-    { name: 'Белый', color: '#FFFFFF' },
     { name: 'Красный', color: '#EF4444' },
     { name: 'Оранжевый', color: '#F97316' },
     { name: 'Жёлтый', color: '#FBBF24' },
@@ -32,7 +30,9 @@ export function showColoringGame(card) {
     { name: 'Фиолетовый', color: '#8B5CF6' },
     { name: 'Розовый', color: '#EC4899' },
     { name: 'Коричневый', color: '#92400E' },
-    { name: 'Серый', color: '#6B7280' }
+    { name: 'Серый', color: '#6B7280' },
+    { name: 'Чёрный', color: '#000000' },
+    { name: 'Белый', color: '#FFFFFF' }
   ];
   
   modal.innerHTML = `
@@ -53,16 +53,16 @@ export function showColoringGame(card) {
             <h4 style="margin: 0 0 8px 0; color: #92400E; font-size: 14px; font-weight: 700;">Как играть:</h4>
             <ul style="margin: 0; padding-left: 20px; color: #78350F; font-size: 13px; line-height: 1.6;">
               <li><strong>Выбери цвет</strong> из палитры или используй пипетку</li>
-              <li><strong>Рисуй кистью</strong> по холсту — зажми мышь и веди</li>
-              <li><strong>Размер кисти:</strong> настрой ползунком (5-50 пикселей)</li>
-              <li><strong>Ластик:</strong> стирай ненужное или очисти всё</li>
+              <li><strong>Кликни на область</strong> чёрно-белого изображения, чтобы залить её цветом</li>
+              <li><strong>Ластик:</strong> стирает цвет, возвращая область в белый</li>
+              <li><strong>Совет:</strong> используй превью оригинала для подсказки</li>
             </ul>
           </div>
         </div>
       </div>
       
       <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-        <!-- Палитра цветов -->
+        <!-- Палитра -->
         <div style="flex: 0 0 auto; max-width: 200px;">
           <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--text-accent);">🎨 Палитра</h4>
           <div id="color-palette" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px;">
@@ -92,93 +92,53 @@ export function showColoringGame(card) {
               type="color" 
               id="color-picker"
               value="${currentColor}"
-              style="
-                width: 100%;
-                height: 50px;
-                border: 2px solid var(--border-light);
-                border-radius: 8px;
-                cursor: pointer;
-              "
+              style="width: 100%; height: 50px; border: 2px solid var(--border-light); border-radius: 8px; cursor: pointer;"
             />
           </div>
           
-          <!-- Размер кисти -->
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);">🖌️ Размер: <span id="brush-size-value">${brushSize}</span>px</label>
-            <input 
-              type="range" 
-              id="brush-size-slider"
-              min="5" 
-              max="50" 
-              value="${brushSize}"
-              style="width: 100%;"
-            />
-          </div>
-          
-          <!-- Кнопки управления -->
+          <!-- Кнопки -->
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <button 
               id="eraser-btn"
-              style="
-                padding: 10px;
-                background: var(--bg-tertiary);
-                color: var(--text);
-                border: 1px solid var(--border-light);
-                border-radius: 8px;
-                cursor: pointer;
-                font-weight: 600;
-                font-size: 13px;
-              "
-            >
+              style="padding: 10px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
               🧯 Ластик
             </button>
             <button 
               id="clear-btn"
-              style="
-                padding: 10px;
-                background: linear-gradient(135deg, #EF4444, #DC2626);
-                color: white;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-                font-weight: 600;
-                font-size: 13px;
-              "
-            >
+              style="padding: 10px; background: linear-gradient(135deg, #EF4444, #DC2626); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
               🗑 Очистить
             </button>
             <button 
               id="save-btn"
-              style="
-                padding: 10px;
-                background: linear-gradient(135deg, #10B981, #059669);
-                color: white;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-                font-weight: 600;
-                font-size: 13px;
-              "
-            >
+              style="padding: 10px; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
               💾 Сохранить
             </button>
+          </div>
+          
+          <!-- Превью -->
+          <div style="margin-top: 16px;">
+            <div style="margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);">Оригинал</div>
+            <img src="${card.imageUrl}" alt="Оригинал" style="width: 100%; border-radius: 8px; opacity: 0.7; border: 2px solid var(--border-light);" />
           </div>
         </div>
         
         <!-- Холст -->
         <div style="flex: 1; min-width: 300px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h4 style="margin: 0; font-size: 14px; color: var(--text-accent);">🖼️ Холст</h4>
+            <h4 style="margin: 0; font-size: 14px; color: var(--text-accent);">🖼️ Раскрась картину</h4>
             <div style="font-size: 12px; color: var(--text-secondary);">
-              Текущий цвет: <span id="current-color-display" style="display: inline-block; width: 20px; height: 20px; background: ${currentColor}; border: 1px solid var(--border); border-radius: 4px; vertical-align: middle;"></span>
+              Текущий: <span id="current-color-display" style="display: inline-block; width: 20px; height: 20px; background: ${currentColor}; border: 1px solid var(--border); border-radius: 4px; vertical-align: middle;"></span>
             </div>
           </div>
           <div style="position: relative; border: 2px solid var(--border-light); border-radius: 12px; overflow: hidden; background: white;">
+            <!-- Скрытый canvas для сегментации -->
+            <canvas id="segment-canvas" width="600" height="600" style="display: none;"></canvas>
+            <!-- Основной canvas -->
             <canvas 
               id="drawing-canvas" 
               width="600" 
               height="600"
-              style="display: block; max-width: 100%; height: auto; cursor: crosshair;"
+              style="display: block; max-width: 100%; height: auto; cursor: pointer;"
             ></canvas>
           </div>
         </div>
@@ -188,66 +148,120 @@ export function showColoringGame(card) {
   
   document.body.appendChild(modal);
   
-  // Закрытие
   modal.querySelector('.modal-close').onclick = () => modal.remove();
   modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
   
-  // Инициализация Canvas
+  // Инициализация
   canvas = modal.querySelector('#drawing-canvas');
   ctx = canvas.getContext('2d');
+  segmentCanvas = modal.querySelector('#segment-canvas');
+  segmentCtx = segmentCanvas.getContext('2d');
   
-  // Загрузка изображения как фона (полупрозрачное)
+  // Загрузка изображения
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.onload = () => {
-    ctx.globalAlpha = 0.15;
+    // Рисуем чёрно-белую версию
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 1.0;
+    
+    // Применяем чёрно-белый фильтр
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    for (let i = 0; i < data.length; i += 4) {
+      const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+      data[i] = avg;     // R
+      data[i + 1] = avg; // G
+      data[i + 2] = avg; // B
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+    
+    // Создаём сегменты (сетку 4x4)
+    createSegments();
+    
+    // Добавляем контуры
+    drawContours();
   };
+  
   img.onerror = () => {
-    // Если не загрузилось - просто белый фон
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = '#F0F0F0';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#666';
+    ctx.font = '20px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Не удалось загрузить изображение', canvas.width / 2, canvas.height / 2);
   };
+  
   img.src = card.imageUrl;
   
-  // Рисование
-  function startDrawing(e) {
-    isDrawing = true;
-    draw(e);
-  }
-  
-  function stopDrawing() {
-    isDrawing = false;
-    ctx.beginPath();
-  }
-  
-  function draw(e) {
-    if (!isDrawing) return;
+  // Создание сегментов (сетка 4x4 = 16 областей)
+  function createSegments() {
+    const gridSize = 4;
+    const segmentWidth = canvas.width / gridSize;
+    const segmentHeight = canvas.height / gridSize;
     
+    segments = [];
+    for (let row = 0; row < gridSize; row++) {
+      for (let col = 0; col < gridSize; col++) {
+        segments.push({
+          id: `${row}-${col}`,
+          x: col * segmentWidth,
+          y: row * segmentHeight,
+          width: segmentWidth,
+          height: segmentHeight
+        });
+      }
+    }
+  }
+  
+  // Отрисовка контуров
+  function drawContours() {
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.lineWidth = 1;
+    
+    segments.forEach(seg => {
+      ctx.strokeRect(seg.x, seg.y, seg.width, seg.height);
+    });
+  }
+  
+  // Получение сегмента по клику
+  function getSegmentAtPoint(x, y) {
+    return segments.find(seg => 
+      x >= seg.x && x < seg.x + seg.width &&
+      y >= seg.y && y < seg.y + seg.height
+    );
+  }
+  
+  // Заливка сегмента
+  function fillSegment(segment, color) {
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.6;
+    ctx.fillRect(segment.x + 1, segment.y + 1, segment.width - 2, segment.height - 2);
+    ctx.globalAlpha = 1.0;
+    
+    // Перерисовываем контур
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(segment.x, segment.y, segment.width, segment.height);
+  }
+  
+  // Клик по canvas
+  canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
     
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = brushSize;
-    ctx.strokeStyle = currentColor;
-    
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  }
+    const segment = getSegmentAtPoint(x, y);
+    if (segment) {
+      coloredSegments.set(segment.id, currentColor);
+      fillSegment(segment, currentColor);
+    }
+  });
   
-  canvas.addEventListener('mousedown', startDrawing);
-  canvas.addEventListener('mousemove', draw);
-  canvas.addEventListener('mouseup', stopDrawing);
-  canvas.addEventListener('mouseout', stopDrawing);
-  
-  // Выбор цвета из палитры
+  // Выбор цвета
   modal.querySelectorAll('.color-btn').forEach(btn => {
     btn.onclick = () => {
       currentColor = btn.dataset.color;
@@ -255,37 +269,35 @@ export function showColoringGame(card) {
     };
   });
   
-  // Пипетка
   const colorPicker = modal.querySelector('#color-picker');
   colorPicker.oninput = (e) => {
     currentColor = e.target.value;
     updateColorUI();
   };
   
-  // Размер кисти
-  const brushSizeSlider = modal.querySelector('#brush-size-slider');
-  const brushSizeValue = modal.querySelector('#brush-size-value');
-  brushSizeSlider.oninput = (e) => {
-    brushSize = parseInt(e.target.value);
-    brushSizeValue.textContent = brushSize;
-  };
-  
   // Ластик
   modal.querySelector('#eraser-btn').onclick = () => {
-    currentColor = '#FFFFFF';
+    currentColor = 'transparent';
     updateColorUI();
   };
   
   // Очистить
   modal.querySelector('#clear-btn').onclick = () => {
-    if (confirm('Очистить весь холст?')) {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Перезагружаем фон
-      ctx.globalAlpha = 0.15;
+    if (confirm('Очистить все цвета?')) {
+      coloredSegments.clear();
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      ctx.globalAlpha = 1.0;
+      
+      // Чёрно-белый фильтр
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+        data[i] = avg;
+        data[i + 1] = avg;
+        data[i + 2] = avg;
+      }
+      ctx.putImageData(imageData, 0, 0);
+      drawContours();
     }
   };
   
@@ -299,12 +311,13 @@ export function showColoringGame(card) {
     ui.showToast('💾 Рисунок сохранён!', 'success');
   };
   
-  // Обновление UI цвета
   function updateColorUI() {
     modal.querySelectorAll('.color-btn').forEach(btn => {
       btn.style.border = btn.dataset.color === currentColor ? '3px solid var(--text-accent)' : '3px solid transparent';
     });
-    modal.querySelector('#current-color-display').style.background = currentColor;
-    colorPicker.value = currentColor;
+    modal.querySelector('#current-color-display').style.background = currentColor === 'transparent' ? '#FFF' : currentColor;
+    if (currentColor !== 'transparent') {
+      colorPicker.value = currentColor;
+    }
   }
 }
