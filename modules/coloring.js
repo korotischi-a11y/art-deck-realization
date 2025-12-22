@@ -16,10 +16,11 @@ export function showColoringGame(card) {
   
   let currentColor = '#EF4444';
   let canvas, ctx;
-  let gridSize = 30; // ОГРОМНАЯ СЕТКА для эффекта мозаики
+  let gridSize = 100; // КАТЕГОРИИ: 100, 150, 200
   let segments = [];
   let coloredSegments = new Map();
-  let pixelatedColors = []; // Цвета пикселизированного изображения
+  let pixelatedColors = [];
+  let isDrawing = false; // Для drag-режима
   
   // Палитра
   const palette = [
@@ -55,9 +56,9 @@ export function showColoringGame(card) {
             <h4 style="margin: 0 0 8px 0; color: #92400E; font-size: 14px; font-weight: 700;">Как играть:</h4>
             <ul style="margin: 0; padding-left: 20px; color: #78350F; font-size: 13px; line-height: 1.6;">
               <li><strong>Выбери цвет</strong> из палитры или используй пипетку</li>
-              <li><strong>Кликни на пиксель</strong> чтобы раскрасить его — ${gridSize}×${gridSize} = ${gridSize * gridSize} пикселей!</li>
+              <li><strong>Кликни или зажми мышку</strong> чтобы раскрасить несколько пикселей подряд!</li>
               <li><strong>Авто-заполнение:</strong> нажми "🎨 Показать оригинал" чтобы увидеть подсказку</li>
-              <li><strong>Сложность:</strong> выбери размер сетки (чем больше — тем детальнее)</li>
+              <li><strong>Сложность:</strong> выбери размер сетки (100×100, 150×150, 200×200)</li>
             </ul>
           </div>
         </div>
@@ -66,10 +67,9 @@ export function showColoringGame(card) {
       <!-- Сложность -->
       <div style="display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; align-items: center;">
         <span style="font-size: 13px; color: var(--text-secondary); font-weight: 600;">Детализация:</span>
-        <button class="grid-size-btn" data-size="20" style="padding: 8px 16px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">20×20</button>
-        <button class="grid-size-btn" data-size="30" style="padding: 8px 16px; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">30×30</button>
-        <button class="grid-size-btn" data-size="40" style="padding: 8px 16px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">40×40</button>
-        <button class="grid-size-btn" data-size="50" style="padding: 8px 16px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">50×50 🔥</button>
+        <button class="grid-size-btn" data-size="100" style="padding: 8px 16px; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">100×100</button>
+        <button class="grid-size-btn" data-size="150" style="padding: 8px 16px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">150×150</button>
+        <button class="grid-size-btn" data-size="200" style="padding: 8px 16px; background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">200×200 🔥</button>
       </div>
       
       <div style="display: flex; gap: 20px; flex-wrap: wrap;">
@@ -163,7 +163,7 @@ export function showColoringGame(card) {
   // Инициализация
   canvas = modal.querySelector('#drawing-canvas');
   ctx = canvas.getContext('2d');
-  ctx.imageSmoothingEnabled = false; // Пикселизация
+  ctx.imageSmoothingEnabled = false;
   
   let showHint = false;
   
@@ -183,17 +183,14 @@ export function showColoringGame(card) {
   
   // Инициализация мозаики
   function initMosaic() {
-    // Пикселизация изображения
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = gridSize;
     tempCanvas.height = gridSize;
     const tempCtx = tempCanvas.getContext('2d');
     tempCtx.imageSmoothingEnabled = false;
     
-    // Рисуем изображение в маленьком размере
     tempCtx.drawImage(img, 0, 0, gridSize, gridSize);
     
-    // Получаем цвета пикселей
     const imageData = tempCtx.getImageData(0, 0, gridSize, gridSize);
     const data = imageData.data;
     
@@ -208,13 +205,11 @@ export function showColoringGame(card) {
       }
     }
     
-    // Создаём сегменты
     createSegments();
     renderCanvas();
     updateProgress();
   }
   
-  // Создание сегментов
   function createSegments() {
     const pixelSize = canvas.width / gridSize;
     segments = [];
@@ -232,16 +227,13 @@ export function showColoringGame(card) {
     }
   }
   
-  // Рендер canvas
   function renderCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Фон
     ctx.fillStyle = '#F5F5F5';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     segments.forEach(seg => {
-      // Если показываем подсказку - рисуем оригинальный цвет полупрозрачным
       if (showHint) {
         ctx.fillStyle = pixelatedColors[seg.colorIndex];
         ctx.globalAlpha = 0.3;
@@ -249,20 +241,17 @@ export function showColoringGame(card) {
         ctx.globalAlpha = 1.0;
       }
       
-      // Если пользователь раскрасил - рисуем его цвет
       if (coloredSegments.has(seg.id)) {
         ctx.fillStyle = coloredSegments.get(seg.id);
         ctx.fillRect(seg.x + 1, seg.y + 1, seg.size - 2, seg.size - 2);
       }
       
-      // Сетка
       ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
       ctx.lineWidth = 0.5;
       ctx.strokeRect(seg.x, seg.y, seg.size, seg.size);
     });
   }
   
-  // Получение сегмента по клику
   function getSegmentAtPoint(x, y) {
     return segments.find(seg => 
       x >= seg.x && x < seg.x + seg.size &&
@@ -270,20 +259,39 @@ export function showColoringGame(card) {
     );
   }
   
-  // Клик по canvas
-  canvas.addEventListener('click', (e) => {
+  function paintSegment(x, y) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    const canvasX = (x - rect.left) * scaleX;
+    const canvasY = (y - rect.top) * scaleY;
     
-    const segment = getSegmentAtPoint(x, y);
+    const segment = getSegmentAtPoint(canvasX, canvasY);
     if (segment) {
       coloredSegments.set(segment.id, currentColor);
       renderCanvas();
       updateProgress();
     }
+  }
+  
+  // DRAG-РЕЖИМ: Зажатая мышка
+  canvas.addEventListener('mousedown', (e) => {
+    isDrawing = true;
+    paintSegment(e.clientX, e.clientY);
+  });
+  
+  canvas.addEventListener('mousemove', (e) => {
+    if (isDrawing) {
+      paintSegment(e.clientX, e.clientY);
+    }
+  });
+  
+  canvas.addEventListener('mouseup', () => {
+    isDrawing = false;
+  });
+  
+  canvas.addEventListener('mouseleave', () => {
+    isDrawing = false;
   });
   
   // Обновление прогресса
@@ -361,7 +369,6 @@ export function showColoringGame(card) {
       coloredSegments.clear();
       initMosaic();
       
-      // Обновляем заголовок
       modal.querySelector('h4').textContent = `💎 Мозаика ${gridSize}×${gridSize}`;
     };
   });
