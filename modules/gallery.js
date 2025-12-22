@@ -274,10 +274,10 @@ function showCardDetailModal(card) {
   };
   
   modal.innerHTML = `
-    <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: var(--bg-secondary); padding: 16px 0; z-index: 10;">
+    <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto; position: relative;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: var(--bg-secondary); padding: 20px 0 16px 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
         <h2 style="margin: 0; color: var(--text-accent);">Детали картины</h2>
-        <button class="modal-close" style="padding: 0; width: 36px; height: 36px; font-size: 24px;">×</button>
+        <button class="modal-close" style="padding: 0; width: 36px; height: 36px; font-size: 24px; background: none; border: none; color: var(--text); cursor: pointer;">×</button>
       </div>
       
       <div style="margin-bottom: 24px;">
