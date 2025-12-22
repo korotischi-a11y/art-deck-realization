@@ -12,6 +12,8 @@ import * as admin from './modules/admin.js';
 import * as ui from './modules/ui.js';
 import * as gallery from './modules/gallery.js';
 import { showMemoryGame } from './modules/memory.js';
+import { showFloodFillGame } from './modules/flood-fill.js';
+import { showArtBattle } from './modules/art-battle.js';
 
 export const state = { currentUser: null, cards: [], packs: [], leaderboard: [], isAdmin: false, isLoginMode: true };
 
@@ -126,8 +128,33 @@ export function switchTab(tabName) {
 // Обработчики для игр
 function setupGamesListeners() {
   document.addEventListener('click', (e) => {
+    // Мемори
     if (e.target.closest('.play-memory-btn')) {
       showMemoryGame();
+    }
+    
+    // Color Flood Fill
+    if (e.target.closest('.play-flood-btn')) {
+      // Выбираем случайную карту из коллекции
+      const userCards = state.currentUser?.cards || {};
+      const cardIds = Object.keys(userCards);
+      
+      if (cardIds.length === 0) {
+        ui.showToast('❌ У тебя нет карт! Открой пак', 'error');
+        return;
+      }
+      
+      const randomCardId = cardIds[Math.floor(Math.random() * cardIds.length)];
+      const card = state.cards.find(c => c.id === randomCardId);
+      
+      if (card) {
+        showFloodFillGame(card);
+      }
+    }
+    
+    // Art Dice Battle
+    if (e.target.closest('.play-battle-btn')) {
+      showArtBattle();
     }
   });
 }
