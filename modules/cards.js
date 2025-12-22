@@ -31,7 +31,7 @@ function getThemeLabel(theme) {
     renaissance: { emoji: '🏰', name: 'Ренессанс', color: '#daa520' },
     surrealism: { emoji: '🌙', name: 'Сюрреализм', color: '#9b59b6' },
     abstract: { emoji: '🎨', name: 'Абстракционизм', color: '#e74c3c' },
-    realism: { emoji: '🚼️', name: 'Реализм', color: '#8b4513' },
+    realism: { emoji: '🖼️', name: 'Реализм', color: '#8b4513' },
     modernism: { emoji: '✨', name: 'Модернизм', color: '#3498db' },
     baroque: { emoji: '👑', name: 'Барокко', color: '#ffd700' },
     romanticism: { emoji: '🌹', name: 'Романтизм', color: '#e91e63' },
@@ -139,7 +139,7 @@ export function renderCollection() {
 
   if (viewingDeck) {
     userCardIds = Object.keys(viewingDeck.cards || {});
-    title = viewingDeck.isDiscardDeck ? '🗑 Карты без колод' : `🂴 ${viewingDeck.name}`;
+    title = viewingDeck.isDiscardDeck ? '🗑 Карты без колод' : `🎴 ${viewingDeck.name}`;
   } else {
     const allCardIds = new Set();
     for (const deck of Object.values(decksObj)) {
@@ -211,8 +211,8 @@ function createCardElement(card, count) {
         <span>${card.year}</span>
       </div>
       
-      <!-- 🔥 МАТРИЦА: Theme & Genre ВЛЕВО + эмодзи + текст (шрифт 5px) -->
-      <div style="display:flex; gap:4px; font-size:5px; justify-content:flex-start; flex-wrap:wrap;">
+      <!-- 🔥 МАТРИЦА: Theme & Genre ВЛЕВО + эмодзи + текст (шрифт 6px) -->
+      <div style="display:flex; gap:4px; font-size:6px; justify-content:flex-start; flex-wrap:wrap;">
         <span style="background:${themeLabel.color}20; color:${themeLabel.color}; padding:2px 4px; border-radius:3px; border:1px solid ${themeLabel.color}40; white-space:nowrap; font-weight:600;">${themeLabel.emoji} ${themeLabel.name}</span>
         <span style="background:${genreLabel.color}20; color:${genreLabel.color}; padding:2px 4px; border-radius:3px; border:1px solid ${genreLabel.color}40; white-space:nowrap; font-weight:600;">${genreLabel.emoji} ${genreLabel.name}</span>
       </div>
