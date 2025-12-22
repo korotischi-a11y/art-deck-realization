@@ -131,7 +131,7 @@ body {
   color: var(--bg-primary);
 }
 
-/* === ГЛАВНОЙ КОНТЕНт === */
+/* === ГЛАВНОЙ КОНТЕНt === */
 .main-content {
   display: flex;
   flex-direction: column;
@@ -291,7 +291,7 @@ body {
   gap: var(--spacing-lg);
 }
 
-/* === 🔥 КАРТОЧКА - ИСПРАВЛЕНО === */
+/* === 🔥 КАРТОЧКА - УВЕЛИЧЕНА ВЫСОТА === */
 .card-item {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -301,7 +301,7 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  aspect-ratio: 7 / 14;
+  aspect-ratio: 7 / 15;  /* 🔥 УВЕЛИЧЕНО: 7/14 → 7/15 */
   box-shadow: var(--shadow-sm);
   transform-style: preserve-3d;
   transition: transform 0.12s linear, box-shadow 0.12s linear, border-color 0.12s linear;
@@ -809,7 +809,7 @@ body {
   background-repeat: no-repeat;
 }
 
-/* === КНОПКi === */
+/* === КНОПKi === */
 .btn {
   padding: var(--spacing-md) var(--spacing-lg);
   border: none;
