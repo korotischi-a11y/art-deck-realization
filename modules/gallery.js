@@ -4,6 +4,7 @@
 
 import { state } from '../app.js';
 import * as ui from './ui.js';
+import { showPuzzleGame } from './puzzle.js';
 
 // Состояние галереи
 const galleryState = {
@@ -392,7 +393,6 @@ function showCardDetailModal(card) {
   
   modal.innerHTML = `
     <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto; padding-top: 0;">
-      <!-- ФИКС: Убрал sticky, добавил обычный заголовок -->
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 24px 24px 16px 24px; background: var(--bg-secondary);">
         <h2 style="margin: 0; color: var(--text-accent);">Детали картины</h2>
         <button class="modal-close" style="padding: 0; width: 36px; height: 36px; font-size: 24px; background: none; border: none; color: var(--text); cursor: pointer;">×</button>
@@ -514,6 +514,53 @@ function showCardDetailModal(card) {
           </div>
         </div>
         
+        <!-- МИНИ-ИГРЫ: Кнопки Пазл и Раскраска -->
+        <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+          <button 
+            id="play-puzzle-btn"
+            style="
+              flex: 1;
+              padding: 14px;
+              background: linear-gradient(135deg, #10B981, #059669);
+              color: white;
+              border: none;
+              border-radius: 10px;
+              cursor: pointer;
+              font-size: 16px;
+              font-weight: 600;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
+            "
+          >
+            <span>🧩</span>
+            Сложить пазл
+          </button>
+          
+          <button 
+            id="play-coloring-btn"
+            style="
+              flex: 1;
+              padding: 14px;
+              background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+              color: white;
+              border: none;
+              border-radius: 10px;
+              cursor: pointer;
+              font-size: 16px;
+              font-weight: 600;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
+            "
+          >
+            <span>🎨</span>
+            Раскраска
+          </button>
+        </div>
+        
         <div style="display: flex; gap: 12px;">
           <button 
             id="toggle-favorite-btn"
@@ -535,27 +582,6 @@ function showCardDetailModal(card) {
           >
             <span>${isFavorite ? '⭐' : '☆'}</span>
             ${isFavorite ? 'В избранном' : 'В избранное'}
-          </button>
-          
-          <button 
-            style="
-              flex: 1;
-              padding: 14px;
-              background: linear-gradient(135deg, #8B5CF6, #6366F1);
-              color: white;
-              border: none;
-              border-radius: 10px;
-              cursor: pointer;
-              font-size: 16px;
-              font-weight: 600;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 8px;
-            "
-          >
-            <span>🧩</span>
-            Сложить пазл
           </button>
         </div>
       </div>
@@ -587,6 +613,17 @@ function showCardDetailModal(card) {
   imageZoomTrigger.addEventListener('mouseleave', () => {
     const img = imageZoomTrigger.querySelector('img');
     img.style.transform = 'scale(1)';
+  });
+  
+  // МИНИ-ИГРЫ: ПАЗЛ
+  modal.querySelector('#play-puzzle-btn').addEventListener('click', () => {
+    modal.remove();
+    showPuzzleGame(card);
+  });
+  
+  // МИНИ-ИГРЫ: РАСКРАСКА (в разработке)
+  modal.querySelector('#play-coloring-btn').addEventListener('click', () => {
+    ui.showToast('🎨 Раскраска в разработке...', 'info');
   });
   
   // Редактирование заметки
