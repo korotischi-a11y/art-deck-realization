@@ -43,7 +43,7 @@ function getThemeLabel(theme) {
 }
 
 /**
- * 🊭 Получить бейдж для genre
+ * 🎭 Получить бейдж для genre
  */
 function getGenreLabel(genre) {
   const genres = {
@@ -211,13 +211,14 @@ function createCardElement(card, count) {
         <span>${card.year}</span>
       </div>
       
-      <!-- 🔥 Theme & Genre: выровнено по центру -->
-      <div style="display:flex; gap:4px; font-size:9px; justify-content:center;">
-        <span style="background:${themeLabel.color}20; color:${themeLabel.color}; padding:2px 6px; border-radius:4px; border:1px solid ${themeLabel.color}40; white-space:nowrap; text-align:center;">${themeLabel.emoji} ${themeLabel.name}</span>
-        <span style="background:${genreLabel.color}20; color:${genreLabel.color}; padding:2px 6px; border-radius:4px; border:1px solid ${genreLabel.color}40; white-space:nowrap; text-align:center;">${genreLabel.emoji} ${genreLabel.name}</span>
+      <!-- 🔥 МАТРИЦА: Theme & Genre ВЛЕВО + шрифт 6px (9px / 1.5) -->
+      <div style="display:flex; gap:4px; font-size:6px; justify-content:flex-start;">
+        <span style="background:${themeLabel.color}20; color:${themeLabel.color}; padding:2px 4px; border-radius:3px; border:1px solid ${themeLabel.color}40; white-space:nowrap;">${themeLabel.emoji}</span>
+        <span style="background:${genreLabel.color}20; color:${genreLabel.color}; padding:2px 4px; border-radius:3px; border:1px solid ${genreLabel.color}40; white-space:nowrap;">${genreLabel.emoji}</span>
       </div>
       
-      <div class="card-rarity" style="background:${rarity.color}15; border-color:${rarity.color}; color:${rarity.color}; padding:4px 8px; border-radius:8px; text-align:center; font-size:11px; border:1px solid ${rarity.color};">
+      <!-- 🔥 МАТРИЦА: Редкость ВЛЕВО + text-align:left -->
+      <div class="card-rarity" style="background:${rarity.color}15; border-color:${rarity.color}; color:${rarity.color}; padding:4px 8px; border-radius:8px; text-align:left; font-size:11px; border:1px solid ${rarity.color};">
         ${rarity.emoji} ${rarity.name}
       </div>
     </div>
@@ -316,7 +317,7 @@ function showCardDetail(card, count) {
 
   paramsTable.innerHTML = '';
   
-  // 🔥 1. ОТДЕЛЬНАЯ СТРОКА: THEME & GENRE
+  // 🔥 МОДАЛКА: Theme & Genre ПО ЦЕНТРУ (text-align:center)
   const themeGenreDiv = document.createElement('div');
   themeGenreDiv.style.cssText = 'display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; grid-column: 1 / -1;';
   themeGenreDiv.innerHTML = `
