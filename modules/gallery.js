@@ -62,26 +62,17 @@ export function saveNote(cardId, note) {
   saveGalleryData();
 }
 
-// 🔥 ИСПРАВЛЕНО: Получение уникальных карт ТОЛЬКО ИЗ КОЛЛЕКЦИИ ПОЛЬЗОВАТЕЛЯ
+// Получение уникальных карт
 function getUniqueCards() {
   const uniqueMap = new Map();
   
-  // 🔥 Собираем все cardId из всех колод пользователя
-  const decksObj = state.currentUser?.decks || {};
-  
-  for (const deck of Object.values(decksObj)) {
-    for (const [cardId, count] of Object.entries(deck.cards || {})) {
-      // 🔥 Находим полную информацию о карте из state.cards
-      const cardData = state.cards.find(c => c.id === cardId);
-      if (!cardData) continue;
-      
-      if (!uniqueMap.has(cardId)) {
-        uniqueMap.set(cardId, { ...cardData, count });
-      } else {
-        uniqueMap.get(cardId).count += count;
-      }
+  state.cards.forEach(card => {
+    if (!uniqueMap.has(card.id)) {
+      uniqueMap.set(card.id, { ...card, count: 1 });
+    } else {
+      uniqueMap.get(card.id).count++;
     }
-  }
+  });
   
   return Array.from(uniqueMap.values());
 }
@@ -167,12 +158,9 @@ export function renderGallery() {
         data-card-id="${card.id}"
         style="
           position: relative;
-          background: var(--bg-secondary);
-          border-radius: 12px;
-          overflow: hidden;
           cursor: pointer;
           transition: all 0.3s ease;
-          border: 3px solid ${rarityColors[card.rarity] || '#9CA3AF'};
+          display: inline-block;
         "
       >
         ${isFavorite ? `
@@ -181,16 +169,23 @@ export function renderGallery() {
           </div>
         ` : ''}
         
-        <div style="height: 200px; overflow: hidden; background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center;">
+        <div style="position: relative; display: inline-block;">
           <img 
             src="${card.imageUrl}" 
             alt="${card.title}"
-            style="width: 100%; height: 100%; object-fit: contain;"
+            style="
+              max-width: 100%;
+              height: auto;
+              display: block;
+              border-radius: 8px;
+              border: 3px solid ${rarityColors[card.rarity] || '#9CA3AF'};
+              box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            "
             loading="lazy"
           >
         </div>
         
-        <div style="padding: 12px;">
+        <div style="padding: 12px 4px;">
           <h3 style="
             font-size: 14px;
             font-weight: 700;
@@ -252,12 +247,8 @@ function updateGalleryStats() {
   const uniqueEl = document.getElementById('gallery-unique-cards');
   const favoritesEl = document.getElementById('gallery-favorites-count');
   
-  // 🔥 Подсчёт общего количества карт в коллекции
-  const uniqueCards = getUniqueCards();
-  const totalCards = uniqueCards.reduce((sum, card) => sum + card.count, 0);
-  
-  if (totalEl) totalEl.textContent = totalCards;
-  if (uniqueEl) uniqueEl.textContent = uniqueCards.length;
+  if (totalEl) totalEl.textContent = state.cards.length;
+  if (uniqueEl) uniqueEl.textContent = getUniqueCards().length;
   if (favoritesEl) favoritesEl.textContent = galleryState.favorites.size;
 }
 
