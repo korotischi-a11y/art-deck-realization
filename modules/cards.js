@@ -205,7 +205,7 @@ function createCardElement(card, count) {
       ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" style="width:100%; height:100%; object-fit:cover; object-position:center;" />` : '🎨'}
     </div>
     <div class="card-body" style="display:flex; flex-direction:column; gap:6px;">
-      <div class="card-title">${ui.sanitizeHTML(card.title)}</div>
+      <div class="card-title" title="${ui.sanitizeHTML(card.title)}">${ui.sanitizeHTML(card.title)}</div>
       <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary);">
         <span class="card-artist-name" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${ui.sanitizeHTML(card.artist)}">${ui.sanitizeHTML(card.artist)}</span>
         <span>${card.year}</span>
