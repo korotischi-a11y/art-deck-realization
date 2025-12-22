@@ -10,7 +10,7 @@
   <div id="app">
     <aside class="sidebar">
       <button class="sidebar-btn active" data-tab="collection" title="Коллекция">🎫</button>
-      <button class="sidebar-btn" data-tab="raids" title="Походы">⚔️</button>
+      <button class="sidebar-btn" data-tab="gallery" title="Галерея">🖼️</button>
       <button class="sidebar-btn" data-tab="profile" title="Профиль">👤</button>
       <button class="sidebar-btn" data-tab="leaderboard" title="Рейтинг">🏆</button>
       <button class="sidebar-btn" data-tab="packs" title="Паки">📋</button>
@@ -66,52 +66,51 @@
               </div>
               <div id="cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px; overflow-y: auto;"></div>
             </div>
-            <!-- ПАНЕЛЬ КОЛОД -->
             <div id="decks-panel" style="border: 1px solid var(--border); border-radius: 12px; background: var(--bg-secondary); overflow-y: auto; max-height: calc(100vh - 120px);"></div>
           </div>
         </div>
 
-        <!-- ПОХОДЫ -->
-        <div class="tab-content" id="raids-tab">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; height: calc(100vh - 120px);">
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-              <h2 style="margin: 0;">⚔️ Ваш отряд</h2>
-              <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
-                <h3 style="margin: 0 0 8px 0; font-size: 14px; color: var(--text-accent);">🎲 Шаг 1: Выберите колоду</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 12px;">Карты из этой колоды будут заменять погибших в бою</p>
-                <select id="raid-deck-choice" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text); border-radius: 8px; font-size: 14px; cursor: pointer;">
-                  <option value="">— Выберите колоду —</option>
+        <!-- ГАЛЕРЕЯ -->
+        <div class="tab-content" id="gallery-tab">
+          <div style="display: flex; flex-direction: column; gap: 16px; height: calc(100vh - 120px);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <div style="display: flex; gap: 12px;">
+                <div class="stat-card" style="padding: 8px 16px; background: none; border: 1px solid var(--border-light); min-width: auto;">
+                  <div class="stat-value" id="gallery-total-cards" style="font-size: 20px;">0</div>
+                  <div class="stat-label">Всего</div>
+                </div>
+                <div class="stat-card" style="padding: 8px 16px; background: none; border: 1px solid var(--border-light); min-width: auto;">
+                  <div class="stat-value" id="gallery-unique-cards" style="font-size: 20px;">0</div>
+                  <div class="stat-label">Уникальных</div>
+                </div>
+                <div class="stat-card" style="padding: 8px 16px; background: none; border: 1px solid var(--border-light); min-width: auto;">
+                  <div class="stat-value" id="gallery-favorites-count" style="font-size: 20px;">0</div>
+                  <div class="stat-label">⭐ Избранное</div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 12px; flex: 1; max-width: 600px;">
+                <input type="text" id="gallery-search" placeholder="🔍 Поиск по названию, автору, году..." style="flex: 1; padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
+                <select id="gallery-filter-rarity" style="padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
+                  <option value="">Все</option>
+                  <option value="favorites">⭐ Избранное</option>
+                  <option value="common">Обычная</option>
+                  <option value="uncommon">Необычная</option>
+                  <option value="rare">Редкая</option>
+                  <option value="mythical">Мифическая</option>
+                  <option value="legendary">Легендарная</option>
+                  <option value="ancient">Древняя</option>
+                  <option value="ethereal">Эфирная</option>
+                  <option value="immortal">Бессмертная</option>
+                </select>
+                <select id="gallery-sort" style="padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
+                  <option value="dateObtained">По дате</option>
+                  <option value="name">По названию</option>
+                  <option value="artist">По автору</option>
+                  <option value="rarity">По редкости</option>
                 </select>
               </div>
-              <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
-                <h3 style="margin: 0 0 8px 0; font-size: 14px; color: var(--text-accent);">🎯 Шаг 2: Выберите 4 карты для отряда</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 12px;">Эти карты будут атаковать вражескую галерею</p>
-                <div id="squad-slots" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;"></div>
-                <button id="start-raid-btn" class="btn btn-primary" style="width: 100%; margin-top: 16px;" disabled>🚀 Начать поход</button>
-              </div>
-              <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 16px; overflow-y: auto;">
-                <h3 style="margin: 0 0 12px 0; font-size: 16px;">📖 Жанры и их роли:</h3>
-                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--text-secondary);">
-                  <div><strong>👤 Портрет:</strong> Дуэлянт, сильный 1 на 1</div>
-                  <div><strong>🌄 Пейзаж:</strong> Массовая атака, стаки</div>
-                  <div><strong>🍎 Натюрморт:</strong> Поддержка, баффы</div>
-                  <div><strong>⛪ Религия:</strong> Лечение, защита</div>
-                  <div><strong>🐉 Мифология:</strong> Высокий урон, криты</div>
-                  <div><strong>🎨 Абстракция:</strong> Хаос, RNG</div>
-                  <div><strong>🏙️ Городской:</strong> Оборона, дальний бой</div>
-                  <div><strong>💃 Ню:</strong> Очарование, дебаффы</div>
-                </div>
-              </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-              <h2 style="margin: 0;">🏛️ Выбор галереи</h2>
-              <div id="galleries-list" style="display: flex; flex-direction: column; gap: 12px; overflow-y: auto;">
-                <div style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; color: var(--text-secondary);">
-                  <p>🏭️ Система галерей в разработке</p>
-                  <p style="font-size: 12px; margin-top: 8px;">Скоро вы сможете создавать свои галереи и атаковать галереи других игроков!</p>
-                </div>
-              </div>
-            </div>
+            <div id="gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; overflow-y: auto; padding-right: 8px;"></div>
           </div>
         </div>
 
@@ -173,7 +172,6 @@
             <div class="stat-card"><div class="stat-value" id="admin-common-cards">0</div><div class="stat-label">🗑 Common</div></div>
             <div class="stat-card"><div class="stat-value" id="admin-legendary-cards">0</div><div class="stat-label">⭐ Legendary+</div></div>
           </div>
-
           <div style="display: grid; grid-template-columns: 350px 1fr; gap: 20px; height: calc(100vh - 250px);">
             <div style="border: 1px solid var(--border); padding: 16px; border-radius: 12px; background: var(--bg-secondary); overflow-y: auto;">
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
