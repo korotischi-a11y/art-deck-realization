@@ -252,6 +252,101 @@ function updateGalleryStats() {
   if (favoritesEl) favoritesEl.textContent = galleryState.favorites.size;
 }
 
+/**
+ * Показать изображение на весь экран (зум)
+ */
+function showImageZoom(imageUrl, title) {
+  const zoomModal = document.createElement('div');
+  zoomModal.className = 'modal active';
+  zoomModal.style.cssText = 'background: rgba(0, 0, 0, 0.95); z-index: 10000;';
+  
+  zoomModal.innerHTML = `
+    <div style="
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+      position: relative;
+    ">
+      <button 
+        class="zoom-close"
+        style="
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          width: 48px;
+          height: 48px;
+          background: rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(10px);
+          border: none;
+          border-radius: 50%;
+          color: white;
+          font-size: 32px;
+          cursor: pointer;
+          z-index: 10001;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
+        "
+        onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'"
+        onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'"
+      >×</button>
+      
+      <img 
+        src="${imageUrl}" 
+        alt="${title}"
+        style="
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+          border-radius: 12px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        "
+      />
+      
+      <div style="
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        padding: 12px 24px;
+        border-radius: 24px;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+      ">
+        ${title}
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(zoomModal);
+  
+  const closeBtn = zoomModal.querySelector('.zoom-close');
+  closeBtn.onclick = () => zoomModal.remove();
+  
+  zoomModal.onclick = (e) => {
+    if (e.target === zoomModal || e.target.tagName === 'IMG') {
+      zoomModal.remove();
+    }
+  };
+  
+  // ESC для закрытия
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      zoomModal.remove();
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
 // Модальное окно детального просмотра
 function showCardDetailModal(card) {
   const modal = document.createElement('div');
@@ -274,154 +369,173 @@ function showCardDetailModal(card) {
   };
   
   modal.innerHTML = `
-    <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto; position: relative;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: var(--bg-secondary); padding: 20px 0 16px 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto; padding-top: 0;">
+      <!-- ФИКС: Убрал sticky, добавил обычный заголовок -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 24px 24px 16px 24px; background: var(--bg-secondary);">
         <h2 style="margin: 0; color: var(--text-accent);">Детали картины</h2>
         <button class="modal-close" style="padding: 0; width: 36px; height: 36px; font-size: 24px; background: none; border: none; color: var(--text); cursor: pointer;">×</button>
       </div>
       
-      <div style="margin-bottom: 24px;">
-        <img 
-          src="${card.imageUrl}" 
-          alt="${card.title}"
-          style="width: 100%; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);"
-        >
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <h3 style="font-size: 24px; margin: 0 0 8px 0; color: var(--text-accent);">${card.title}</h3>
-        <p style="font-size: 16px; color: var(--text-secondary); margin: 0 0 8px 0;">${card.artist}, ${card.year}</p>
-        <div style="display: inline-block; padding: 6px 12px; border-radius: 8px; background: var(--bg-tertiary); font-size: 14px; font-weight: 600;">
-          ${rarityLabels[card.rarity]}
-        </div>
-      </div>
-      
-      <div style="margin-bottom: 24px;">
-        <h4 style="font-size: 16px; margin: 0 0 8px 0; color: var(--text-accent);">📚 Описание</h4>
-        <p style="color: var(--text); line-height: 1.6;">${card.description}</p>
-      </div>
-      
-      <div style="background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <h4 style="margin: 0; font-size: 16px; color: #92400E; display: flex; align-items: center; gap: 8px;">
-            <span>📝</span> Моя заметка
-          </h4>
-          <button 
-            id="edit-note-btn"
-            style="
-              padding: 6px 12px;
-              background: #F59E0B;
-              color: white;
-              border: none;
-              border-radius: 6px;
-              cursor: pointer;
-              font-size: 13px;
-              font-weight: 600;
-            "
+      <div style="padding: 0 24px 24px 24px;">
+        <!-- ЗУМ: Клик по изображению для увеличения -->
+        <div style="margin-bottom: 24px; cursor: zoom-in; position: relative;" id="image-zoom-trigger">
+          <img 
+            src="${card.imageUrl}" 
+            alt="${card.title}"
+            style="width: 100%; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); transition: transform 0.3s ease;"
           >
-            Редактировать
-          </button>
-        </div>
-        
-        <div id="note-display" style="color: #78350F; font-style: ${note ? 'normal' : 'italic'};">
-          ${note || 'Нет заметок. Нажмите "Редактировать" чтобы добавить.'}
-        </div>
-        
-        <div id="note-editor" style="display: none;">
-          <textarea 
-            id="note-textarea"
-            style="
-              width: 100%;
-              padding: 12px;
-              border: 1px solid #FCD34D;
-              border-radius: 8px;
-              background: white;
-              color: #78350F;
-              font-size: 14px;
-              resize: vertical;
-              min-height: 100px;
-              box-sizing: border-box;
-            "
-            placeholder="Добавьте личную заметку о картине..."
-          >${note}</textarea>
-          <div style="display: flex; gap: 8px; margin-top: 8px;">
-            <button 
-              id="save-note-btn"
-              style="
-                flex: 1;
-                padding: 8px;
-                background: #10B981;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-                font-weight: 600;
-              "
-            >
-              💾 Сохранить
-            </button>
-            <button 
-              id="cancel-note-btn"
-              style="
-                flex: 1;
-                padding: 8px;
-                background: #6B7280;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-                font-weight: 600;
-              "
-            >
-              Отмена
-            </button>
+          <div style="
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            padding: 8px 12px;
+            border-radius: 20px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            pointer-events: none;
+          ">
+            🔍 Клик для увеличения
           </div>
         </div>
-      </div>
-      
-      <div style="display: flex; gap: 12px;">
-        <button 
-          id="toggle-favorite-btn"
-          style="
-            flex: 1;
-            padding: 14px;
-            background: ${isFavorite ? '#FCD34D' : 'var(--bg-tertiary)'};
-            color: ${isFavorite ? '#78350F' : 'var(--text)'};
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-          "
-        >
-          <span>${isFavorite ? '⭐' : '☆'}</span>
-          ${isFavorite ? 'В избранном' : 'В избранное'}
-        </button>
         
-        <button 
-          style="
-            flex: 1;
-            padding: 14px;
-            background: linear-gradient(135deg, #8B5CF6, #6366F1);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-          "
-        >
-          <span>🧩</span>
-          Сложить пазл
-        </button>
+        <div style="margin-bottom: 20px;">
+          <h3 style="font-size: 24px; margin: 0 0 8px 0; color: var(--text-accent);">${card.title}</h3>
+          <p style="font-size: 16px; color: var(--text-secondary); margin: 0 0 8px 0;">${card.artist}, ${card.year}</p>
+          <div style="display: inline-block; padding: 6px 12px; border-radius: 8px; background: var(--bg-tertiary); font-size: 14px; font-weight: 600;">
+            ${rarityLabels[card.rarity]}
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 24px;">
+          <h4 style="font-size: 16px; margin: 0 0 8px 0; color: var(--text-accent);">📚 Описание</h4>
+          <p style="color: var(--text); line-height: 1.6;">${card.description}</p>
+        </div>
+        
+        <div style="background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h4 style="margin: 0; font-size: 16px; color: #92400E; display: flex; align-items: center; gap: 8px;">
+              <span>📝</span> Моя заметка
+            </h4>
+            <button 
+              id="edit-note-btn"
+              style="
+                padding: 6px 12px;
+                background: #F59E0B;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 600;
+              "
+            >
+              Редактировать
+            </button>
+          </div>
+          
+          <div id="note-display" style="color: #78350F; font-style: ${note ? 'normal' : 'italic'};">
+            ${note || 'Нет заметок. Нажмите "Редактировать" чтобы добавить.'}
+          </div>
+          
+          <div id="note-editor" style="display: none;">
+            <textarea 
+              id="note-textarea"
+              style="
+                width: 100%;
+                padding: 12px;
+                border: 1px solid #FCD34D;
+                border-radius: 8px;
+                background: white;
+                color: #78350F;
+                font-size: 14px;
+                resize: vertical;
+                min-height: 100px;
+                box-sizing: border-box;
+              "
+              placeholder="Добавьте личную заметку о картине..."
+            >${note}</textarea>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+              <button 
+                id="save-note-btn"
+                style="
+                  flex: 1;
+                  padding: 8px;
+                  background: #10B981;
+                  color: white;
+                  border: none;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  font-weight: 600;
+                "
+              >
+                💾 Сохранить
+              </button>
+              <button 
+                id="cancel-note-btn"
+                style="
+                  flex: 1;
+                  padding: 8px;
+                  background: #6B7280;
+                  color: white;
+                  border: none;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  font-weight: 600;
+                "
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div style="display: flex; gap: 12px;">
+          <button 
+            id="toggle-favorite-btn"
+            style="
+              flex: 1;
+              padding: 14px;
+              background: ${isFavorite ? '#FCD34D' : 'var(--bg-tertiary)'};
+              color: ${isFavorite ? '#78350F' : 'var(--text)'};
+              border: none;
+              border-radius: 10px;
+              cursor: pointer;
+              font-size: 16px;
+              font-weight: 600;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
+            "
+          >
+            <span>${isFavorite ? '⭐' : '☆'}</span>
+            ${isFavorite ? 'В избранном' : 'В избранное'}
+          </button>
+          
+          <button 
+            style="
+              flex: 1;
+              padding: 14px;
+              background: linear-gradient(135deg, #8B5CF6, #6366F1);
+              color: white;
+              border: none;
+              border-radius: 10px;
+              cursor: pointer;
+              font-size: 16px;
+              font-weight: 600;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
+            "
+          >
+            <span>🧩</span>
+            Сложить пазл
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -435,6 +549,22 @@ function showCardDetailModal(card) {
   
   modal.addEventListener('click', (e) => {
     if (e.target === modal) modal.remove();
+  });
+  
+  // ЗУМ: Клик по изображению
+  const imageZoomTrigger = modal.querySelector('#image-zoom-trigger');
+  imageZoomTrigger.addEventListener('click', () => {
+    showImageZoom(card.imageUrl, card.title);
+  });
+  
+  imageZoomTrigger.addEventListener('mouseenter', () => {
+    const img = imageZoomTrigger.querySelector('img');
+    img.style.transform = 'scale(1.02)';
+  });
+  
+  imageZoomTrigger.addEventListener('mouseleave', () => {
+    const img = imageZoomTrigger.querySelector('img');
+    img.style.transform = 'scale(1)';
   });
   
   // Редактирование заметки
