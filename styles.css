@@ -523,17 +523,19 @@ body {
   flex-shrink: 0;
 }
 
-/* 🔥 АВТОР: одна строка, фиксированная высота */
+/* 🔥 АВТОР: СТРОГО ОДНА СТРОКА (КРИТИЧНО!) */
 .card-artist {
   font-size: 9px;
   color: var(--text-secondary);
   margin: 0;
-  height: 11.25px;
+  height: 11.25px !important;
   line-height: 1.25;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex-shrink: 0;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  max-width: 100% !important;
+  word-wrap: normal !important;
 }
 
 /* 🔥 РЕДКОСТЬ: фиксированная высота, ВСЕГДА НА ОДНОМ УРОВНЕ */
