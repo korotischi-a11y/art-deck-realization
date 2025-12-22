@@ -5,6 +5,7 @@
 import { state } from '../app.js';
 import * as ui from './ui.js';
 import { showPuzzleGame } from './puzzle.js';
+import { showColoringGame } from './coloring.js';
 
 // Состояние галереи
 const galleryState = {
@@ -621,9 +622,10 @@ function showCardDetailModal(card) {
     showPuzzleGame(card);
   });
   
-  // МИНИ-ИГРЫ: РАСКРАСКА (в разработке)
+  // МИНИ-ИГРЫ: РАСКРАСКА
   modal.querySelector('#play-coloring-btn').addEventListener('click', () => {
-    ui.showToast('🎨 Раскраска в разработке...', 'info');
+    modal.remove();
+    showColoringGame(card);
   });
   
   // Редактирование заметки
