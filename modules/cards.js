@@ -207,7 +207,7 @@ function createCardElement(card, count) {
     <div class="card-body" style="display:flex; flex-direction:column; gap:6px;">
       <div class="card-title">${ui.sanitizeHTML(card.title)}</div>
       <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary);">
-        <span style="overflow:hidden; text-overflow:ellipsis;">${ui.sanitizeHTML(card.artist)}</span>
+        <span class="card-artist-name" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${ui.sanitizeHTML(card.artist)}">${ui.sanitizeHTML(card.artist)}</span>
         <span>${card.year}</span>
       </div>
       
