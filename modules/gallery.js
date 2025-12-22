@@ -172,11 +172,11 @@ export function renderGallery() {
           </div>
         ` : ''}
         
-        <div style="aspect-ratio: 3/4; overflow: hidden;">
+        <div style="height: 200px; overflow: hidden; background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center;">
           <img 
             src="${card.imageUrl}" 
             alt="${card.title}"
-            style="width: 100%; height: 100%; object-fit: cover;"
+            style="width: 100%; height: 100%; object-fit: contain;"
             loading="lazy"
           >
         </div>
