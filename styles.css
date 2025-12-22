@@ -131,7 +131,7 @@ body {
   color: var(--bg-primary);
 }
 
-/* === ГЛАВНОЙ КОНТЕНt === */
+/* === ГЛАВНОЙ КОНТЕНт === */
 .main-content {
   display: flex;
   flex-direction: column;
@@ -284,10 +284,10 @@ body {
   font-weight: 700;
 }
 
-/* === 🔥 СЕТКА КАРТ === */
+/* === 🔥 СЕТКА КАРТ - УВЕЛИЧЕНА ШИРИНА === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));  /* 🔥 280px → 300px (+7%) */
   gap: var(--spacing-lg);
 }
 
@@ -498,7 +498,7 @@ body {
 .card-body {
   height: 40%;
   flex-shrink: 0;
-  padding: 8px 8px 12px 8px;  /* 🔥 ДОБАВЛЕН padding-bottom: 12px */
+  padding: 8px 8px 12px 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -809,7 +809,7 @@ body {
   background-repeat: no-repeat;
 }
 
-/* === КНОПKi === */
+/* === КНОПКi === */
 .btn {
   padding: var(--spacing-md) var(--spacing-lg);
   border: none;
@@ -981,22 +981,22 @@ body {
   }
 }
 
-/* === АДАПТИВНОСТЬ === */
+/* === АДАПТИВНОСТЬ - ОБНОВЛЕНЫ BREAKPOINTS === */
 @media (max-width: 1800px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));  /* 🔥 240px → 260px (+7%) */
   }
 }
 
 @media (max-width: 1400px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));  /* 🔥 200px → 215px (+7%) */
   }
 }
 
 @media (max-width: 1200px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));  /* 🔥 180px → 195px (+7%) */
   }
 }
 
@@ -1021,7 +1021,7 @@ body {
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));  /* 🔥 160px → 170px (+7%) */
   }
   
   .modal-content {
