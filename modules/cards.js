@@ -204,7 +204,7 @@ function createCardElement(card, count) {
       <div style="position:absolute; top:4px; right:4px; z-index:11; background:rgba(30,30,30,0.8); padding:3px 6px; border-radius:4px; font-size:11px; font-weight:600; color:${rarity.color}; border:1px solid ${rarity.color};">${count}</div>
       ${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" style="width:100%; height:100%; object-fit:cover; object-position:center;" />` : '🎨'}
     </div>
-    <div class="card-body" style="display:flex; flex-direction:column; gap:6px;">
+    <div class="card-body" style="display:flex; flex-direction:column; gap:6px; padding:8px 8px 12px 8px;">
       <div class="card-title" title="${ui.sanitizeHTML(card.title)}">${ui.sanitizeHTML(card.title)}</div>
       <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary);">
         <span class="card-artist-name" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${ui.sanitizeHTML(card.artist)}">${ui.sanitizeHTML(card.artist)}</span>
