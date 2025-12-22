@@ -23,15 +23,15 @@
   --profundity: #95E1D3;
   --harmony: #FFD93D;
   
-  /* === 🎨 РЕДКОСТИ - ОБНОВЛЁННАЯ ПАЛИТРА === */
-  --rarity-common: #9ca3af;          /* 🔄 Тёмно-серый (было #6b7280) */
-  --rarity-uncommon: #10b981;        /* 🆕 Изумрудно-зелёный (было синий #3b82f6) */
-  --rarity-rare: #6366f1;            /* 🔄 Насыщенный индиго (было #8b5cf6) */
-  --rarity-mythical: #a855f7;        /* 🔄 Яркий пурпур (было #d946ef) */
-  --rarity-legendary: #f43f5e;       /* 🔄 Малиновый (было розовый #ec4899) */
-  --rarity-ancient: #f97316;         /* ✅ Оранжевый (без изменений) */
-  --rarity-ethereal: #06b6d4;        /* ✅ Бирюзовый (без изменений) */
-  --rarity-immortal: #fbbf24;        /* ✅ Янтарный (без изменений) */
+  /* === 🎨 РЕДКОСТИ - МАКСИМАЛЬНАЯ КОНТРАСТНОСТЬ === */
+  --rarity-common: #94a3b8;          /* Серо-голубой (нейтральный холодный) */
+  --rarity-uncommon: #22c55e;        /* Яркий зелёный (чистый зелёный спектр) */
+  --rarity-rare: #3b82f6;            /* Яркий синий (чистый синий) */
+  --rarity-mythical: #c026d3;        /* Насыщенный фуксия (розово-фиолетовый) */
+  --rarity-legendary: #ef4444;       /* Ярко-красный (чистый красный) */
+  --rarity-ancient: #f97316;         /* Оранжевый (красно-оранжевый) */
+  --rarity-ethereal: #06b6d4;        /* Бирюзовый (сине-зелёный) */
+  --rarity-immortal: #fbbf24;        /* Янтарный (жёлтый) */
   
   /* === РАЗМЕРЫ === */
   --radius-sm: 4px;
@@ -287,7 +287,7 @@ body {
 /* === 🔥 СЕТКА КАРТ - УВЕЛИЧЕНА ШИРИНА === */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));  /* 🔥 280px → 300px (+7%) */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--spacing-lg);
 }
 
@@ -301,7 +301,7 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  aspect-ratio: 7 / 15;  /* 🔥 УВЕЛИЧЕНО: 7/14 → 7/15 */
+  aspect-ratio: 7 / 15;
   box-shadow: var(--shadow-sm);
   transform-style: preserve-3d;
   transition: transform 0.12s linear, box-shadow 0.12s linear, border-color 0.12s linear;
@@ -984,19 +984,19 @@ body {
 /* === АДАПТИВНОСТЬ - ОБНОВЛЕНЫ BREAKPOINTS === */
 @media (max-width: 1800px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));  /* 🔥 240px → 260px (+7%) */
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   }
 }
 
 @media (max-width: 1400px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));  /* 🔥 200px → 215px (+7%) */
+    grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
   }
 }
 
 @media (max-width: 1200px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));  /* 🔥 180px → 195px (+7%) */
+    grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
   }
 }
 
@@ -1021,7 +1021,7 @@ body {
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));  /* 🔥 160px → 170px (+7%) */
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   }
   
   .modal-content {
